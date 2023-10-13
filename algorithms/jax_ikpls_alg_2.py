@@ -72,7 +72,7 @@ class PLS(PLSBase):
         self.Q: PLS Loadings matrix for Y (M x A)
         self.R: PLS weights matrix to compute scores T directly from original X (K x A)
         """
-        self.B, _W, _P, _Q, _R, _T = self._fit_helper(X, Y, A)
+        self.B, _W, _P, _Q, _R = self._fit_helper(X, Y, A)
         self.W = _W.T
         self.P = _P.T
         self.Q = _Q.T
