@@ -243,7 +243,7 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=(0,))
     def _sample_with_replacement(
         self,
-        prng_key: Union[jnp.ndarray, jax.random.PRNGKeyArray],
+        prng_key: Union[jnp.ndarray, jax.Array],
         X_train: jnp.ndarray,
         Y_train: jnp.ndarray,
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
