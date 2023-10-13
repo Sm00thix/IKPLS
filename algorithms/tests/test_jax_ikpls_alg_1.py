@@ -3,8 +3,8 @@ import jax.numpy as jnp
 import numpy as np
 
 def test_fit_predict():
-    X = jnp.array(np.random.uniform(size=(10,10), dtype=np.float64))
-    Y = jnp.array(np.random.uniform(size=(10,2), dtype=np.float64))
+    X = jnp.array(np.random.uniform(size=(10,10)))
+    Y = jnp.array(np.random.uniform(size=(10,2)))
     p = PLS()
     p.fit(X, Y, 5)
     p.predict(X)
