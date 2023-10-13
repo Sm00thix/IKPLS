@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.554" timestamp="2023-10-13T19:53:41.687969" hostname="Toaster"><testcase classname="algorithms.tests.test_numpy_ikpls" name="test_check_stuff" time="0.001" /></testsuite></testsuites>
