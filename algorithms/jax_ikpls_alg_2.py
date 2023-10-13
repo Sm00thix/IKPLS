@@ -1,4 +1,4 @@
-from Algorithms.jax_improved_kernel_base import PLSBase
+from algorithms.jax_ikpls_base import PLSBase
 import jax
 import jax.numpy as jnp
 from functools import partial
