@@ -1,5 +1,5 @@
-jax==0.4.19
-numpy==1.21.6
-pandas==2.1.1
-scikit_learn==1.3.1
-tqdm==4.66.1
+jax
+numpy
+pandas
+scikit_learn
+tqdm
