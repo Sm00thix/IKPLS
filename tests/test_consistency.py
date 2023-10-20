@@ -628,11 +628,11 @@ class TestClass:
 
 if __name__ == "__main__":
     tc = TestClass()
-    # tc.test_pls_1()
-    # tc.test_pls_2_m_less_k()
-    # tc.test_pls_2_m_eq_k()
-    # tc.test_pls_2_m_greater_k()
-    # tc.test_early_stop_fitting_pls_1() # Stop after 4 components. Here, own algorithms fails to stop early. Norm is constant at approx. 1e-14.
-    # tc.test_early_stop_fitting_pls_2_m_less_k()  # Stop after 4 components. Here, own algorithms fails to stop early. Norm explodes.
-    # tc.test_early_stop_fitting_pls_2_m_eq_k()  # Stop after 4 components
+    tc.test_pls_1()
+    tc.test_pls_2_m_less_k()
+    tc.test_pls_2_m_eq_k()
+    tc.test_pls_2_m_greater_k()
+    tc.test_early_stop_fitting_pls_1() # Stop after 4 components. Here, own algorithms fails to stop early. Norm is constant at approx. 1e-14.
+    tc.test_early_stop_fitting_pls_2_m_less_k()  # Stop after 4 components. Here, own algorithms fails to stop early. Norm explodes.
+    tc.test_early_stop_fitting_pls_2_m_eq_k()  # Stop after 4 components
     tc.test_early_stop_fitting_pls_2_m_greater_k() # Fix denne. Lykkes ikke med at skaffe early stopping
