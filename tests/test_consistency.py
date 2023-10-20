@@ -15,7 +15,6 @@ from numpy.testing import assert_allclose
 class TestClass:
     csv = load_data.load_csv()
     raw_spectra = load_data.load_spectra()
-    rng = np.random.default_rng(seed=42)
 
     def load_target_values(self, values: list[str]) -> npt.NDArray[np.float_]:
         target_values = self.csv[values].to_numpy()
