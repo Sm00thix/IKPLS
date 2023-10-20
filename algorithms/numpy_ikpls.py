@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.typing as npt
+import warnings
 from sklearn.base import BaseEstimator
 
 
@@ -44,16 +45,16 @@ class PLS(BaseEstimator):
         M = Y.shape[1]
 
         self.B = np.zeros(shape=(A, K, M), dtype=self.dtype)
-        self._W = np.empty(shape=(A, K), dtype=self.dtype)
-        self._P = np.empty(shape=(A, K), dtype=self.dtype)
-        self._Q = np.empty(shape=(A, M), dtype=self.dtype)
-        self._R = np.empty(shape=(A, K), dtype=self.dtype)
+        self._W = np.zeros(shape=(A, K), dtype=self.dtype)
+        self._P = np.zeros(shape=(A, K), dtype=self.dtype)
+        self._Q = np.zeros(shape=(A, M), dtype=self.dtype)
+        self._R = np.zeros(shape=(A, K), dtype=self.dtype)
         self.W = self._W.T
         self.P = self._P.T
         self.Q = self._Q.T
         self.R = self._R.T
         if self.algorithm == 1:
-            self._T = np.empty(shape=(A, N), dtype=self.dtype)
+            self._T = np.zeros(shape=(A, N), dtype=self.dtype)
             self.T = self._T.T
         self.A = A
         self.N = N
@@ -70,9 +71,10 @@ class PLS(BaseEstimator):
         for i in range(A):
             # Step 2
             if M == 1:
-                norm = la.norm(XTY)
-                if np.isclose(norm, 0):
-                    print(
+                norm = la.norm(XTY, ord=2)
+                print(norm)
+                if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                    warnings.warn(
                         f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
                     )
                     break
@@ -82,12 +84,25 @@ class PLS(BaseEstimator):
                     XTYTXTY = XTY.T @ XTY
                     eig_vals, eig_vecs = la.eigh(XTYTXTY)
                     q = eig_vecs[:, -1:]
-                    q = q.reshape(-1, 1)
                     w = XTY @ q
-                    w = w / la.norm(w)
+                    norm = la.norm(w)
+                    print(norm)
+                    if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                        warnings.warn(
+                            f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                        )
+                        break
+                    w = w / norm
                 else:
                     XTYYTX = XTY @ XTY.T
                     eig_vals, eig_vecs = la.eigh(XTYYTX)
+                    norm = eig_vals[-1]
+                    print(norm)
+                    if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                        warnings.warn(
+                            f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                        )
+                        break
                     w = eig_vecs[:, -1:]
             self._W[i] = w.squeeze()
 

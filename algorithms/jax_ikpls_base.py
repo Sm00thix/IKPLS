@@ -11,9 +11,6 @@ import numpy as np
 class PLSBase(abc.ABC):
     """
     Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
-
-    Parameters:
-    dtype: The float datatype to use in computation of the PLS algorithm. Defaults to numpy.float64. Using a lower precision will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
     """
 
     def __init__(self) -> None:
@@ -32,10 +29,10 @@ class PLSBase(abc.ABC):
         self, A, K, M
     ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         B = jnp.zeros(shape=(A, K, M), dtype=jnp.float64)
-        W = jnp.empty(shape=(A, K), dtype=jnp.float64)
-        P = jnp.empty(shape=(A, K), dtype=jnp.float64)
-        Q = jnp.empty(shape=(A, M), dtype=jnp.float64)
-        R = jnp.empty(shape=(A, K), dtype=jnp.float64)
+        W = jnp.zeros(shape=(A, K), dtype=jnp.float64)
+        P = jnp.zeros(shape=(A, K), dtype=jnp.float64)
+        Q = jnp.zeros(shape=(A, M), dtype=jnp.float64)
+        R = jnp.zeros(shape=(A, K), dtype=jnp.float64)
         return B, W, P, Q, R
 
     @partial(jax.jit, static_argnums=0)
