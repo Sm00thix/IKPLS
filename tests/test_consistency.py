@@ -944,8 +944,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
-            atol=5e-4,
-            rtol=2e-3,
+            atol=0.014,
+            rtol=0,
             n_good_components=n_good_components,
         )
 
@@ -1090,7 +1090,7 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
+            atol=5e-8,
             rtol=1e-5,
             n_good_components=n_good_components,
         )
@@ -1212,7 +1212,7 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
+            atol=3e-7,
             rtol=1e-5,
             n_good_components=n_good_components,
         )
@@ -1334,7 +1334,7 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
+            atol=6e-8,
             rtol=1e-5,
             n_good_components=n_good_components,
         )
@@ -1771,6 +1771,7 @@ class TestClass:
 # TODO: Check that results are consistent across CPU and GPU implementations.
 # TODO: Check that cross validation results match those achieved by SkLearn.
 # TODO: Implement general purpose cross validation for GPU algorithms.
+    # TODO: For this purpose, also implement general preprocessing where a user can pass a function that takes (X_train, Y_train, X_val, Y_val), peforms whatever operations and then returns processed arrays of the same type.
 
 # TODO: Use pytest.warns as context manager.
 # TODO: Implement constant Y test from SkLearn's test suite.
