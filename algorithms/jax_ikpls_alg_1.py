@@ -1,5 +1,6 @@
 from algorithms.jax_ikpls_base import PLSBase
 import jax
+from jax.experimental import host_callback
 import jax.numpy as jnp
 from functools import partial
 from typing import Tuple
@@ -53,7 +54,8 @@ class PLS(PLSBase):
     ]:
         print("Tracing loop body...")
         # step 2
-        w = self._step_2(XTY, M, K)
+        w, norm = self._step_2(XTY, M, K)
+        host_callback.id_tap(self.weight_warning, [i, norm])
         # step 3
         r = self._step_3(i, w, P, R)
         # step 4

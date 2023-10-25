@@ -6,6 +6,7 @@ import abc
 from typing import Tuple, Callable, Union, Any
 from tqdm import tqdm
 import numpy as np
+import warnings
 
 
 class PLSBase(abc.ABC):
@@ -15,6 +16,13 @@ class PLSBase(abc.ABC):
 
     def __init__(self) -> None:
         self.name = "PLS"
+
+    def weight_warning(self, arg, _transforms):
+        i, norm = arg
+        if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+            warnings.warn(
+                f"Weight is close to zero. Results with A = {i} component(s) or higher may be unstable."
+            )
 
     @partial(jax.jit, static_argnums=0)
     def compute_regression_coefficients(
@@ -64,7 +72,9 @@ class PLSBase(abc.ABC):
         pass
 
     @partial(jax.jit, static_argnums=(0, 2, 3))
-    def _step_2(self, XTY: jnp.ndarray, M: jnp.ndarray, K: jnp.ndarray) -> jnp.ndarray:
+    def _step_2(
+        self, XTY: jnp.ndarray, M: jnp.ndarray, K: jnp.ndarray
+    ) -> Tuple[jnp.ndarray, jnp.float64]:
         print("Tracing step 2...")
         if M == 1:
             norm = jla.norm(XTY)
@@ -76,12 +86,14 @@ class PLSBase(abc.ABC):
                 q = eig_vecs[:, -1:]
                 q = q.reshape(-1, 1)
                 w = XTY @ q
-                w = w / jla.norm(w)
+                norm = jla.norm(w)
+                w = w / norm
             else:
                 XTYYTX = XTY @ XTY.T
                 eig_vals, eig_vecs = jla.eigh(XTYYTX)
                 w = eig_vecs[:, -1:]
-        return w
+                norm = eig_vals[-1]
+        return w, norm
 
     @partial(jax.jit, static_argnums=(0,))
     def _step_3(
