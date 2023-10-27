@@ -4,13 +4,14 @@ from algorithms.jax_ikpls_alg_2 import PLS as JAX_Alg_2
 from algorithms.numpy_ikpls import PLS as NpPLS
 
 # import load_data
-
 from . import load_data
 
 import pytest
 import numpy as np
 import numpy.linalg as la
 import numpy.typing as npt
+from typing import Tuple
+import jax
 from jax import numpy as jnp
 from numpy.testing import assert_allclose
 
@@ -39,7 +40,9 @@ class TestClass:
         Y /= y_std
         jnp_X = jnp.array(X)
         jnp_Y = jnp.array(Y)
-        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
+        sk_pls = SkPLS(
+            n_components=n_components, scale=False, copy=True
+        )  # Do not rescale again.
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
         jax_pls_alg_1 = JAX_Alg_1()
@@ -1640,24 +1643,92 @@ class TestClass:
         with pytest.warns(UserWarning, match=msg):
             jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
 
+    def cross_val_test_pls_1(self):
+        X = self.load_X()
+        Y = self.load_Y(['Protein'])
+        jnp_X = jnp.array(X, dtype=jnp.float64)
+        jnp_Y = jnp.array(Y, dtype=jnp.float64)
+        cv_splits = jnp.arange(jnp_X.shape[0], dtype=int)
+        cv_splits = jnp.mod(cv_splits, 5)
+        jax_pls_alg_1 = JAX_Alg_1()
+
+        @jax.jit
+        def autoscale(X_train, Y_train, X_val, Y_val):
+            X_mean = jnp.mean(X_train, axis=0, dtype=jnp.float64)
+            X_std = jnp.std(X_train, axis=0, ddof=1, dtype=jnp.float64)
+            Y_mean = jnp.mean(Y_train, axis=0, dtype=jnp.float64)
+            Y_std = jnp.std(Y_train, axis=0, ddof=1, dtype=jnp.float64)
+
+            X_train = (X_train - X_mean) / X_std
+            Y_train = (Y_train - Y_mean) / Y_std
+            X_val = (X_val - X_mean) / X_std
+            Y_val = (Y_val - Y_mean) / Y_std
+            return X_train, Y_train, X_val, Y_val
+
+        @jax.jit
+        def _find_best_num_components_and_rmse(vec: jnp.array) -> Tuple[jnp.int64, jnp.float64]:
+            lowest_idx = jnp.argmin(vec)
+            lowest_rmse = vec[lowest_idx]
+            num_components = lowest_idx + 1
+            return num_components.astype(jnp.int64), lowest_rmse
+
+
+        @jax.jit
+        def metric_fun(Y_true: jnp.array, Y_pred: jnp.array) -> Tuple[jnp.int64, jnp.int64, jnp.int64, jnp.array, jnp.array, jnp.array]:
+            """
+            Y_true is (N x M)
+            Y_pred is (A x N x M)
+            """
+            e = Y_true - Y_pred
+            se = e ** 2
+            mse = jnp.mean(se, axis=-2)  # Compute the mean over samples
+            rmse = jnp.sqrt(mse)
+            num_components_lowest_protein_rmse, lowest_protein_rmse = _find_best_num_components_and_rmse(
+                rmse)
+            return lowest_protein_rmse, num_components_lowest_protein_rmse
+
+
+        @jax.jit
+        def rmse(y_true, y_pred):
+            e = y_true - y_pred
+            se = e ** 2
+            mse = jnp.mean(se)
+            rmse = jnp.sqrt(mse)
+            return (rmse,)
+
+        def compute_loss_and_updates(x, y, conv_filter):
+
+            jax.lax.conv_with_general_padding
+            output = jnp.array([jnp.convolve(row, conv_filter) for row in x])
+            # B, W, P, Q, R, T = jax_pls_alg_1.stateless_fit(output, y, 20)
+            # y_pred = jax_pls_alg_1.stateless_predict(output, B)
+            loss = jax_pls_alg_1.cv(x, y, jnp.arange(100), 10, lambda a,b,c,d: (a,b,c,d), rmse, ['rmse'])
+            # loss = rmse(y, y_pred)
+            return jnp.sum(jnp.array(loss['rmse']))
+            # return loss
+
+        
+
+        print(jnp_X.device())
+        res = jax_pls_alg_1.cv(jnp_X, jnp_Y, cv_splits, 102, autoscale, metric_fun, ['rmse', 'num_components_lowest_rmse'])
+        pass
+
 
 if __name__ == "__main__":
     tc = TestClass()
-    tc.test_pls_1()
-    tc.test_pls_2_m_less_k()
-    tc.test_pls_2_m_eq_k()
-    tc.test_pls_2_m_greater_k()
-    tc.test_sanity_check_pls_regression()
-    tc.test_sanity_check_pls_regression_constant_column_Y()
-    tc.test_pls_1_constant_y()
-    tc.test_pls_2_m_less_k_constant_y()
-    tc.test_pls_2_m_eq_k_constant_y()
-    tc.test_pls_2_m_greater_k_constant_y()
+    # tc.test_pls_1()
+    # tc.test_pls_2_m_less_k()
+    # tc.test_pls_2_m_eq_k()
+    # tc.test_pls_2_m_greater_k()
+    # tc.test_sanity_check_pls_regression()
+    # tc.test_sanity_check_pls_regression_constant_column_Y()
+    # tc.test_pls_1_constant_y()
+    # tc.test_pls_2_m_less_k_constant_y()
+    # tc.test_pls_2_m_eq_k_constant_y()
+    # tc.test_pls_2_m_greater_k_constant_y()
+    tc.cross_val_test_pls_1()
 
 # TODO: Check that results are consistent across CPU and GPU implementations.
 # TODO: Check that cross validation results match those achieved by SkLearn.
 # TODO: Implement general purpose cross validation for GPU algorithms.
 # TODO: For this purpose, also implement general preprocessing where a user can pass a function that takes (X_train, Y_train, X_val, Y_val), peforms whatever operations and then returns processed arrays of the same type
-
-# TODO: Use pytest.warns as context manager.
-# TODO: Implement constant Y test from SkLearn's test suite.

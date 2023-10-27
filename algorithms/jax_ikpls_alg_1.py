@@ -38,10 +38,11 @@ class PLS(PLSBase):
         p = (tT @ X).T / tTt
         q = (r.T @ XTY).T / tTt
         return tTt, p, q, t
-
-    @partial(jax.jit, static_argnums=(0, 4, 5))
+    
+    @partial(jax.jit, static_argnums=(0, 1, 5, 6))
     def _main_loop_body(
         self,
+        A: int,
         i: int,
         X: jnp.ndarray,
         XTY: jnp.ndarray,
@@ -57,15 +58,40 @@ class PLS(PLSBase):
         w, norm = self._step_2(XTY, M, K)
         host_callback.id_tap(self.weight_warning, [i, norm])
         # step 3
-        r = self._step_3(i, w, P, R)
+        r = self._step_3(A, w, P, R)
         # step 4
         tTt, p, q, t = self._step_4(X, XTY, r)
         # step 5
         XTY = self._step_5(XTY, p, q, tTt)
         return XTY, w, p, q, r, t
 
+    # @partial(jax.jit, static_argnums=(0, 4, 5))
+    # def _main_loop_body(
+    #     self,
+    #     i: int,
+    #     X: jnp.ndarray,
+    #     XTY: jnp.ndarray,
+    #     M: int,
+    #     K: int,
+    #     P: jnp.ndarray,
+    #     R: jnp.ndarray,
+    # ) -> Tuple[
+    #     jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
+    # ]:
+    #     print("Tracing loop body...")
+    #     # step 2
+    #     w, norm = self._step_2(XTY, M, K)
+    #     host_callback.id_tap(self.weight_warning, [i, norm])
+    #     # step 3
+    #     r = self._step_3(i, w, P, R)
+    #     # step 4
+    #     tTt, p, q, t = self._step_4(X, XTY, r)
+    #     # step 5
+    #     XTY = self._step_5(XTY, p, q, tTt)
+    #     return XTY, w, p, q, r, t
+
     def fit(self, X: jnp.ndarray, Y: jnp.ndarray, A: int) -> None:
-        self.B, _W, _P, _Q, _R, _T = self._fit_helper(X, Y, A)
+        self.B, _W, _P, _Q, _R, _T = self.stateless_fit(X, Y, A)
         self.W = _W.T
         self.P = _P.T
         self.Q = _Q.T
@@ -73,7 +99,7 @@ class PLS(PLSBase):
         self.T = _T.T
 
     @partial(jax.jit, static_argnums=(0, 3))
-    def _fit_helper(
+    def stateless_fit(
         self, X: jnp.ndarray, Y: jnp.ndarray, A: int
     ) -> Tuple[
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
@@ -105,7 +131,7 @@ class PLS(PLSBase):
         XTY = self._step_1(X, Y)
 
         for i in range(A):
-            XTY, w, p, q, r, t = self._main_loop_body(i, X, XTY, M, K, P, R)
+            XTY, w, p, q, r, t = self._main_loop_body(A, i, X, XTY, M, K, P, R)
             W = W.at[i].set(w.squeeze())
             P = P.at[i].set(p.squeeze())
             Q = Q.at[i].set(q.squeeze())

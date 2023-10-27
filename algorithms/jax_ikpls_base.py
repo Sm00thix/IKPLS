@@ -3,7 +3,8 @@ import jax.numpy as jnp
 import jax.numpy.linalg as jla
 from functools import partial
 import abc
-from typing import Tuple, Callable, Union, Any
+from typing import Tuple, Union, Any
+from collections.abc import Callable
 from tqdm import tqdm
 import numpy as np
 import warnings
@@ -57,7 +58,7 @@ class PLSBase(abc.ABC):
 
     @abc.abstractmethod
     @partial(jax.jit, static_argnums=(0, 3))
-    def _fit_helper(
+    def stateless_fit(
         self, X: jnp.ndarray, Y: jnp.ndarray, A: int
     ) -> Union[
         Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
@@ -95,14 +96,29 @@ class PLSBase(abc.ABC):
                 norm = eig_vals[-1]
         return w, norm
 
-    @partial(jax.jit, static_argnums=(0,))
+    @partial(
+        jax.jit,
+        static_argnums=(
+            0,
+            1,
+        ),
+    )
     def _step_3(
-        self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
+        self, A: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
     ) -> jnp.ndarray:
         print("Tracing step 3...")
         r = jnp.copy(w)
-        r, P, w, R = jax.lax.fori_loop(0, i, self._step_3_body, (r, P, w, R))
+        r, P, w, R = jax.lax.fori_loop(0, A, self._step_3_body, (r, P, w, R))
         return r
+
+    # @partial(jax.jit, static_argnums=(0,))
+    # def _step_3(
+    #     self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
+    # ) -> jnp.ndarray:
+    #     print("Tracing step 3...")
+    #     r = jnp.copy(w)
+    #     r, P, w, R = jax.lax.fori_loop(0, i, self._step_3_body, (r, P, w, R))
+    #     return r
 
     @partial(jax.jit, static_argnums=0)
     def _step_3_body(
@@ -185,10 +201,64 @@ class PLSBase(abc.ABC):
         metric_function: Callable that takes two array of shape (N x M) and returns Any.
         """
 
-        matrices = self._fit_helper(X_train, Y_train, A)
+        matrices = self.stateless_fit(X_train, Y_train, A)
         B = matrices[0]
         Y_pred = X_test @ B
         return metric_function(Y_test, Y_pred)
+
+    def cv(
+        self,
+        X: jnp.ndarray,
+        Y: jnp.ndarray,
+        cv_splits: jnp.ndarray,
+        A: int,
+        preprocessing_function: Callable[
+            [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+            Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+        ],
+        metric_funtion: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        metric_names: list[str],
+    ) -> dict[str, Any]:
+        metric_value_lists = [[] for _ in metric_names]
+        unique_splits = jnp.unique(cv_splits)
+        for split in unique_splits:
+            train_idxs = jnp.nonzero(cv_splits != split)[0]
+            val_idxs = jnp.nonzero(cv_splits == split)[0]
+            metric_values = self._inner_cv(
+                X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_funtion
+            )
+            metric_value_lists = self.update_metric_value_lists(
+                metric_value_lists, metric_values
+            )
+        return self.finalize_metric_values(metric_value_lists, metric_names)
+
+    @partial(jax.jit, static_argnums=(0, 5, 6, 7))
+    def _inner_cv(
+        self,
+        X: jnp.ndarray,
+        Y: jnp.ndarray,
+        train_idxs: jnp.ndarray,
+        val_idxs: jnp.ndarray,
+        A: int,
+        preprocessing_function: Callable[
+            [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+            Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+        ],
+        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Tuple[Any]],
+    ):
+        print("Tracing inner CV...")
+        X_train = jnp.take(X, train_idxs, axis=0)
+        Y_train = jnp.take(Y, train_idxs, axis=0)
+
+        X_val = jnp.take(X, val_idxs, axis=0)
+        Y_val = jnp.take(Y, val_idxs, axis=0)
+        X_train, Y_train, X_val, Y_val = preprocessing_function(
+            X_train, Y_train, X_val, Y_val
+        )
+        metric_values = self.stateless_fit_predict_eval(
+            X_train, Y_train, A, X_val, Y_val, metric_function
+        )
+        return metric_values
 
     @partial(jax.jit, static_argnums=(0, 4, 5))
     def _inner_loocv(
@@ -243,10 +313,13 @@ class PLSBase(abc.ABC):
             metric_value_lists[j].append(m)
         return metric_value_lists
 
-    def finalize_metric_values(self, metrics_results, metric_names):
+    def finalize_metric_values(
+        self, metrics_results: list[list[Any]], metric_names: list[str]
+    ):
         metrics = {}
         for name, lst in zip(metric_names, metrics_results):
-            metrics[name] = np.asarray(lst)
+            # metrics[name] = np.asarray(lst)
+            metrics[name] = lst
         return metrics
 
     @partial(jax.jit, static_argnums=(0,))
