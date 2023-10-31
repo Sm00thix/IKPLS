@@ -72,7 +72,6 @@ class PLS(BaseEstimator):
             # Step 2
             if M == 1:
                 norm = la.norm(XTY, ord=2)
-                print(norm)
                 if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                     warnings.warn(
                         f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
@@ -86,7 +85,6 @@ class PLS(BaseEstimator):
                     q = eig_vecs[:, -1:]
                     w = XTY @ q
                     norm = la.norm(w)
-                    print(norm)
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                         warnings.warn(
                             f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
@@ -97,7 +95,6 @@ class PLS(BaseEstimator):
                     XTYYTX = XTY @ XTY.T
                     eig_vals, eig_vecs = la.eigh(XTYYTX)
                     norm = eig_vals[-1]
-                    print(norm)
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                         warnings.warn(
                             f"Weight is close to zero. Stopping fitting after A = {i} component(s)."

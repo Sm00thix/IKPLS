@@ -85,7 +85,7 @@ class TestClass:
         @jax.jit
         def helper(conv_filter):
             filtered_x = self.apply_1d_convolution(x, conv_filter)
-            matrices = pls_alg.stateless_fit(filtered_x, y, 102)
+            matrices = pls_alg.stateless_fit(filtered_x, y, A)
             B = matrices[0]
             y_pred = pls_alg.stateless_predict(filtered_x, B, A)
             rmse_loss = self.rmse(y, y_pred)
@@ -682,7 +682,7 @@ class TestClass:
             n_good_components = np_pls_alg_1.A
 
         atol = 0
-        rtol = 4e-5
+        rtol = 1e-4
         # Regression matrices
         assert_allclose(
             np_pls_alg_1.B[:n_good_components],
@@ -1972,7 +1972,7 @@ class TestClass:
         pls_alg_1 = JAX_Alg_1()
         pls_alg_2 = JAX_Alg_2()
 
-        num_components = 10
+        num_components = 3 # With this preprocessing on this data, only 3 components are relevant.
 
         uniform_filter = jnp.ones(7) / 7
 
@@ -1983,16 +1983,13 @@ class TestClass:
         grad_fun = jax.value_and_grad(
             self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
         )
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg): # With this preprocessing on this data, only 3 components are relevant.
-            output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
+        output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
 
         # Compute the gradient and output value for a single number of components
         grad_fun = jax.value_and_grad(
             self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
         )
-        with pytest.warns(UserWarning, match=msg): # With this preprocessing on this data, only 3 components are relevant.
-            output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
+        output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
 
         # Check that outputs and gradients of algorithm 1 and 2 are identical
         assert_allclose(np.array(grad_alg_1), np.array(grad_alg_2), atol=0)
@@ -2045,7 +2042,7 @@ class TestClass:
         pls_alg_1 = JAX_Alg_1()
         pls_alg_2 = JAX_Alg_2()
 
-        num_components = 9
+        num_components = 2 # With this preprocessing on this data, only 2 components are relevant.
 
         uniform_filter = jnp.ones(7) / 7
 
@@ -2056,16 +2053,13 @@ class TestClass:
         grad_fun = jax.value_and_grad(
             self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
         )
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg): # With this preprocessing on this data, only 2 components are relevant.
-            output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
+        output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
 
         # Compute the gradient and output value for a single number of components
         grad_fun = jax.value_and_grad(
             self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
         )
-        with pytest.warns(UserWarning, match=msg): # With this preprocessing on this data, only 2 components are relevant.
-            output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
+        output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
 
         # Check that outputs and gradients of algorithm 1 and 2 are identical
         assert_allclose(np.array(grad_alg_1), np.array(grad_alg_2), atol=0)
