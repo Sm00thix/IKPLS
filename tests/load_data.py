@@ -19,6 +19,7 @@ def load_csv():
         "Wheat_Spelt",
         "Moisture",
         "Protein",
+        "split",
     ]
     csv = pd.read_csv(csv_url, usecols=columns)
     csv = csv.astype(np.float64)

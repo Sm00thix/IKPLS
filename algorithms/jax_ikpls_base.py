@@ -111,15 +111,6 @@ class PLSBase(abc.ABC):
         r, P, w, R = jax.lax.fori_loop(0, A, self._step_3_body, (r, P, w, R))
         return r
 
-    # @partial(jax.jit, static_argnums=(0,))
-    # def _step_3(
-    #     self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
-    # ) -> jnp.ndarray:
-    #     print("Tracing step 3...")
-    #     r = jnp.copy(w)
-    #     r, P, w, R = jax.lax.fori_loop(0, i, self._step_3_body, (r, P, w, R))
-    #     return r
-
     @partial(jax.jit, static_argnums=0)
     def _step_3_body(
         self, j: int, carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]
@@ -203,15 +194,15 @@ class PLSBase(abc.ABC):
 
         matrices = self.stateless_fit(X_train, Y_train, A)
         B = matrices[0]
-        Y_pred = X_test @ B
+        Y_pred = self.stateless_predict(X_test, B)
         return metric_function(Y_test, Y_pred)
 
     def cv(
         self,
         X: jnp.ndarray,
         Y: jnp.ndarray,
-        cv_splits: jnp.ndarray,
         A: int,
+        cv_splits: jnp.ndarray,
         preprocessing_function: Callable[
             [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
             Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
@@ -219,9 +210,24 @@ class PLSBase(abc.ABC):
         metric_funtion: Callable[[jnp.ndarray, jnp.ndarray], Any],
         metric_names: list[str],
     ) -> dict[str, Any]:
+        """
+        Perform cross validation on using jnp.unique(cv_splits) splits. For each split, (X_train, Y_train, X_val, Y_val) = preprocessing_function(X_train, Y_train, X_val, Y_val) and metric_function(Y_val, self.stateless_predict(X_val, B)) where B is the regression matrix derived from self.stateless_fit(X_train, Y_train, A).
+
+        Parameters:
+        X: Predictor variables matrix (N x K)
+        Y: Response variables matrix (N x M)
+        A: Number of components in the PLS model
+        cv_splits: An array of length N assigning a split to corresponding rows of X and Y. Each split will be used exactly once for validation with the remaining splits used for training.
+        preprocessing_function: Callable that takes X_train, Y_train, X_val, Y_val and returns (X_train, Y_train, X_val, Y_val)
+        metric_function: Callable that takes two arrays Y_true of shape (N x M) and Y_pred of shape (A x N x M) and returns Any.
+        metric_names: List of strings with names to assign to each output of metric_function.
+
+        Returns:
+        Dictionairy with keys from metric_names and values that are outputs of metric_function(Y_true, Y_pred).
+        """
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
-        for split in unique_splits:
+        for split in tqdm(unique_splits):
             train_idxs = jnp.nonzero(cv_splits != split)[0]
             val_idxs = jnp.nonzero(cv_splits == split)[0]
             metric_values = self._inner_cv(
@@ -260,54 +266,6 @@ class PLSBase(abc.ABC):
         )
         return metric_values
 
-    @partial(jax.jit, static_argnums=(0, 4, 5))
-    def _inner_loocv(
-        self,
-        i: int,
-        X_train_val: jnp.ndarray,
-        Y_train_val: jnp.ndarray,
-        A: int,
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
-    ) -> Any:
-        print("Tracing inner LOOCV...")
-        all_indices = jnp.arange(X_train_val.shape[0])
-        train_indices = jnp.nonzero(all_indices != i, size=X_train_val.shape[0] - 1)[0]
-        X_train = jnp.take(X_train_val, train_indices, axis=0)
-        Y_train = jnp.take(Y_train_val, train_indices, axis=0)
-        X_val = jnp.take(X_train_val, jnp.array([i]), axis=0)
-        Y_val = jnp.take(Y_train_val, jnp.array([i]), axis=0)
-        metric_values = self.stateless_fit_predict_eval(
-            X_train, Y_train, A, X_val, Y_val, metric_function
-        )
-        return metric_values
-
-    def loocv(
-        self,
-        X_train_val: jnp.ndarray,
-        Y_train_val: jnp.ndarray,
-        A: int,
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
-        metric_names: list[str],
-    ) -> dict[str]:
-        metric_value_lists = [[] for _ in metric_names]
-        i = 0  # The first iteration includes JIT compilation so let's keep it outside tqdm's timing estimate
-        metric_values = self._inner_loocv(
-            i, X_train_val, Y_train_val, A, metric_function
-        )
-        metric_value_lists = self.update_metric_value_lists(
-            metric_value_lists, metric_values
-        )
-        for i in tqdm(
-            range(1, X_train_val.shape[0]), initial=1, total=X_train_val.shape[0]
-        ):
-            metric_values = self._inner_loocv(
-                i, X_train_val, Y_train_val, A, metric_function
-            )
-            metric_value_lists = self.update_metric_value_lists(
-                metric_value_lists, metric_values
-            )
-        return self.finalize_metric_values(metric_value_lists, metric_names)
-
     def update_metric_value_lists(self, metric_value_lists, metric_values):
         for j, m in enumerate(metric_values):
             metric_value_lists[j].append(m)
@@ -318,60 +276,5 @@ class PLSBase(abc.ABC):
     ):
         metrics = {}
         for name, lst in zip(metric_names, metrics_results):
-            # metrics[name] = np.asarray(lst)
             metrics[name] = lst
         return metrics
-
-    @partial(jax.jit, static_argnums=(0,))
-    def _sample_with_replacement(
-        self,
-        prng_key: Union[jnp.ndarray, jax.Array],
-        X_train: jnp.ndarray,
-        Y_train: jnp.ndarray,
-    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
-        print("Tracing inner bootstrap...")
-        X_train = jax.random.choice(
-            prng_key, X_train, shape=(X_train.shape[0],), axis=0
-        )
-        Y_train = jax.random.choice(
-            prng_key, Y_train, shape=(Y_train.shape[0],), axis=0
-        )
-        return X_train, Y_train
-
-    def bootstrap(
-        self,
-        seed: int,
-        num_iters: int,
-        A: int,
-        X_train: jnp.ndarray,
-        Y_train: jnp.ndarray,
-        X_val: jnp.ndarray,
-        Y_val: jnp.ndarray,
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
-        metric_names: list[str],
-    ) -> dict[str]:
-        metric_value_lists = [[] for _ in metric_names]
-        prng_key = jax.random.PRNGKey(seed)
-        prng_array = jax.random.split(prng_key, num_iters)
-
-        # The first iteration includes JIT compilation so let's keep it outside tqdm's timing estimate
-        X_train_bootsrap, Y_train_bootstrap = self._sample_with_replacement(
-            prng_array[0], X_train, Y_train
-        )
-        metric_values = self.stateless_fit_predict_eval(
-            X_train_bootsrap, Y_train_bootstrap, A, X_val, Y_val, metric_function
-        )
-        metric_value_lists = self.update_metric_value_lists(
-            metric_value_lists, metric_values
-        )
-        for key in tqdm(prng_array[1:], initial=1, total=prng_array.shape[0]):
-            X_train_bootsrap, Y_train_bootstrap = self._sample_with_replacement(
-                key, X_train, Y_train
-            )
-            metric_values = self.stateless_fit_predict_eval(
-                X_train_bootsrap, Y_train_bootstrap, A, X_val, Y_val, metric_function
-            )
-            metric_value_lists = self.update_metric_value_lists(
-                metric_value_lists, metric_values
-            )
-        return self.finalize_metric_values(metric_value_lists, metric_names)

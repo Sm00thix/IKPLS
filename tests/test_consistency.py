@@ -9,13 +9,10 @@ from . import load_data
 
 import pytest
 import numpy as np
-import numpy.linalg as la
 import numpy.typing as npt
-from typing import Tuple
 import jax
 from jax import numpy as jnp
 from numpy.testing import assert_allclose
-from functools import partial
 
 
 class TestClass:
@@ -66,422 +63,9 @@ class TestClass:
             sk_B[i] = sk_B_at_component_i
         return sk_pls, sk_B, np_pls_alg_1, np_pls_alg_2, jax_pls_alg_1, jax_pls_alg_2
 
-    @partial(jax.jit, static_argnums=(0,))
-    def apply_1d_convolution(self, matrix, conv_filter):
-        convolved_rows = jax.vmap(lambda row: jnp.convolve(row, conv_filter, "valid"))(
-            matrix
-        )
-        return convolved_rows
-
-    @partial(jax.jit, static_argnums=(0,))
-    def rmse(self, y_true, y_pred):
-        e = y_true - y_pred
-        se = e**2
-        mse = jnp.mean(se)
-        rmse = jnp.sqrt(mse)
-        return rmse
-
-    def preprocess_fit_rmse(self, x, y, pls_alg, A=None):
-        @jax.jit
-        def helper(conv_filter):
-            filtered_x = self.apply_1d_convolution(x, conv_filter)
-            matrices = pls_alg.stateless_fit(filtered_x, y, A)
-            B = matrices[0]
-            y_pred = pls_alg.stateless_predict(filtered_x, B, A)
-            rmse_loss = self.rmse(y, y_pred)
-            return jnp.squeeze(rmse_loss)
-
-        return helper
-
     def assert_matrix_orthogonal(self, M, atol, rtol):
         MTM = np.dot(M.T, M)
         assert_allclose(MTM, np.diag(np.diag(MTM)), atol=atol, rtol=rtol)
-
-    def check_x_weights(
-        self,
-        sk_pls,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
-        if n_good_components == -1:
-            n_good_components = np_pls_alg_1.A
-        assert_allclose(
-            np.abs(np_pls_alg_1.W[..., :n_good_components]),
-            np.abs(sk_pls.x_weights_[..., :n_good_components]),
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(np_pls_alg_2.W[..., :n_good_components]),
-            np.abs(sk_pls.x_weights_[..., :n_good_components]),
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(np.array(jax_pls_alg_1.W)[..., :n_good_components]),
-            np.abs(sk_pls.x_weights_[..., :n_good_components]),
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(np.array(jax_pls_alg_2.W)[..., :n_good_components]),
-            np.abs(sk_pls.x_weights_[..., :n_good_components]),
-            atol=atol,
-            rtol=rtol,
-        )
-
-    def check_x_loadings(
-        self,
-        sk_pls,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
-        if n_good_components == -1:
-            n_good_components = np_pls_alg_1.A
-        # assert_allclose(
-        #     np.abs(np_pls_alg_1.P[..., :n_good_components]),
-        #     np.abs(sk_pls.x_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np_pls_alg_2.P[..., :n_good_components]),
-        #     np.abs(sk_pls.x_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np.array(jax_pls_alg_1.P)[..., :n_good_components]),
-        #     np.abs(sk_pls.x_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np.array(jax_pls_alg_2.P)[..., :n_good_components]),
-        #     np.abs(sk_pls.x_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-
-        # We have rotational freedom. Therefore, check that loadings are parallel or antiparallel to eachother.
-        # We do this by taking the dot product between the normalized loadings of two different implementations and assert that they are either -1 or 1.
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_1.P[..., :n_good_components]
-                    * sk_pls.x_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_1.P[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.x_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_2.P[..., :n_good_components]
-                    * sk_pls.x_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_2.P[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.x_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_1.P[..., :n_good_components])
-                    * sk_pls.x_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_1.P[..., :n_good_components]), axis=0)
-                    * la.norm(sk_pls.x_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_2.P[..., :n_good_components])
-                    * sk_pls.x_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_2.P[..., :n_good_components]), axis=0)
-                    * la.norm(sk_pls.x_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-
-    def check_y_loadings(
-        self,
-        sk_pls,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
-        if n_good_components == -1:
-            n_good_components = np_pls_alg_1.A
-        # We have rotational freedom. Therefore, check that loadings are parallel or antiparallel to eachother.
-        # We do this by taking the dot product between the normalized loadings of two different implementations and assert that they are either -1 or 1.
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_1.Q[..., :n_good_components]
-                    * sk_pls.y_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_1.Q[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.y_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_2.Q[..., :n_good_components]
-                    * sk_pls.y_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_2.Q[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.y_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_1.Q[..., :n_good_components])
-                    * sk_pls.y_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_1.Q[..., :n_good_components]), axis=0)
-                    * la.norm(sk_pls.y_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_2.Q[..., :n_good_components])
-                    * sk_pls.y_loadings_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_2.Q[..., :n_good_components]), axis=0)
-                    * la.norm(sk_pls.y_loadings_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        # assert_allclose(
-        #     np.abs(np_pls_alg_1.Q[..., :n_good_components]),
-        #     np.abs(sk_pls.y_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np_pls_alg_2.Q[..., :n_good_components]),
-        #     np.abs(sk_pls.y_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np.array(jax_pls_alg_1.Q)[..., :n_good_components]),
-        #     np.abs(sk_pls.y_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np.array(jax_pls_alg_2.Q)[..., :n_good_components]),
-        #     np.abs(sk_pls.y_loadings_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-
-    def check_x_rotations(
-        self,
-        sk_pls,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
-        if n_good_components == -1:
-            n_good_components = np_pls_alg_1.A
-
-        # We have rotational freedom. Therefore, check that rotations are parallel or antiparallel to eachother.
-        # We do this by taking the dot product between the normalized rotations of two different implementations and assert that they are either -1 or 1.
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_1.R[..., :n_good_components]
-                    * sk_pls.x_rotations_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_1.R[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.x_rotations_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_2.R[..., :n_good_components]
-                    * sk_pls.x_rotations_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_2.R[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.x_rotations_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_1.R[..., :n_good_components])
-                    * sk_pls.x_rotations_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_1.R[..., :n_good_components]), axis=0)
-                    * la.norm(sk_pls.x_rotations_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_2.R[..., :n_good_components])
-                    * sk_pls.x_rotations_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_2.R[..., :n_good_components]), axis=0)
-                    * la.norm(sk_pls.x_rotations_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-
-    def check_x_scores(  # X scores - not computed by IKPLS Algorithm #2
-        self,
-        sk_pls,
-        np_pls_alg_1,
-        jax_pls_alg_1,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
-        if n_good_components == -1:
-            n_good_components = np_pls_alg_1.A
-        # We have rotational freedom. Therefore, check that scores are parallel or antiparallel to eachother.
-        # We do this by taking the dot product between the normalized scores of two different implementations and assert that they are either -1 or 1.
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np_pls_alg_1.T[..., :n_good_components]
-                    * sk_pls.x_scores_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np_pls_alg_1.T[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.x_scores_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        assert_allclose(
-            np.abs(
-                np.sum(
-                    np.array(jax_pls_alg_1.T)[..., :n_good_components]
-                    * sk_pls.x_scores_[..., :n_good_components],
-                    axis=0,
-                )
-                / (
-                    la.norm(np.array(jax_pls_alg_1.T)[..., :n_good_components], axis=0)
-                    * la.norm(sk_pls.x_scores_[..., :n_good_components], axis=0)
-                )
-            ),
-            1,
-            atol=atol,
-            rtol=rtol,
-        )
-        # assert_allclose(
-        #     np.abs(np_pls_alg_1.T[..., :n_good_components]),
-        #     np.abs(sk_pls.x_scores_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
-        # assert_allclose(
-        #     np.abs(np.array(jax_pls_alg_1.T[..., :n_good_components])),
-        #     np.abs(sk_pls.x_scores_[..., :n_good_components]),
-        #     atol=atol,
-        #     rtol=rtol,
-        # )
 
     def check_regression_matrices(
         self,
@@ -801,54 +385,6 @@ class TestClass:
             rtol=0,
         )
 
-        self.check_x_weights(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_x_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_y_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_x_rotations(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=0,
-            rtol=1e-5,
-        )
-
-        self.check_x_scores(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            jax_pls_alg_1=jax_pls_alg_1,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
         self.check_regression_matrices(
             sk_B=sk_B,
             np_pls_alg_1=np_pls_alg_1,
@@ -922,54 +458,6 @@ class TestClass:
             jax_pls_alg_2=jax_pls_alg_2,
             atol=1e-1,
             rtol=0,
-        )
-
-        self.check_x_weights(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=2e-3,
-            rtol=1e-5,
-        )
-
-        self.check_x_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=2e-5,
-        )
-
-        self.check_y_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=2e-5,
-        )
-
-        self.check_x_rotations(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=0,
-            rtol=2e-5,
-        )
-
-        self.check_x_scores(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            jax_pls_alg_1=jax_pls_alg_1,
-            atol=1e-8,
-            rtol=2e-5,
         )
 
         self.check_regression_matrices(
@@ -1047,54 +535,6 @@ class TestClass:
             rtol=0,
         )
 
-        self.check_x_weights(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=2e-3,
-            rtol=0,
-        )
-
-        self.check_x_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_y_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_x_rotations(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=0,
-            rtol=1e-5,
-        )
-
-        self.check_x_scores(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            jax_pls_alg_1=jax_pls_alg_1,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
         self.check_regression_matrices(
             sk_B=sk_B,
             np_pls_alg_1=np_pls_alg_1,
@@ -1168,54 +608,6 @@ class TestClass:
             jax_pls_alg_2=jax_pls_alg_2,
             atol=1e-1,
             rtol=0,
-        )
-
-        self.check_x_weights(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=2e-3,
-            rtol=0,
-        )
-
-        self.check_x_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_y_loadings(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=1e-8,
-            rtol=1e-5,
-        )
-
-        self.check_x_rotations(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            np_pls_alg_2=np_pls_alg_2,
-            jax_pls_alg_1=jax_pls_alg_1,
-            jax_pls_alg_2=jax_pls_alg_2,
-            atol=0,
-            rtol=1e-5,
-        )
-
-        self.check_x_scores(
-            sk_pls=sk_pls,
-            np_pls_alg_1=np_pls_alg_1,
-            jax_pls_alg_1=jax_pls_alg_1,
-            atol=1e-8,
-            rtol=1e-5,
         )
 
         self.check_regression_matrices(
@@ -1363,43 +755,41 @@ class TestClass:
         sk_x_loadings_sign_flip = np.sign(sk_pls.x_loadings_ / expected_x_loadings)
         sk_x_weights_sign_flip = np.sign(sk_pls.x_weights_ / expected_x_weights)
         sk_y_loadings_sign_flip = np.sign(sk_pls.y_loadings_ / expected_y_loadings)
-        assert np.allclose(
-            sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0
-        )
-        assert np.allclose(
+        assert_allclose(sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0)
+        assert_allclose(
             sk_x_loadings_sign_flip, sk_y_loadings_sign_flip, atol=0, rtol=0
         )
 
         np_alg_1_x_loadings_sign_flip = np.sign(np_pls_alg_1.P / expected_x_loadings)
         np_alg_1_x_weights_sign_flip = np.sign(np_pls_alg_1.W / expected_x_weights)
         np_alg_1_y_loadings_sign_flip = np.sign(np_pls_alg_1.Q / expected_y_loadings)
-        assert np.allclose(
+        assert_allclose(
             np_alg_1_x_loadings_sign_flip, np_alg_1_x_weights_sign_flip, atol=0, rtol=0
         )
-        assert np.allclose(
+        assert_allclose(
             np_alg_1_x_loadings_sign_flip, np_alg_1_y_loadings_sign_flip, atol=0, rtol=0
         )
 
         np_alg_2_x_loadings_sign_flip = np.sign(np_pls_alg_2.P / expected_x_loadings)
         np_alg_2_x_weights_sign_flip = np.sign(np_pls_alg_2.W / expected_x_weights)
         np_alg_2_y_loadings_sign_flip = np.sign(np_pls_alg_2.Q / expected_y_loadings)
-        assert np.allclose(
+        assert_allclose(
             np_alg_2_x_loadings_sign_flip, np_alg_2_x_weights_sign_flip, atol=0, rtol=0
         )
-        assert np.allclose(
+        assert_allclose(
             np_alg_2_x_loadings_sign_flip, np_alg_2_y_loadings_sign_flip, atol=0, rtol=0
         )
 
         jax_alg_1_x_loadings_sign_flip = np.sign(jax_pls_alg_1.P / expected_x_loadings)
         jax_alg_1_x_weights_sign_flip = np.sign(jax_pls_alg_1.W / expected_x_weights)
         jax_alg_1_y_loadings_sign_flip = np.sign(jax_pls_alg_1.Q / expected_y_loadings)
-        assert np.allclose(
+        assert_allclose(
             jax_alg_1_x_loadings_sign_flip,
             jax_alg_1_x_weights_sign_flip,
             atol=0,
             rtol=0,
         )
-        assert np.allclose(
+        assert_allclose(
             jax_alg_1_x_loadings_sign_flip,
             jax_alg_1_y_loadings_sign_flip,
             atol=0,
@@ -1409,13 +799,13 @@ class TestClass:
         jax_alg_2_x_loadings_sign_flip = np.sign(jax_pls_alg_2.P / expected_x_loadings)
         jax_alg_2_x_weights_sign_flip = np.sign(jax_pls_alg_2.W / expected_x_weights)
         jax_alg_2_y_loadings_sign_flip = np.sign(jax_pls_alg_2.Q / expected_y_loadings)
-        assert np.allclose(
+        assert_allclose(
             jax_alg_2_x_loadings_sign_flip,
             jax_alg_2_x_weights_sign_flip,
             atol=0,
             rtol=0,
         )
-        assert np.allclose(
+        assert_allclose(
             jax_alg_2_x_loadings_sign_flip,
             jax_alg_2_y_loadings_sign_flip,
             atol=0,
@@ -1541,10 +931,8 @@ class TestClass:
         sk_y_loadings_sign_flip = np.sign(
             sk_pls.y_loadings_[1:] / expected_y_loadings[1:]
         )
-        assert np.allclose(
-            sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0
-        )
-        assert np.allclose(
+        assert_allclose(sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0)
+        assert_allclose(
             sk_x_loadings_sign_flip[1:], sk_y_loadings_sign_flip, atol=0, rtol=0
         )
 
@@ -1553,10 +941,10 @@ class TestClass:
         np_alg_1_y_loadings_sign_flip = np.sign(
             np_pls_alg_1.Q[1:] / expected_y_loadings[1:]
         )
-        assert np.allclose(
+        assert_allclose(
             np_alg_1_x_loadings_sign_flip, np_alg_1_x_weights_sign_flip, atol=0, rtol=0
         )
-        assert np.allclose(
+        assert_allclose(
             np_alg_1_x_loadings_sign_flip[1:],
             np_alg_1_y_loadings_sign_flip,
             atol=0,
@@ -1568,10 +956,10 @@ class TestClass:
         np_alg_2_y_loadings_sign_flip = np.sign(
             np_pls_alg_2.Q[1:] / expected_y_loadings[1:]
         )
-        assert np.allclose(
+        assert_allclose(
             np_alg_2_x_loadings_sign_flip, np_alg_2_x_weights_sign_flip, atol=0, rtol=0
         )
-        assert np.allclose(
+        assert_allclose(
             np_alg_2_x_loadings_sign_flip[1:],
             np_alg_2_y_loadings_sign_flip,
             atol=0,
@@ -1583,15 +971,15 @@ class TestClass:
         jax_alg_1_y_loadings_sign_flip = np.sign(
             jax_pls_alg_1.Q[1:] / expected_y_loadings[1:]
         )
-        assert np.allclose(
+        assert_allclose(
             jax_alg_1_x_loadings_sign_flip,
             jax_alg_1_x_weights_sign_flip,
             atol=0,
             rtol=0,
         )
-        assert np.allclose(
-            jax_alg_1_x_loadings_sign_flip,
-            jax_alg_1_y_loadings_sign_flip[1:],
+        assert_allclose(
+            jax_alg_1_x_loadings_sign_flip[1:],
+            jax_alg_1_y_loadings_sign_flip,
             atol=0,
             rtol=0,
         )
@@ -1601,221 +989,105 @@ class TestClass:
         jax_alg_2_y_loadings_sign_flip = np.sign(
             jax_pls_alg_2.Q[1:] / expected_y_loadings[1:]
         )
-        assert np.allclose(
+        assert_allclose(
             jax_alg_2_x_loadings_sign_flip,
             jax_alg_2_x_weights_sign_flip,
             atol=0,
             rtol=0,
         )
-        assert np.allclose(
-            jax_alg_2_x_loadings_sign_flip,
-            jax_alg_2_y_loadings_sign_flip[1:],
+        assert_allclose(
+            jax_alg_2_x_loadings_sign_flip[1:],
+            jax_alg_2_y_loadings_sign_flip,
             atol=0,
             rtol=0,
         )
 
-    def test_pls_1_constant_y(
-        self,
+    def check_pls_constant_y(
+        self, X, Y
     ):  # Taken from SkLearn's test suite and modified to include own algorithms.
+        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
         """Checks warning when y is constant."""
+        x_mean = X.mean(axis=0)
+        X -= x_mean
+        y_mean = Y.mean(axis=0)
+        Y -= y_mean
+        x_std = X.std(axis=0, ddof=1)
+        x_std[x_std == 0.0] = 1.0
+        X /= x_std
+        y_std = Y.std(axis=0, ddof=1)
+        y_std[y_std == 0.0] = 1.0
+        Y /= y_std
+        jnp_X = jnp.array(X)
+        jnp_Y = jnp.array(Y)
+        n_components = 2
+        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
+        np_pls_alg_1 = NpPLS(algorithm=1)
+        np_pls_alg_2 = NpPLS(algorithm=2)
+        jax_pls_alg_1 = JAX_Alg_1()
+        jax_pls_alg_2 = JAX_Alg_2()
+
+        sk_msg = "Y residual is constant at iteration"
+        with pytest.warns(UserWarning, match=sk_msg):
+            sk_pls.fit(X=X, Y=Y)
+            assert_allclose(sk_pls.x_rotations_, 0)
+
+        msg = "Weight is close to zero."
+        with pytest.warns(UserWarning, match=msg):
+            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
+            assert_allclose(np_pls_alg_1.R, 0)
+        with pytest.warns(UserWarning, match=msg):
+            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
+            assert_allclose(np_pls_alg_2.R, 0)
+        with pytest.warns(UserWarning, match=msg):
+            jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+        with pytest.warns(UserWarning, match=msg):
+            jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+
+    def test_pls_1_constant_y(self):
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 1))
-        n_components = 2
-
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-        jnp_X = jnp.array(X)
-        jnp_Y = jnp.array(Y)
-        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
-        np_pls_alg_1 = NpPLS(algorithm=1)
-        np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
-
         assert Y.shape[1] == 1
+        self.check_pls_constant_y(X, Y)
 
-        sk_msg = "Y residual is constant at iteration"
-        with pytest.warns(UserWarning, match=sk_msg):
-            sk_pls.fit(X=X, Y=Y)
-            assert_allclose(sk_pls.x_rotations_, 0)
-
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_1.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_2.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-
-    def test_pls_2_m_less_k_constant_y(
-        self,
-    ):  # Taken from SkLearn's test suite and modified to include own algorithms.
-        """Checks warning when y is constant."""
+    def test_pls_2_m_less_k_constant_y(self):
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 2))
-        n_components = 2
-
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-        jnp_X = jnp.array(X)
-        jnp_Y = jnp.array(Y)
-        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
-        np_pls_alg_1 = NpPLS(algorithm=1)
-        np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
-
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
+        self.check_pls_constant_y(X, Y)
 
-        sk_msg = "Y residual is constant at iteration"
-        with pytest.warns(UserWarning, match=sk_msg):
-            sk_pls.fit(X=X, Y=Y)
-            assert_allclose(sk_pls.x_rotations_, 0)
-
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_1.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_2.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-
-    def test_pls_2_m_eq_k_constant_y(
-        self,
-    ):  # Taken from SkLearn's test suite and modified to include own algorithms.
-        """Checks warning when y is constant."""
+    def test_pls_2_m_eq_k_constant_y(self):
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 3))
-        n_components = 2
-
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-        jnp_X = jnp.array(X)
-        jnp_Y = jnp.array(Y)
-        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
-        np_pls_alg_1 = NpPLS(algorithm=1)
-        np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
-
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
+        self.check_pls_constant_y(X, Y)
 
-        sk_msg = "Y residual is constant at iteration"
-        with pytest.warns(UserWarning, match=sk_msg):
-            sk_pls.fit(X=X, Y=Y)
-            assert_allclose(sk_pls.x_rotations_, 0)
-
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_1.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_2.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-
-    def test_pls_2_m_greater_k_constant_y(
-        self,
-    ):  # Taken from SkLearn's test suite and modified to include own algorithms.
-        """Checks warning when y is constant."""
+    def test_pls_2_m_greater_k_constant_y(self):
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 4))
-        n_components = 2
-
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-        jnp_X = jnp.array(X)
-        jnp_Y = jnp.array(Y)
-        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
-        np_pls_alg_1 = NpPLS(algorithm=1)
-        np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
-
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
+        self.check_pls_constant_y(X, Y)
 
-        sk_msg = "Y residual is constant at iteration"
-        with pytest.warns(UserWarning, match=sk_msg):
-            sk_pls.fit(X=X, Y=Y)
-            assert_allclose(sk_pls.x_rotations_, 0)
-
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_1.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_2.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
-
-    def test_gradient_pls_1(self):
+    def check_gradient_pls(
+        self,
+        X,
+        Y,
+        num_components,
+        filter_size,
+        val_atol,
+        val_rtol,
+        grad_atol,
+        grad_rtol,
+    ):
         """
-        Tests that the gradient propagation works for PLS1. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
+        Tests that the gradient propagation works for PLS. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
         """
-        X = self.load_X()
-        Y = self.load_Y(
-            [
-                "Protein",
-            ]
-        )
-
         # Taken from self.fit_models() to check each individual algorithm for early stopping.
         x_mean = X.mean(axis=0)
         X -= x_mean
@@ -1834,41 +1106,88 @@ class TestClass:
         pls_alg_1 = JAX_Alg_1()
         pls_alg_2 = JAX_Alg_2()
 
-        num_components = 25
+        uniform_filter = jnp.ones(filter_size) / filter_size
 
-        uniform_filter = jnp.ones(7) / 7
+        # Preprocessing convolution filter for which we will obtain the gradients.
+        @jax.jit
+        def apply_1d_convolution(matrix, conv_filter):
+            convolved_rows = jax.vmap(
+                lambda row: jnp.convolve(row, conv_filter, "valid")
+            )(matrix)
+            return convolved_rows
 
-        assert jnp_Y.shape[1] == 1
+        # Loss function which we want to minimize.
+        @jax.jit
+        def rmse(y_true, y_pred):
+            e = y_true - y_pred
+            se = e**2
+            mse = jnp.mean(se)
+            rmse = jnp.sqrt(mse)
+            return rmse
+
+        # Function to differentiate.
+        def preprocess_fit_rmse(X, Y, pls_alg, A=None):
+            @jax.jit
+            def helper(conv_filter):
+                filtered_X = apply_1d_convolution(X, conv_filter)
+                matrices = pls_alg.stateless_fit(filtered_X, Y, A)
+                B = matrices[0]
+                Y_pred = pls_alg.stateless_predict(filtered_X, B, A)
+                rmse_loss = rmse(Y, Y_pred)
+                return jnp.squeeze(rmse_loss)
+
+            return helper
 
         # Compute values and gradients for algorithm #1
         grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
+            preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
         )
         output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
 
         # Compute the gradient and output value for a single number of components
         grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
+            preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
         )
         output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
 
         # Check that outputs and gradients of algorithm 1 and 2 are identical
-        assert_allclose(np.array(grad_alg_1), np.array(grad_alg_2), atol=0)
-        assert_allclose(np.array(output_val_alg_1), np.array(output_val_alg_2))
+        assert_allclose(
+            np.array(grad_alg_1), np.array(grad_alg_2), atol=grad_atol, rtol=grad_rtol
+        )
+        assert_allclose(
+            np.array(output_val_alg_1),
+            np.array(output_val_alg_2),
+            atol=val_atol,
+            rtol=val_rtol,
+        )
 
         # Check that no NaNs are encountered in the gradient
         assert jnp.all(~jnp.isnan(grad_alg_1))
         assert jnp.all(~jnp.isnan(grad_alg_2))
 
         # Check that the gradient actually flows all the way through
-        zeros = jnp.zeros(7, dtype=jnp.float64)
+        zeros = jnp.zeros(filter_size, dtype=jnp.float64)
         assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
         assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
+
+    def test_gradient_pls_1(self):
+        X = self.load_X()
+        Y = self.load_Y(["Protein"])
+        num_components = 25
+        filter_size = 7
+        assert Y.shape[1] == 1
+        self.check_gradient_pls(
+            X=X,
+            Y=Y,
+            num_components=num_components,
+            filter_size=filter_size,
+            val_atol=0,
+            val_rtol=1e-5,
+            grad_atol=0,
+            grad_rtol=1e-5,
+        )
 
     def test_gradient_pls_2_m_less_k(self):
-        """
-        Tests that the gradient propagation works for PLS2 with M < K. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
-        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1884,60 +1203,24 @@ class TestClass:
                 "Protein",
             ]
         )
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-
-        jnp_X = jnp.array(X, dtype=jnp.float64)
-        jnp_Y = jnp.array(Y, dtype=jnp.float64)
-
-        pls_alg_1 = JAX_Alg_1()
-        pls_alg_2 = JAX_Alg_2()
-
         num_components = 25
-
-        uniform_filter = jnp.ones(7) / 7
-
+        filter_size = 7
         assert Y.shape[1] > 1
-        assert Y.shape[1] < X.shape[1]
-
-        # Compute values and gradients for algorithm #1
-        grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
+        assert (
+            Y.shape[1] < X.shape[1] - filter_size + 1
+        )  # The output of the convolution preprocessing is what is actually fed as input to the PLS algorithms.
+        self.check_gradient_pls(
+            X=X,
+            Y=Y,
+            num_components=num_components,
+            filter_size=filter_size,
+            val_atol=0,
+            val_rtol=1e-5,
+            grad_atol=0,
+            grad_rtol=1e-5,
         )
-        output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
-
-        # Compute the gradient and output value for a single number of components
-        grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
-        )
-        output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
-
-        # Check that outputs and gradients of algorithm 1 and 2 are identical
-        assert_allclose(np.array(grad_alg_1), np.array(grad_alg_2), atol=0, rtol=4e-7)
-        assert_allclose(np.array(output_val_alg_1), np.array(output_val_alg_2))
-
-        # Check that no NaNs are encountered in the gradient
-        assert jnp.all(~jnp.isnan(grad_alg_1))
-        assert jnp.all(~jnp.isnan(grad_alg_2))
-
-        # Check that the gradient actually flows all the way through
-        zeros = jnp.zeros(7, dtype=jnp.float64)
-        assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
-        assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
 
     def test_gradient_pls_2_m_eq_k(self):
-        """
-        Tests that the gradient propagation works for PLS2 with M = K. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
-        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1953,61 +1236,25 @@ class TestClass:
                 "Protein",
             ]
         )
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        X = X[..., :10]
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-
-        jnp_X = jnp.array(X, dtype=jnp.float64)
-        jnp_Y = jnp.array(Y, dtype=jnp.float64)
-
-        pls_alg_1 = JAX_Alg_1()
-        pls_alg_2 = JAX_Alg_2()
-
-        num_components = 3 # With this preprocessing on this data, only 3 components are relevant.
-
-        uniform_filter = jnp.ones(7) / 7
-
+        filter_size = 7
+        X = X[..., : 10 + filter_size - 1]
+        num_components = 10
         assert Y.shape[1] > 1
-        assert Y.shape[1] == X.shape[1]
-
-        # Compute values and gradients for algorithm #1
-        grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
+        assert (
+            Y.shape[1] == X.shape[1] - filter_size + 1
+        )  # The output of the convolution preprocessing is what is actually fed as input to the PLS algorithms.
+        self.check_gradient_pls(
+            X=X,
+            Y=Y,
+            num_components=num_components,
+            filter_size=filter_size,
+            val_atol=0,
+            val_rtol=1e-5,
+            grad_atol=0,
+            grad_rtol=1e-5,
         )
-        output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
-
-        # Compute the gradient and output value for a single number of components
-        grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
-        )
-        output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
-
-        # Check that outputs and gradients of algorithm 1 and 2 are identical
-        assert_allclose(np.array(grad_alg_1), np.array(grad_alg_2), atol=0)
-        assert_allclose(np.array(output_val_alg_1), np.array(output_val_alg_2))
-
-        # Check that no NaNs are encountered in the gradient
-        assert jnp.all(~jnp.isnan(grad_alg_1))
-        assert jnp.all(~jnp.isnan(grad_alg_2))
-
-        # Check that the gradient actually flows all the way through
-        zeros = jnp.zeros(7, dtype=jnp.float64)
-        assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
-        assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
 
     def test_gradient_pls_2_m_greater_k(self):
-        """
-        Tests that the gradient propagation works for PLS2 with M = K. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
-        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -2023,73 +1270,343 @@ class TestClass:
                 "Protein",
             ]
         )
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
+        filter_size = 7
+        X = X[..., : 9 + filter_size - 1]
+        num_components = 9
+        assert Y.shape[1] > 1
+        assert (
+            Y.shape[1] > X.shape[1] - filter_size + 1
+        )  # The output of the convolution preprocessing is what is actually fed as input to the PLS algorithms.
+        self.check_gradient_pls(
+            X=X,
+            Y=Y,
+            num_components=num_components,
+            filter_size=filter_size,
+            val_atol=0,
+            val_rtol=1e-5,
+            grad_atol=0,
+            grad_rtol=1e-5,
+        )
+
+    def check_cross_val_pls(self, X, Y, splits, atol, rtol):
+        """
+        Test that we can cross validate to get RMSE and best number of components for each target and for each split
+        """
+        from sklearn.model_selection import cross_validate
+
+        def cross_val_preprocessing(X_train, Y_train, X_val, Y_val):
+            x_mean = X_train.mean(axis=0, keepdims=True)
+            X_train -= x_mean
+            X_val -= x_mean
+            y_mean = Y_train.mean(axis=0, keepdims=True)
+            Y_train -= y_mean
+            Y_val -= y_mean
+            return X_train, Y_train, X_val, Y_val
+
+        n_components = X.shape[1]
+
+        sk_pls = SkPLS(n_components=n_components, scale=False)
+        jax_pls_alg_1 = JAX_Alg_1()
+        jax_pls_alg_2 = JAX_Alg_2()
+
+        def cv_splitter(splits):
+            uniq_splits = np.unique(splits)
+            for split in uniq_splits:
+                train_idxs = np.nonzero(splits != split)[0]
+                val_idxs = np.nonzero(splits == split)[0]
+                yield train_idxs, val_idxs
+
+        def rmse_per_component(Y_true, Y_pred):
+            e = Y_true - Y_pred
+            se = e**2
+            mse = np.mean(se, axis=-2)
+            rmse = np.sqrt(mse)
+            return rmse
+
+        def jax_rmse_per_component(y_true, y_pred):
+            e = y_true - y_pred
+            se = e**2
+            mse = jnp.mean(se, axis=-2)
+            rmse = jnp.sqrt(mse)
+            return (rmse,)
+
+        jnp_splits = jnp.array(splits)
+
+        # Calibrate SkPLS
+        sk_results = cross_validate(
+            sk_pls, X, Y, cv=cv_splitter(splits), return_estimator=True, n_jobs=-1
+        )
+        sk_models = sk_results["estimator"]
+        # Extract regression matrices for SkPLS for all possible number of components and make a prediction with the regression matrices at all possible number of components.
+        sk_Bs = np.empty((len(sk_models), n_components, X.shape[1], Y.shape[1]))
+        sk_preds = np.empty((len(sk_models), n_components, X.shape[0], Y.shape[1]))
+        for i, sk_model in enumerate(sk_models):
+            for j in range(sk_Bs.shape[1]):
+                sk_B_at_component_j = np.dot(
+                    sk_model.x_rotations_[..., : j + 1],
+                    sk_model.y_loadings_[..., : j + 1].T,
+                )
+                sk_Bs[i, j] = sk_B_at_component_j
+            sk_pred = (X - sk_models[i]._x_mean) / sk_models[i]._x_std @ sk_Bs[
+                i
+            ] + sk_models[i].intercept_
+            sk_preds[i] = sk_pred
+            assert_allclose(
+                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=0
+            )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
+
+        # Compute RMSE on the validation predictions
+        sk_pls_rmses = np.empty((len(sk_models), n_components, Y.shape[1]))
+        for i in range(len(sk_models)):
+            val_idxs = val_idxs = np.nonzero(splits == i)[0]
+            Y_true = Y[val_idxs]
+            Y_pred = sk_preds[i, :, val_idxs, ...].swapaxes(0, 1)
+            val_rmses = rmse_per_component(Y_true, Y_pred)
+            sk_pls_rmses[i] = val_rmses
+
+        # Calibrate NPPLS
+        # Since SkLearn's cross_validate does not allow for a preprocessing function to be executed on each split, we have to get a bit creative.
+        # This is because SkLearn's PLS implementation always mean centers X and Y based on the training data and uses these mean values in its predictions.
+        # We subclass the original implementation and modify it to mimic the SkLearn implementation's behavior so that we can accurately compare results.
+        class NpPLSWithPreprocessing(NpPLS):
+            def __init__(
+                self, algorithm: int = 1, dtype: np.float_ = np.float64
+            ) -> None:
+                super().__init__(algorithm, dtype)
+
+            def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
+                self.X_mean = np.mean(X, axis=0)
+                self.Y_mean = np.mean(Y, axis=0)
+                X -= self.X_mean
+                Y -= self.Y_mean
+                return super().fit(X, Y, A)
+
+            def predict(
+                self, X: npt.ArrayLike, A: None | int = None
+            ) -> npt.NDArray[np.float_]:
+                return super().predict(X - self.X_mean, A) + self.Y_mean
+
+        np_pls_alg_1 = NpPLSWithPreprocessing(algorithm=1)
+        np_pls_alg_2 = NpPLSWithPreprocessing(algorithm=2)
+
+        fit_params = {"A": n_components}
+        np_pls_alg_1_results = cross_validate(
+            np_pls_alg_1,
+            X,
+            Y,
+            cv=cv_splitter(splits),
+            scoring=lambda *args, **kwargs: 0,
+            fit_params=fit_params,
+            return_estimator=True,
+            n_jobs=-1,
+        )
+        np_pls_alg_1_models = np_pls_alg_1_results["estimator"]
+        np_pls_alg_2_results = cross_validate(
+            np_pls_alg_2,
+            X,
+            Y,
+            cv=cv_splitter(splits),
+            scoring=lambda *args, **kwargs: 0,
+            fit_params=fit_params,
+            return_estimator=True,
+            n_jobs=-1,
+        )
+        np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
+
+        # Compute RMSE on the validation predictions
+        np_pls_alg_1_rmses = np.empty(
+            (len(np_pls_alg_1_models), n_components, Y.shape[1])
+        )
+        np_pls_alg_2_rmses = np.empty(
+            (len(np_pls_alg_2_models), n_components, Y.shape[1])
+        )
+        for i in range(len(np_pls_alg_1_models)):
+            val_idxs = val_idxs = np.nonzero(splits == i)[0]
+            Y_true = Y[val_idxs]
+            Y_pred_alg_1 = np_pls_alg_1_models[i].predict(X[val_idxs])
+            Y_pred_alg_2 = np_pls_alg_2_models[i].predict(X[val_idxs])
+            val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
+            val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
+            np_pls_alg_1_rmses[i] = val_rmses_alg_1
+            np_pls_alg_2_rmses[i] = val_rmses_alg_2
+
+        # Calibrate JAX_PLS
+        jax_pls_alg_1_results = jax_pls_alg_1.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
+        jax_pls_alg_2_results = jax_pls_alg_2.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
+
+        # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
+        unique_splits = np.unique(splits).astype(int)
+        sk_best_num_components = [
+            [np.argmin(sk_pls_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_1_best_num_components = [
+            [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_2_best_num_components = [
+            [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_1_best_num_components = [
+            [
+                np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_2_best_num_components = [
+            [
+                np.argmin(jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+
+        assert sk_best_num_components == np_pls_alg_1_best_num_components
+        assert sk_best_num_components == np_pls_alg_2_best_num_components
+        assert sk_best_num_components == jax_pls_alg_1_best_num_components
+        assert sk_best_num_components == jax_pls_alg_2_best_num_components
+
+        # Check that the RMSE achieved is similar
+        sk_best_rmses = [
+            [np.amin(sk_pls_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_1_best_rmses = [
+            [np.amin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_2_best_rmses = [
+            [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_1_best_rmses = [
+            [
+                np.amin(jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_2_best_rmses = [
+            [
+                np.amin(jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+
+        assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+
+    def test_cross_val_pls_1(self):
+        X = self.load_X()
+        Y = self.load_Y(["Protein"])
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        assert Y.shape[1] == 1
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
+
+    def test_cross_val_pls_2_m_less_k(self):
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        assert Y.shape[1] > 1
+        assert Y.shape[1] < X.shape[1]
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
+
+    def test_cross_val_pls_2_m_eq_k(self):
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        X = X[..., :10]
+        assert Y.shape[1] > 1
+        assert Y.shape[1] == X.shape[1]
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
+
+    def test_cross_val_pls_2_m_greater_k(self):
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
         X = X[..., :9]
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-
-        jnp_X = jnp.array(X, dtype=jnp.float64)
-        jnp_Y = jnp.array(Y, dtype=jnp.float64)
-
-        pls_alg_1 = JAX_Alg_1()
-        pls_alg_2 = JAX_Alg_2()
-
-        num_components = 2 # With this preprocessing on this data, only 2 components are relevant.
-
-        uniform_filter = jnp.ones(7) / 7
-
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
-
-        # Compute values and gradients for algorithm #1
-        grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
-        )
-        output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
-
-        # Compute the gradient and output value for a single number of components
-        grad_fun = jax.value_and_grad(
-            self.preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
-        )
-        output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
-
-        # Check that outputs and gradients of algorithm 1 and 2 are identical
-        assert_allclose(np.array(grad_alg_1), np.array(grad_alg_2), atol=0)
-        assert_allclose(np.array(output_val_alg_1), np.array(output_val_alg_2))
-
-        # Check that no NaNs are encountered in the gradient
-        assert jnp.all(~jnp.isnan(grad_alg_1))
-        assert jnp.all(~jnp.isnan(grad_alg_2))
-
-        # Check that the gradient actually flows all the way through
-        zeros = jnp.zeros(7, dtype=jnp.float64)
-        assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
-        assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
 
 
 if __name__ == "__main__":
     tc = TestClass()
-    # tc.test_pls_1()
-    # tc.test_pls_2_m_less_k()
-    # tc.test_pls_2_m_eq_k()
-    # tc.test_pls_2_m_greater_k()
-    # tc.test_sanity_check_pls_regression()
-    # tc.test_sanity_check_pls_regression_constant_column_Y()
-    # tc.test_pls_1_constant_y()
-    # tc.test_pls_2_m_less_k_constant_y()
-    # tc.test_pls_2_m_eq_k_constant_y()
-    # tc.test_pls_2_m_greater_k_constant_y()
-    # tc.test_gradient_pls_1()
-    # tc.test_gradient_pls_2_m_less_k()
-    # tc.test_gradient_pls_2_m_eq_k()
+    tc.test_pls_1()
+    tc.test_pls_2_m_less_k()
+    tc.test_pls_2_m_eq_k()
+    tc.test_pls_2_m_greater_k()
+    tc.test_sanity_check_pls_regression()
+    tc.test_sanity_check_pls_regression_constant_column_Y()
+    tc.test_pls_1_constant_y()
+    tc.test_pls_2_m_less_k_constant_y()
+    tc.test_pls_2_m_eq_k_constant_y()
+    tc.test_pls_2_m_greater_k_constant_y()
+    tc.test_gradient_pls_1()
+    tc.test_gradient_pls_2_m_less_k()
+    tc.test_gradient_pls_2_m_eq_k()
     tc.test_gradient_pls_2_m_greater_k()
-
-# TODO: Check that cross validation results match those achieved by SkLearn.
+    tc.test_cross_val_pls_1()
+    tc.test_cross_val_pls_2_m_less_k()
+    tc.test_cross_val_pls_2_m_eq_k()
+    tc.test_cross_val_pls_2_m_greater_k()
