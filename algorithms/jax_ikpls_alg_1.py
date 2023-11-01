@@ -9,10 +9,13 @@ from typing import Tuple
 class PLS(PLSBase):
     """
     Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+
+    Parameters:
+    differentiable: Bool. Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical. Defaults to False
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, differentiable: bool = False) -> None:
+        super().__init__(differentiable=differentiable)
 
     def _get_initial_matrices(
         self, A: int, K: int, M: int, N: int
@@ -38,8 +41,8 @@ class PLS(PLSBase):
         p = (tT @ X).T / tTt
         q = (r.T @ XTY).T / tTt
         return tTt, p, q, t
-    
-    @partial(jax.jit, static_argnums=(0, 1, 5, 6))
+
+    @partial(jax.jit, static_argnums=(0, 1, 5, 6, 9))
     def _main_loop_body(
         self,
         A: int,
@@ -50,6 +53,7 @@ class PLS(PLSBase):
         K: int,
         P: jnp.ndarray,
         R: jnp.ndarray,
+        differentiable: bool,
     ) -> Tuple[
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
@@ -58,7 +62,10 @@ class PLS(PLSBase):
         w, norm = self._step_2(XTY, M, K)
         host_callback.id_tap(self.weight_warning, [i, norm])
         # step 3
-        r = self._step_3(A, w, P, R)
+        if differentiable:
+            r = self._step_3(A, w, P, R)
+        else:
+            r = self._step_3(i, w, P, R)
         # step 4
         tTt, p, q, t = self._step_4(X, XTY, r)
         # step 5
@@ -73,7 +80,6 @@ class PLS(PLSBase):
         self.R = _R.T
         self.T = _T.T
 
-    @partial(jax.jit, static_argnums=(0, 3))
     def stateless_fit(
         self, X: jnp.ndarray, Y: jnp.ndarray, A: int
     ) -> Tuple[
@@ -95,24 +101,34 @@ class PLS(PLSBase):
         T: PLS scores matrix of X (N x A)
         """
 
-        # Get shapes
-        N, K = X.shape
-        M = Y.shape[1]
+        @partial(jax.jit, static_argnums=(2, 3))
+        def helper(
+            X: jnp.ndarray, Y: jnp.ndarray, A: int, differentiable: bool
+        ) -> Tuple[
+            jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
+        ]:
+            # Get shapes
+            N, K = X.shape
+            M = Y.shape[1]
 
-        # Initialize matrices
-        B, W, P, Q, R, T = self._get_initial_matrices(A, K, M, N)
+            # Initialize matrices
+            B, W, P, Q, R, T = self._get_initial_matrices(A, K, M, N)
 
-        # step 1
-        XTY = self._step_1(X, Y)
+            # step 1
+            XTY = self._step_1(X, Y)
 
-        for i in range(A):
-            XTY, w, p, q, r, t = self._main_loop_body(A, i, X, XTY, M, K, P, R)
-            W = W.at[i].set(w.squeeze())
-            P = P.at[i].set(p.squeeze())
-            Q = Q.at[i].set(q.squeeze())
-            R = R.at[i].set(r.squeeze())
-            T = T.at[i].set(t.squeeze())
-            b = self.compute_regression_coefficients(B[i - 1], r, q)
-            B = B.at[i].set(b)
+            for i in range(A):
+                XTY, w, p, q, r, t = self._main_loop_body(
+                    A, i, X, XTY, M, K, P, R, differentiable
+                )
+                W = W.at[i].set(w.squeeze())
+                P = P.at[i].set(p.squeeze())
+                Q = Q.at[i].set(q.squeeze())
+                R = R.at[i].set(r.squeeze())
+                T = T.at[i].set(t.squeeze())
+                b = self.compute_regression_coefficients(B[i - 1], r, q)
+                B = B.at[i].set(b)
 
-        return B, W, P, Q, R, T
+            return B, W, P, Q, R, T
+
+        return helper(X=X, Y=Y, A=A, differentiable=self.differentiable)

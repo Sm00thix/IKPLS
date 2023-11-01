@@ -44,14 +44,18 @@ class TestClass:
         )  # Do not rescale again.
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
+        jax_pls_alg_1 = JAX_Alg_1(differentiable=False)
+        jax_pls_alg_2 = JAX_Alg_2(differentiable=False)
+        diff_jax_pls_alg_1 = JAX_Alg_1(differentiable=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(differentiable=True)
 
         sk_pls.fit(X=X, Y=Y)
         np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
         np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
         jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
         jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+        diff_jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+        diff_jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
 
         # Reconstruct SkPLS regression matrix for all components
         sk_B = np.empty(np_pls_alg_1.B.shape)
@@ -61,7 +65,7 @@ class TestClass:
                 sk_pls.y_loadings_[..., : i + 1].T,
             )
             sk_B[i] = sk_B_at_component_i
-        return sk_pls, sk_B, np_pls_alg_1, np_pls_alg_2, jax_pls_alg_1, jax_pls_alg_2
+        return sk_pls, sk_B, np_pls_alg_1, np_pls_alg_2, jax_pls_alg_1, jax_pls_alg_2, diff_jax_pls_alg_1, diff_jax_pls_alg_2
 
     def assert_matrix_orthogonal(self, M, atol, rtol):
         MTM = np.dot(M.T, M)
@@ -74,6 +78,8 @@ class TestClass:
         np_pls_alg_2,
         jax_pls_alg_1,
         jax_pls_alg_2,
+        diff_jax_pls_alg_1,
+        diff_jax_pls_alg_2,
         atol,
         rtol,
         n_good_components=-1,
@@ -104,6 +110,18 @@ class TestClass:
             atol=atol,
             rtol=rtol,
         )
+        assert_allclose(
+            np.array(diff_jax_pls_alg_1.B)[:n_good_components],
+            sk_B[:n_good_components],
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.array(diff_jax_pls_alg_2.B)[:n_good_components],
+            sk_B[:n_good_components],
+            atol=atol,
+            rtol=rtol,
+        )
 
     def check_predictions(
         self,
@@ -112,6 +130,8 @@ class TestClass:
         np_pls_alg_2,
         jax_pls_alg_1,
         jax_pls_alg_2,
+        diff_jax_pls_alg_1,
+        diff_jax_pls_alg_2,
         X,
         atol,
         rtol,
@@ -125,9 +145,6 @@ class TestClass:
             np_pls_alg_1.predict(X)[:n_good_components]
             - sk_all_preds[:n_good_components]
         )
-        max_atol = np.amax(diff)
-        max_rtol = np.amax(diff / np.abs(sk_all_preds[:n_good_components]))
-        print(f"Max atol: {max_atol}\nMax rtol:{max_rtol}")
         assert_allclose(
             np_pls_alg_1.predict(X)[:n_good_components],
             sk_all_preds[:n_good_components],
@@ -148,6 +165,18 @@ class TestClass:
         )
         assert_allclose(
             np.array(jax_pls_alg_2.predict(X))[:n_good_components],
+            sk_all_preds[:n_good_components],
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.array(diff_jax_pls_alg_1.predict(X))[:n_good_components],
+            sk_all_preds[:n_good_components],
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.array(diff_jax_pls_alg_2.predict(X))[:n_good_components],
             sk_all_preds[:n_good_components],
             atol=atol,
             rtol=rtol,
@@ -179,6 +208,18 @@ class TestClass:
             atol=atol,
             rtol=rtol,
         )
+        assert_allclose(
+            np.array(diff_jax_pls_alg_1.predict(X, A=n_good_components)),
+            sk_final_pred,
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.array(diff_jax_pls_alg_2.predict(X, A=n_good_components)),
+            sk_final_pred,
+            atol=atol,
+            rtol=rtol,
+        )
 
     def check_orthogonality_properties(
         self,
@@ -186,6 +227,8 @@ class TestClass:
         np_pls_alg_2,
         jax_pls_alg_1,
         jax_pls_alg_2,
+        diff_jax_pls_alg_1,
+        diff_jax_pls_alg_2,
         atol,
         rtol,
         n_good_components=-1,
@@ -205,6 +248,12 @@ class TestClass:
         self.assert_matrix_orthogonal(
             np.array(jax_pls_alg_2.W)[..., :n_good_components], atol=atol, rtol=rtol
         )
+        self.assert_matrix_orthogonal(
+            np.array(diff_jax_pls_alg_1.W)[..., :n_good_components], atol=atol, rtol=rtol
+        )
+        self.assert_matrix_orthogonal(
+            np.array(diff_jax_pls_alg_2.W)[..., :n_good_components], atol=atol, rtol=rtol
+        )
 
         # X scores (only computed by algorithm 1) should be orthogonal
         self.assert_matrix_orthogonal(
@@ -213,10 +262,11 @@ class TestClass:
         self.assert_matrix_orthogonal(
             np.array(jax_pls_alg_1.T)[..., :n_good_components], atol=atol, rtol=rtol
         )
+        self.assert_matrix_orthogonal(
+            np.array(diff_jax_pls_alg_1.T)[..., :n_good_components], atol=atol, rtol=rtol
+        )
 
-    def check_equality_properties(
-        self, np_pls_alg_1, jax_pls_alg_1, X, atol, rtol, n_good_components=-1
-    ):
+    def check_equality_properties(self, np_pls_alg_1, jax_pls_alg_1, diff_jax_pls_alg_1, X, atol, rtol, n_good_components=-1):
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
 
@@ -239,6 +289,15 @@ class TestClass:
             atol=atol,
             rtol=rtol,
         )
+        assert_allclose(
+            np.dot(
+                np.array(diff_jax_pls_alg_1.T[..., :n_good_components]),
+                np.array(diff_jax_pls_alg_1.P[..., :n_good_components]).T,
+            ),
+            X,
+            atol=atol,
+            rtol=rtol,
+        )
 
         # X multiplied by X rotations (R) should be equal to X scores (T)
         assert_allclose(
@@ -253,6 +312,12 @@ class TestClass:
             atol=atol,
             rtol=rtol,
         )
+        assert_allclose(
+            np.dot(X, np.array(diff_jax_pls_alg_1.R[..., :n_good_components])),
+            np.array(diff_jax_pls_alg_1.T[..., :n_good_components]),
+            atol=atol,
+            rtol=rtol,
+        )
 
     def check_cpu_gpu_equality(
         self,
@@ -260,6 +325,8 @@ class TestClass:
         np_pls_alg_2,
         jax_pls_alg_1,
         jax_pls_alg_2,
+        diff_jax_pls_alg_1,
+        diff_jax_pls_alg_2,
         n_good_components=-1,
     ):
         if n_good_components == -1:
@@ -275,8 +342,20 @@ class TestClass:
             rtol=rtol,
         )
         assert_allclose(
+            np_pls_alg_1.B[:n_good_components],
+            np.array(diff_jax_pls_alg_1.B[:n_good_components]),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
             np_pls_alg_2.B[:n_good_components],
             np.array(jax_pls_alg_2.B[:n_good_components]),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np_pls_alg_2.B[:n_good_components],
+            np.array(diff_jax_pls_alg_2.B[:n_good_components]),
             atol=atol,
             rtol=rtol,
         )
@@ -289,8 +368,20 @@ class TestClass:
             rtol=rtol,
         )
         assert_allclose(
+            np.abs(np_pls_alg_1.W[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_1.W[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
             np.abs(np_pls_alg_2.W[..., :n_good_components]),
             np.abs(np.array(jax_pls_alg_2.W[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.abs(np_pls_alg_2.W[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_2.W[..., :n_good_components])),
             atol=atol,
             rtol=rtol,
         )
@@ -303,8 +394,20 @@ class TestClass:
             rtol=rtol,
         )
         assert_allclose(
+            np.abs(np_pls_alg_1.P[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_1.P[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
             np.abs(np_pls_alg_2.P[..., :n_good_components]),
             np.abs(np.array(jax_pls_alg_2.P[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.abs(np_pls_alg_2.P[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_2.P[..., :n_good_components])),
             atol=atol,
             rtol=rtol,
         )
@@ -317,8 +420,20 @@ class TestClass:
             rtol=rtol,
         )
         assert_allclose(
+            np.abs(np_pls_alg_1.Q[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_1.Q[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
             np.abs(np_pls_alg_2.Q[..., :n_good_components]),
             np.abs(np.array(jax_pls_alg_2.Q[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.abs(np_pls_alg_2.Q[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_2.Q[..., :n_good_components])),
             atol=atol,
             rtol=rtol,
         )
@@ -331,8 +446,20 @@ class TestClass:
             rtol=rtol,
         )
         assert_allclose(
+            np.abs(np_pls_alg_1.R[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_1.R[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
             np.abs(np_pls_alg_2.R[..., :n_good_components]),
             np.abs(np.array(jax_pls_alg_2.R[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.abs(np_pls_alg_2.R[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_2.R[..., :n_good_components])),
             atol=atol,
             rtol=rtol,
         )
@@ -341,6 +468,12 @@ class TestClass:
         assert_allclose(
             np.abs(np_pls_alg_1.T[..., :n_good_components]),
             np.abs(np.array(jax_pls_alg_1.T[..., :n_good_components])),
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np.abs(np_pls_alg_1.T[..., :n_good_components]),
+            np.abs(np.array(diff_jax_pls_alg_1.T[..., :n_good_components])),
             atol=atol,
             rtol=rtol,
         )
@@ -360,6 +493,8 @@ class TestClass:
             np_pls_alg_2,
             jax_pls_alg_1,
             jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
         ) = self.fit_models(X=X, Y=Y, n_components=n_components)
 
         self.check_cpu_gpu_equality(
@@ -367,11 +502,14 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
         )
 
         self.check_equality_properties(
             np_pls_alg_1=np_pls_alg_1,
             jax_pls_alg_1=jax_pls_alg_1,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             X=X,
             atol=1e-1,
             rtol=1e-5,
@@ -381,6 +519,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-1,
             rtol=0,
         )
@@ -391,6 +531,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-8,
             rtol=1e-5,
         )
@@ -401,6 +543,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             X=X,
             atol=1e-8,
             rtol=1e-5,
@@ -435,6 +579,8 @@ class TestClass:
             np_pls_alg_2,
             jax_pls_alg_1,
             jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
         ) = self.fit_models(X=X, Y=Y, n_components=n_components)
 
         self.check_cpu_gpu_equality(
@@ -442,11 +588,14 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
         )
 
         self.check_equality_properties(
             np_pls_alg_1=np_pls_alg_1,
             jax_pls_alg_1=jax_pls_alg_1,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             X=X,
             atol=1e-1,
             rtol=1e-5,
@@ -456,6 +605,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-1,
             rtol=0,
         )
@@ -466,6 +617,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=0.06,
             rtol=0,
         )
@@ -475,6 +628,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             X=X,
             atol=1e-2,
             rtol=0,
@@ -510,6 +665,8 @@ class TestClass:
             np_pls_alg_2,
             jax_pls_alg_1,
             jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
         ) = self.fit_models(X=X, Y=Y, n_components=n_components)
 
         self.check_cpu_gpu_equality(
@@ -517,11 +674,14 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
         )
 
         self.check_equality_properties(
             np_pls_alg_1=np_pls_alg_1,
             jax_pls_alg_1=jax_pls_alg_1,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             X=X,
             atol=1e-1,
             rtol=1e-5,
@@ -531,6 +691,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-1,
             rtol=0,
         )
@@ -541,6 +703,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-8,
             rtol=0.1,
         )
@@ -550,6 +714,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             X=X,
             atol=2e-3,
             rtol=0,
@@ -585,6 +751,8 @@ class TestClass:
             np_pls_alg_2,
             jax_pls_alg_1,
             jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
         ) = self.fit_models(X=X, Y=Y, n_components=n_components)
 
         self.check_cpu_gpu_equality(
@@ -592,11 +760,14 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
         )
 
         self.check_equality_properties(
             np_pls_alg_1=np_pls_alg_1,
             jax_pls_alg_1=jax_pls_alg_1,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             X=X,
             atol=1e-1,
             rtol=1e-5,
@@ -606,6 +777,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-1,
             rtol=0,
         )
@@ -616,6 +789,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-8,
             rtol=2e-2,
         )
@@ -625,6 +800,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             X=X,
             atol=2e-3,
             rtol=0,
@@ -646,6 +823,8 @@ class TestClass:
             np_pls_alg_2,
             jax_pls_alg_1,
             jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
         ) = self.fit_models(X=X, Y=Y, n_components=n_components)
 
         self.check_cpu_gpu_equality(
@@ -653,6 +832,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
         )
 
         # Check for orthogonal X weights.
@@ -671,6 +852,7 @@ class TestClass:
         self.check_equality_properties(
             np_pls_alg_1=np_pls_alg_1,
             jax_pls_alg_1=jax_pls_alg_1,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             X=X,
             atol=1e-8,
             rtol=1e-5,
@@ -829,6 +1011,8 @@ class TestClass:
             np_pls_alg_2,
             jax_pls_alg_1,
             jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
         ) = self.fit_models(X=X, Y=Y, n_components=n_components)
 
         self.check_cpu_gpu_equality(
@@ -836,6 +1020,8 @@ class TestClass:
             np_pls_alg_2=np_pls_alg_2,
             jax_pls_alg_1=jax_pls_alg_1,
             jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
         )
 
         expected_x_weights = np.array(
@@ -878,6 +1064,12 @@ class TestClass:
         assert_allclose(
             np.abs(jax_pls_alg_2.W), np.abs(expected_x_weights), atol=3e-6, rtol=0
         )
+        assert_allclose(
+            np.abs(diff_jax_pls_alg_1.W), np.abs(expected_x_weights), atol=3e-6, rtol=0
+        )
+        assert_allclose(
+            np.abs(diff_jax_pls_alg_2.W), np.abs(expected_x_weights), atol=3e-6, rtol=0
+        )
 
         # Check for expected X loadings
         assert_allclose(
@@ -894,6 +1086,12 @@ class TestClass:
         )
         assert_allclose(
             np.abs(jax_pls_alg_2.P), np.abs(expected_x_loadings), atol=3e-6, rtol=0
+        )
+        assert_allclose(
+            np.abs(diff_jax_pls_alg_1.P), np.abs(expected_x_loadings), atol=3e-6, rtol=0
+        )
+        assert_allclose(
+            np.abs(diff_jax_pls_alg_2.P), np.abs(expected_x_loadings), atol=3e-6, rtol=0
         )
 
         # Check for expected Y loadings
@@ -912,6 +1110,12 @@ class TestClass:
         assert_allclose(
             np.abs(jax_pls_alg_2.Q), np.abs(expected_y_loadings), atol=3e-6, rtol=0
         )
+        assert_allclose(
+            np.abs(diff_jax_pls_alg_1.Q), np.abs(expected_y_loadings), atol=3e-6, rtol=0
+        )
+        assert_allclose(
+            np.abs(diff_jax_pls_alg_2.Q), np.abs(expected_y_loadings), atol=3e-6, rtol=0
+        )
 
         # Check for orthogonal X weights.
         self.assert_matrix_orthogonal(sk_pls.x_weights_, atol=1e-8, rtol=0)
@@ -919,11 +1123,14 @@ class TestClass:
         self.assert_matrix_orthogonal(np_pls_alg_2.W, atol=1e-8, rtol=0)
         self.assert_matrix_orthogonal(jax_pls_alg_1.W, atol=1e-8, rtol=0)
         self.assert_matrix_orthogonal(jax_pls_alg_2.W, atol=1e-8, rtol=0)
+        self.assert_matrix_orthogonal(diff_jax_pls_alg_1.W, atol=1e-8, rtol=0)
+        self.assert_matrix_orthogonal(diff_jax_pls_alg_2.W, atol=1e-8, rtol=0)
 
         # Check for orthogonal X scores - not computed by Algorithm #2.
         self.assert_matrix_orthogonal(sk_pls.x_scores_, atol=1e-8, rtol=0)
         self.assert_matrix_orthogonal(np_pls_alg_1.T, atol=1e-8, rtol=0)
         self.assert_matrix_orthogonal(jax_pls_alg_1.T, atol=1e-8, rtol=0)
+        self.assert_matrix_orthogonal(diff_jax_pls_alg_1.T, atol=1e-8, rtol=0)
 
         # Check that sign flip is consistent and exact across loadings and weights. Ignore the first column of Y which will be a column of zeros (due to mean centering of its constant value).
         sk_x_loadings_sign_flip = np.sign(sk_pls.x_loadings_ / expected_x_loadings)
@@ -984,6 +1191,24 @@ class TestClass:
             rtol=0,
         )
 
+        diff_jax_alg_1_x_loadings_sign_flip = np.sign(diff_jax_pls_alg_1.P / expected_x_loadings)
+        diff_jax_alg_1_x_weights_sign_flip = np.sign(diff_jax_pls_alg_1.W / expected_x_weights)
+        diff_jax_alg_1_y_loadings_sign_flip = np.sign(
+            diff_jax_pls_alg_1.Q[1:] / expected_y_loadings[1:]
+        )
+        assert_allclose(
+            diff_jax_alg_1_x_loadings_sign_flip,
+            diff_jax_alg_1_x_weights_sign_flip,
+            atol=0,
+            rtol=0,
+        )
+        assert_allclose(
+            diff_jax_alg_1_x_loadings_sign_flip[1:],
+            diff_jax_alg_1_y_loadings_sign_flip,
+            atol=0,
+            rtol=0,
+        )
+
         jax_alg_2_x_loadings_sign_flip = np.sign(jax_pls_alg_2.P / expected_x_loadings)
         jax_alg_2_x_weights_sign_flip = np.sign(jax_pls_alg_2.W / expected_x_weights)
         jax_alg_2_y_loadings_sign_flip = np.sign(
@@ -998,6 +1223,24 @@ class TestClass:
         assert_allclose(
             jax_alg_2_x_loadings_sign_flip[1:],
             jax_alg_2_y_loadings_sign_flip,
+            atol=0,
+            rtol=0,
+        )
+
+        diff_jax_alg_2_x_loadings_sign_flip = np.sign(diff_jax_pls_alg_2.P / expected_x_loadings)
+        diff_jax_alg_2_x_weights_sign_flip = np.sign(diff_jax_pls_alg_2.W / expected_x_weights)
+        diff_jax_alg_2_y_loadings_sign_flip = np.sign(
+            diff_jax_pls_alg_2.Q[1:] / expected_y_loadings[1:]
+        )
+        assert_allclose(
+            diff_jax_alg_2_x_loadings_sign_flip,
+            diff_jax_alg_2_x_weights_sign_flip,
+            atol=0,
+            rtol=0,
+        )
+        assert_allclose(
+            diff_jax_alg_2_x_loadings_sign_flip[1:],
+            diff_jax_alg_2_y_loadings_sign_flip,
             atol=0,
             rtol=0,
         )
@@ -1023,8 +1266,10 @@ class TestClass:
         sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
+        jax_pls_alg_1 = JAX_Alg_1(differentiable=False)
+        jax_pls_alg_2 = JAX_Alg_2(differentiable=False)
+        diff_jax_pls_alg_1 = JAX_Alg_1(differentiable=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(differentiable=True)
 
         sk_msg = "Y residual is constant at iteration"
         with pytest.warns(UserWarning, match=sk_msg):
@@ -1042,6 +1287,10 @@ class TestClass:
             jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
         with pytest.warns(UserWarning, match=msg):
             jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+        with pytest.warns(UserWarning, match=msg):
+            diff_jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+        with pytest.warns(UserWarning, match=msg):
+            diff_jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
 
     def test_pls_1_constant_y(self):
         rng = np.random.RandomState(42)
@@ -1086,7 +1335,7 @@ class TestClass:
         grad_rtol,
     ):
         """
-        Tests that the gradient propagation works for PLS. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
+        Tests that the gradient propagation works for differentiable JAX PLS. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
         """
         # Taken from self.fit_models() to check each individual algorithm for early stopping.
         x_mean = X.mean(axis=0)
@@ -1103,8 +1352,8 @@ class TestClass:
         jnp_X = jnp.array(X, dtype=jnp.float64)
         jnp_Y = jnp.array(Y, dtype=jnp.float64)
 
-        pls_alg_1 = JAX_Alg_1()
-        pls_alg_2 = JAX_Alg_2()
+        diff_pls_alg_1 = JAX_Alg_1(differentiable=True)
+        diff_pls_alg_2 = JAX_Alg_2(differentiable=True)
 
         uniform_filter = jnp.ones(filter_size) / filter_size
 
@@ -1140,23 +1389,23 @@ class TestClass:
 
         # Compute values and gradients for algorithm #1
         grad_fun = jax.value_and_grad(
-            preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
+            preprocess_fit_rmse(jnp_X, jnp_Y, diff_pls_alg_1, num_components), argnums=0
         )
-        output_val_alg_1, grad_alg_1 = grad_fun(uniform_filter)
+        output_val_diff_alg_1, grad_alg_1 = grad_fun(uniform_filter)
 
         # Compute the gradient and output value for a single number of components
         grad_fun = jax.value_and_grad(
-            preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
+            preprocess_fit_rmse(jnp_X, jnp_Y, diff_pls_alg_2, num_components), argnums=0
         )
-        output_val_alg_2, grad_alg_2 = grad_fun(uniform_filter)
+        output_val_diff_alg_2, grad_alg_2 = grad_fun(uniform_filter)
 
         # Check that outputs and gradients of algorithm 1 and 2 are identical
         assert_allclose(
             np.array(grad_alg_1), np.array(grad_alg_2), atol=grad_atol, rtol=grad_rtol
         )
         assert_allclose(
-            np.array(output_val_alg_1),
-            np.array(output_val_alg_2),
+            np.array(output_val_diff_alg_1),
+            np.array(output_val_diff_alg_2),
             atol=val_atol,
             rtol=val_rtol,
         )
@@ -1169,6 +1418,33 @@ class TestClass:
         zeros = jnp.zeros(filter_size, dtype=jnp.float64)
         assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
         assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
+
+        # Check that we can not differentiate the JAX implementations using reverse-mode differentiation without setting the parameter differentiable=True
+        pls_alg_1 = JAX_Alg_1(differentiable=False)
+        pls_alg_2 = JAX_Alg_2(differentiable=False)
+        msg = "Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop with dynamic start/stop values."
+        with pytest.raises(ValueError, match=msg):
+            grad_fun = jax.value_and_grad(
+                preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
+            )
+            grad_fun(uniform_filter)
+
+        msg = "Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop with dynamic start/stop values."
+        with pytest.raises(ValueError, match=msg):
+            grad_fun = jax.value_and_grad(
+                preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
+            )
+            grad_fun(uniform_filter)
+
+        # For good measure, let's assure ourselves that the results are equivalent across differentiable and non-differentiable versions:
+        output_val_alg_1 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components)(
+            uniform_filter
+        )
+        output_val_alg_2 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components)(
+            uniform_filter
+        )
+        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=1e-14)
+        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=1e-14)
 
     def test_gradient_pls_1(self):
         X = self.load_X()
@@ -1306,8 +1582,10 @@ class TestClass:
         n_components = X.shape[1]
 
         sk_pls = SkPLS(n_components=n_components, scale=False)
-        jax_pls_alg_1 = JAX_Alg_1()
-        jax_pls_alg_2 = JAX_Alg_2()
+        jax_pls_alg_1 = JAX_Alg_1(differentiable=False)
+        jax_pls_alg_2 = JAX_Alg_2(differentiable=False)
+        diff_jax_pls_alg_1 = JAX_Alg_1(differentiable=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(differentiable=True)
 
         def cv_splitter(splits):
             uniq_splits = np.unique(splits)
@@ -1364,7 +1642,7 @@ class TestClass:
             val_rmses = rmse_per_component(Y_true, Y_pred)
             sk_pls_rmses[i] = val_rmses
 
-        # Calibrate NPPLS
+        # Calibrate NumPy PLS
         # Since SkLearn's cross_validate does not allow for a preprocessing function to be executed on each split, we have to get a bit creative.
         # This is because SkLearn's PLS implementation always mean centers X and Y based on the training data and uses these mean values in its predictions.
         # We subclass the original implementation and modify it to mimic the SkLearn implementation's behavior so that we can accurately compare results.
@@ -1430,7 +1708,7 @@ class TestClass:
             np_pls_alg_1_rmses[i] = val_rmses_alg_1
             np_pls_alg_2_rmses[i] = val_rmses_alg_2
 
-        # Calibrate JAX_PLS
+        # Calibrate JAX PLS
         jax_pls_alg_1_results = jax_pls_alg_1.cv(
             X,
             Y,
@@ -1440,7 +1718,25 @@ class TestClass:
             jax_rmse_per_component,
             ["RMSE"],
         )
+        diff_jax_pls_alg_1_results = diff_jax_pls_alg_1.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
         jax_pls_alg_2_results = jax_pls_alg_2.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
+        diff_jax_pls_alg_2_results = diff_jax_pls_alg_2.cv(
             X,
             Y,
             n_components,
@@ -1478,11 +1774,27 @@ class TestClass:
             ]
             for i in range(Y.shape[1])
         ]
+        diff_jax_pls_alg_1_best_num_components = [
+            [
+                np.argmin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        diff_jax_pls_alg_2_best_num_components = [
+            [
+                np.argmin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
 
         assert sk_best_num_components == np_pls_alg_1_best_num_components
         assert sk_best_num_components == np_pls_alg_2_best_num_components
         assert sk_best_num_components == jax_pls_alg_1_best_num_components
         assert sk_best_num_components == jax_pls_alg_2_best_num_components
+        assert sk_best_num_components == diff_jax_pls_alg_1_best_num_components
+        assert sk_best_num_components == diff_jax_pls_alg_2_best_num_components
 
         # Check that the RMSE achieved is similar
         sk_best_rmses = [
@@ -1511,11 +1823,27 @@ class TestClass:
             ]
             for i in range(Y.shape[1])
         ]
+        diff_jax_pls_alg_1_best_rmses = [
+            [
+                np.amin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        diff_jax_pls_alg_2_best_rmses = [
+            [
+                np.amin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
 
         assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(diff_jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
 
     def test_cross_val_pls_1(self):
         X = self.load_X()
@@ -1592,23 +1920,23 @@ class TestClass:
 
 if __name__ == "__main__":
     tc = TestClass()
-    tc.test_pls_1()
-    tc.test_pls_2_m_less_k()
-    tc.test_pls_2_m_eq_k()
-    tc.test_pls_2_m_greater_k()
-    tc.test_sanity_check_pls_regression()
-    tc.test_sanity_check_pls_regression_constant_column_Y()
-    tc.test_pls_1_constant_y()
-    tc.test_pls_2_m_less_k_constant_y()
-    tc.test_pls_2_m_eq_k_constant_y()
-    tc.test_pls_2_m_greater_k_constant_y()
+    # tc.test_pls_1()
+    # tc.test_pls_2_m_less_k()
+    # tc.test_pls_2_m_eq_k()
+    # tc.test_pls_2_m_greater_k()
+    # tc.test_sanity_check_pls_regression()
+    # tc.test_sanity_check_pls_regression_constant_column_Y()
+    # tc.test_pls_1_constant_y()
+    # tc.test_pls_2_m_less_k_constant_y()
+    # tc.test_pls_2_m_eq_k_constant_y()
+    # tc.test_pls_2_m_greater_k_constant_y()
     tc.test_gradient_pls_1()
     tc.test_gradient_pls_2_m_less_k()
     tc.test_gradient_pls_2_m_eq_k()
     tc.test_gradient_pls_2_m_greater_k()
-    tc.test_cross_val_pls_1()
-    tc.test_cross_val_pls_2_m_less_k()
-    tc.test_cross_val_pls_2_m_eq_k()
-    tc.test_cross_val_pls_2_m_greater_k()
+    # tc.test_cross_val_pls_1()
+    # tc.test_cross_val_pls_2_m_less_k()
+    # tc.test_cross_val_pls_2_m_eq_k()
+    # tc.test_cross_val_pls_2_m_greater_k()
 
     # TODO: Doc strings for tests and algorithms.

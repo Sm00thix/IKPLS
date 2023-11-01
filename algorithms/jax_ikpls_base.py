@@ -13,10 +13,14 @@ import warnings
 class PLSBase(abc.ABC):
     """
     Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+
+    Parameters:
+    differentiable: Bool. Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical. Defaults to False
     """
 
-    def __init__(self) -> None:
+    def __init__(self, differentiable: bool = False) -> None:
         self.name = "PLS"
+        self.differentiable = differentiable
 
     def weight_warning(self, arg, _transforms):
         i, norm = arg
@@ -104,11 +108,11 @@ class PLSBase(abc.ABC):
         ),
     )
     def _step_3(
-        self, A: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
+        self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
     ) -> jnp.ndarray:
         print("Tracing step 3...")
         r = jnp.copy(w)
-        r, P, w, R = jax.lax.fori_loop(0, A, self._step_3_body, (r, P, w, R))
+        r, P, w, R = jax.lax.fori_loop(0, i, self._step_3_body, (r, P, w, R))
         return r
 
     @partial(jax.jit, static_argnums=0)
