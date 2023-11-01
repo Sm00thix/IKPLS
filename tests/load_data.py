@@ -7,6 +7,9 @@ GITHUB_DATADIR = "https://raw.githubusercontent.com/Sm00thix/IKPLSTestData/main/
 
 
 def load_csv():
+    """
+    Loads a csv-file with 26617 rows and 11 columns. The columns represent ground truth values for 8 different grain varieties, protein, moisture, and an assignment to a dataset split.
+    """
     csv_url = GITHUB_DATADIR + "dataset.csv"
     columns = [
         "Rye_Midsummer",
@@ -27,6 +30,9 @@ def load_csv():
 
 
 def load_spectra():
+    """
+    Loads 26617 near-infrared (NIR) spectra with 102 wavelength channels and transforms them from reflectance to pseudo absorbance.
+    """
     spectra_url = GITHUB_DATADIR + "spectra.npz"
     resp = urlopen(spectra_url)
     resp_byte_array = resp.read()

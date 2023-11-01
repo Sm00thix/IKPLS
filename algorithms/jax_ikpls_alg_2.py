@@ -41,29 +41,6 @@ class PLS(PLSBase):
         q = (r.T @ XTY).T / tTt
         return tTt, p, q
 
-    # @partial(jax.jit, static_argnums=(0, 4, 5))
-    # def _main_loop_body(
-    #     self,
-    #     i: int,
-    #     XTX: jnp.ndarray,
-    #     XTY: jnp.ndarray,
-    #     M: int,
-    #     K: int,
-    #     P: jnp.ndarray,
-    #     R: jnp.ndarray,
-    # ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    #     print("Tracing loop body...")
-    #     # step 2
-    #     w, norm = self._step_2(XTY, M, K)
-    #     host_callback.id_tap(self.weight_warning, [i, norm])
-    #     # step 3
-    #     r = self._step_3(i, w, P, R)
-    #     # step 4
-    #     tTt, p, q = self._step_4(XTX, XTY, r)
-    #     # step 5
-    #     XTY = self._step_5(XTY, p, q, tTt)
-    #     return XTY, w, p, q, r
-
     @partial(jax.jit, static_argnums=(0, 1, 5, 6))
     def _main_loop_body(
         self,
