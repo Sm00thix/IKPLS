@@ -12,17 +12,32 @@ import warnings
 
 class PLSBase(abc.ABC):
     """
-    Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+    Description
+    -----------
+    Implements an abstract class for partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23.
 
-    Parameters:
-    differentiable: Bool. Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical. Defaults to False
+    Implementations of concrete classes exist for both Improved Kernel PLS Algorithm #1 and Improved Kernel PLS Algorithm #2.
+
+    Parameters
+    ----------
+    `reverse_differentiable`: bool, optional (default=False). Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+
+    `name` : str, optional (default=\"Improved Kernel PLS Algorithm\"). Assigns a name to the instance of the class.
+
+    `verbose` : bool, optional (default=False). If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
     """
 
-    def __init__(self, differentiable: bool = False) -> None:
-        self.name = "PLS"
-        self.differentiable = differentiable
+    def __init__(
+        self,
+        name: str = "Improved Kernel PLS Algorithm",
+        reverse_differentiable: bool = False,
+        verbose: bool = False,
+    ) -> None:
+        self.name = name
+        self.reverse_differentiable = reverse_differentiable
+        self.verbose = verbose
 
-    def weight_warning(self, arg, _transforms):
+    def _weight_warning(self, arg, _transforms):
         i, norm = arg
         if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
             warnings.warn(
@@ -30,11 +45,15 @@ class PLSBase(abc.ABC):
             )
 
     @partial(jax.jit, static_argnums=0)
-    def compute_regression_coefficients(
+    def _compute_regression_coefficients(
         self, b_last: jnp.ndarray, r: jnp.ndarray, q: jnp.ndarray
     ) -> jnp.ndarray:
         b = b_last + r @ q.T
         return b
+
+    _compute_regression_coefficients = jax.jit(
+        _compute_regression_coefficients, static_argnums=0
+    )
 
     @abc.abstractmethod
     @partial(jax.jit, static_argnums=(0, 1, 2, 3))
@@ -61,18 +80,7 @@ class PLSBase(abc.ABC):
         return XT @ X
 
     @abc.abstractmethod
-    @partial(jax.jit, static_argnums=(0, 3))
-    def stateless_fit(
-        self, X: jnp.ndarray, Y: jnp.ndarray, A: int
-    ) -> Union[
-        Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
-        Tuple[
-            jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
-        ],
-    ]:
-        pass
-
-    @abc.abstractmethod
+    @partial(jax.jit, static_argnums=0)
     def _step_1(self):
         pass
 
@@ -80,7 +88,8 @@ class PLSBase(abc.ABC):
     def _step_2(
         self, XTY: jnp.ndarray, M: jnp.ndarray, K: jnp.ndarray
     ) -> Tuple[jnp.ndarray, jnp.float64]:
-        print("Tracing step 2...")
+        if self.verbose:
+            print(f"_step_2 for {self.name} will be JIT compiled...")
         if M == 1:
             norm = jla.norm(XTY)
             w = XTY / norm
@@ -100,17 +109,12 @@ class PLSBase(abc.ABC):
                 norm = eig_vals[-1]
         return w, norm
 
-    @partial(
-        jax.jit,
-        static_argnums=(
-            0,
-            1,
-        ),
-    )
+    @partial(jax.jit, static_argnums=(0, 1))
     def _step_3(
         self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
     ) -> jnp.ndarray:
-        print("Tracing step 3...")
+        if self.verbose:
+            print(f"_step_3 for {self.name} will be JIT compiled...")
         r = jnp.copy(w)
         r, P, w, R = jax.lax.fori_loop(0, i, self._step_3_body, (r, P, w, R))
         return r
@@ -119,12 +123,14 @@ class PLSBase(abc.ABC):
     def _step_3_body(
         self, j: int, carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]
     ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-        print("Tracing step 3 loop body...")
+        if self.verbose:
+            print(f"_step_3_body for {self.name} will be JIT compiled...")
         r, P, w, R = carry
         r = r - P[j].reshape(-1, 1).T @ w * R[j].reshape(-1, 1)
         return r, P, w, R
 
     @abc.abstractmethod
+    @partial(jax.jit, static_argnums=0)
     def _step_4(self):
         pass
 
@@ -132,52 +138,190 @@ class PLSBase(abc.ABC):
     def _step_5(
         self, XTY: jnp.ndarray, p: jnp.ndarray, q: jnp.ndarray, tTt: jnp.ndarray
     ) -> jnp.ndarray:
-        print("Tracing step 5...")
+        if self.verbose:
+            print(f"_step_5 for {self.name} will be JIT compiled...")
         return XTY - (p @ q.T) * tTt
 
     @abc.abstractmethod
+    @partial(jax.jit, static_argnums=0)
     def _main_loop_body(self):
         pass
 
     @abc.abstractmethod
+    @partial(jax.jit, static_argnums=(0, 3))
+    def stateless_fit(
+        self, X: jnp.ndarray, Y: jnp.ndarray, A: int
+    ) -> Union[
+        Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+        Tuple[
+            jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
+        ],
+    ]:
+        """
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+
+        `Y` : Array of shape (N, M)
+            Response variables. The precision should be at least float64 for reliable results.
+        
+        `A` : int
+            Number of components in the PLS model.
+        
+        Returns
+        -------
+        `B` : Array of shape (A, K, M)
+            PLS regression coefficients tensor.
+
+        `W` : Array of shape (A, K)
+            PLS weights matrix for X.
+
+        `P` : Array of shape (A, K)
+            PLS loadings matrix for X.
+
+        `Q` : Array of shape (A, M)
+            PLS Loadings matrix for Y.
+
+        `R` : Array of shape (A, K)
+            PLS weights matrix to compute scores T directly from original X.
+
+        `T` : Array of shape (A, N)
+            PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
+
+        Warns
+        -----
+        `UserWarning`.
+            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+
+        See Also
+        --------
+        fit : Performs the same operation but stores the output matrices in the class instance instead of returning them.
+
+        Notes
+        -----
+        For optimization purposes, the internal representation of all matrices (except B) is transposed from the usual representation.
+        """
+        pass
+
+    @abc.abstractmethod
     def fit(self, X: jnp.ndarray, Y: jnp.ndarray, A: int) -> None:
+        """
+        Description
+        -----------
+        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
+
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+
+        `Y` : Array of shape (N, M)
+            Response variables. The precision should be at least float64 for reliable results.
+        
+        `A` : int
+            Number of components in the PLS model.
+        
+        Assigns
+        -------
+        `self.B` : Array of shape (A, K, M)
+            PLS regression coefficients tensor.
+
+        `self.W` : Array of shape (K, A)
+            PLS weights matrix for X.
+
+        `self.P` : Array of shape (K, A)
+            PLS loadings matrix for X.
+
+        `self.Q` : Array of shape (M, A)
+            PLS Loadings matrix for Y.
+
+        `self.R` : Array of shape (K, A)
+            PLS weights matrix to compute scores T directly from original X.
+
+        `self.T` : Array of shape (N, A)
+            PLS scores matrix of X. Only assigned for Improved Kernel PLS Algorithm #1.
+        
+        Returns
+        -------
+        `None`.
+
+        Warns
+        -----
+        `UserWarning`.
+            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+
+        See Also
+        --------
+        `stateless_fit` : Performs the same operation but returns the output matrices instead of storing them in the class instance.
+        """
         pass
 
     @partial(jax.jit, static_argnums=(0, 3))
     def stateless_predict(
-        self, X: jnp.ndarray, B: jnp.ndarray, A: None | int = None
+        self, X: jnp.ndarray, B: jnp.ndarray, n_components: None | int = None
     ) -> jnp.ndarray:
-        print("Tracing stateless predict...")
         """
-        Parameters:
-        X: Predictor variables matrix (N x K)
-        B: Regression coefficient matrix (A x K x M) or (K x M)
-        A: Integer number of components to use in the prediction or None. If None, return the predictions for every component. Defaults to the maximum number of components, the model was fitted with.
+        Description
+        -----------
+        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
 
-        Returns:
-        Y_hat: Predicted response variables matrix (N x M) or (A x N x M)
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+
+        `B` : Array of shape (A, K, M)
+            PLS regression coefficients tensor.
+        
+        `n_components` : int or None, optional
+            Number of components in the PLS model. If None, then all number of components are used.
+        
+        Returns
+        -------
+        `Y_pred` : Array of shape (N, M) or (A, N, M)
+            If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
+
+        See Also
+        --------
+        `predict` : Performs the same operation but uses the class instance of `B`.
         """
-
-        if A is None:
+        if self.verbose:
+            print(f"stateless_predict for {self.name} will be JIT compiled...")
+        if n_components is None:
             return X @ B
         else:
-            return X @ B[A - 1]
+            return X @ B[n_components - 1]
 
-    def predict(self, X: jnp.ndarray, A: None | int = None) -> jnp.ndarray:
+    def predict(self, X: jnp.ndarray, n_components: None | int = None) -> jnp.ndarray:
         """
-        Parameters:
-        X: Predictor variables matrix (N x K)
-        A: Integer number of components to use in the prediction or None. If None, return the predictions for every component. Defaults to the maximum number of components, the model was fitted with.
+        Description
+        -----------
+        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
 
-        Returns:
-        Y_hat: Predicted response variables matrix (N x M) or (A x N x M)
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+        
+        `n_components` : int or None, optional
+            Number of components in the PLS model. If None, then all number of components are used.
+        
+        Returns
+        -------
+        `Y_pred` : Array of shape (N, M) or (A, N, M)
+            If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
+
+        See Also
+        --------
+        `stateless_predict` : Performs the same operation but uses an input `B` instead of the one stored in the class instance.
         """
-
-        if A is None:
+        if n_components is None:
             return X @ self.B
         else:
-            return X @ self.B[A - 1]
+            return X @ self.B[n_components - 1]
 
+    # TODO: Continue doc strings from here.
     @partial(jax.jit, static_argnums=(0, 3, 6))
     def stateless_fit_predict_eval(
         self,
@@ -195,6 +339,8 @@ class PLSBase(abc.ABC):
         A: Number of components in the PLS model
         metric_function: Callable that takes two array of shape (N x M) and returns Any.
         """
+        if self.verbose:
+            print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled...")
 
         matrices = self.stateless_fit(X_train, Y_train, A)
         B = matrices[0]
@@ -237,10 +383,10 @@ class PLSBase(abc.ABC):
             metric_values = self._inner_cv(
                 X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_funtion
             )
-            metric_value_lists = self.update_metric_value_lists(
+            metric_value_lists = self._update_metric_value_lists(
                 metric_value_lists, metric_values
             )
-        return self.finalize_metric_values(metric_value_lists, metric_names)
+        return self._finalize_metric_values(metric_value_lists, metric_names)
 
     @partial(jax.jit, static_argnums=(0, 5, 6, 7))
     def _inner_cv(
@@ -256,7 +402,8 @@ class PLSBase(abc.ABC):
         ],
         metric_function: Callable[[jnp.ndarray, jnp.ndarray], Tuple[Any]],
     ):
-        print("Tracing inner CV...")
+        if self.verbose:
+            print(f"_inner_cv for {self.name} will be JIT compiled...")
         X_train = jnp.take(X, train_idxs, axis=0)
         Y_train = jnp.take(Y, train_idxs, axis=0)
 
@@ -270,12 +417,12 @@ class PLSBase(abc.ABC):
         )
         return metric_values
 
-    def update_metric_value_lists(self, metric_value_lists, metric_values):
+    def _update_metric_value_lists(self, metric_value_lists, metric_values):
         for j, m in enumerate(metric_values):
             metric_value_lists[j].append(m)
         return metric_value_lists
 
-    def finalize_metric_values(
+    def _finalize_metric_values(
         self, metrics_results: list[list[Any]], metric_names: list[str]
     ):
         metrics = {}

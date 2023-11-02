@@ -39,15 +39,16 @@ class TestClass:
         Y /= y_std
         jnp_X = jnp.array(X)
         jnp_Y = jnp.array(Y)
+
         sk_pls = SkPLS(
             n_components=n_components, scale=False, copy=True
         )  # Do not rescale again.
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1(differentiable=False)
-        jax_pls_alg_2 = JAX_Alg_2(differentiable=False)
-        diff_jax_pls_alg_1 = JAX_Alg_1(differentiable=True)
-        diff_jax_pls_alg_2 = JAX_Alg_2(differentiable=True)
+        jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
+        jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
+        diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
         sk_pls.fit(X=X, Y=Y)
         np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
@@ -185,37 +186,37 @@ class TestClass:
         # Check predictions using the largest good number of components.
         sk_final_pred = sk_all_preds[n_good_components - 1]
         assert_allclose(
-            np_pls_alg_1.predict(X, A=n_good_components),
+            np_pls_alg_1.predict(X, n_components=n_good_components),
             sk_final_pred,
             atol=atol,
             rtol=rtol,
         )
         assert_allclose(
-            np_pls_alg_2.predict(X, A=n_good_components),
+            np_pls_alg_2.predict(X, n_components=n_good_components),
             sk_final_pred,
             atol=atol,
             rtol=rtol,
         )
         assert_allclose(
-            np.array(jax_pls_alg_1.predict(X, A=n_good_components)),
+            np.array(jax_pls_alg_1.predict(X, n_components=n_good_components)),
             sk_final_pred,
             atol=atol,
             rtol=rtol,
         )
         assert_allclose(
-            np.array(jax_pls_alg_2.predict(X, A=n_good_components)),
+            np.array(jax_pls_alg_2.predict(X, n_components=n_good_components)),
             sk_final_pred,
             atol=atol,
             rtol=rtol,
         )
         assert_allclose(
-            np.array(diff_jax_pls_alg_1.predict(X, A=n_good_components)),
+            np.array(diff_jax_pls_alg_1.predict(X, n_components=n_good_components)),
             sk_final_pred,
             atol=atol,
             rtol=rtol,
         )
         assert_allclose(
-            np.array(diff_jax_pls_alg_2.predict(X, A=n_good_components)),
+            np.array(diff_jax_pls_alg_2.predict(X, n_components=n_good_components)),
             sk_final_pred,
             atol=atol,
             rtol=rtol,
@@ -1266,10 +1267,10 @@ class TestClass:
         sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
-        jax_pls_alg_1 = JAX_Alg_1(differentiable=False)
-        jax_pls_alg_2 = JAX_Alg_2(differentiable=False)
-        diff_jax_pls_alg_1 = JAX_Alg_1(differentiable=True)
-        diff_jax_pls_alg_2 = JAX_Alg_2(differentiable=True)
+        jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
+        jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
+        diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
         sk_msg = "Y residual is constant at iteration"
         with pytest.warns(UserWarning, match=sk_msg):
@@ -1335,7 +1336,7 @@ class TestClass:
         grad_rtol,
     ):
         """
-        Tests that the gradient propagation works for differentiable JAX PLS. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
+        Tests that the gradient propagation works for reverse-mode differentiable JAX PLS. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
         """
         # Taken from self.fit_models() to check each individual algorithm for early stopping.
         x_mean = X.mean(axis=0)
@@ -1352,8 +1353,8 @@ class TestClass:
         jnp_X = jnp.array(X, dtype=jnp.float64)
         jnp_Y = jnp.array(Y, dtype=jnp.float64)
 
-        diff_pls_alg_1 = JAX_Alg_1(differentiable=True)
-        diff_pls_alg_2 = JAX_Alg_2(differentiable=True)
+        diff_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
+        diff_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
         uniform_filter = jnp.ones(filter_size) / filter_size
 
@@ -1419,9 +1420,9 @@ class TestClass:
         assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
         assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
 
-        # Check that we can not differentiate the JAX implementations using reverse-mode differentiation without setting the parameter differentiable=True
-        pls_alg_1 = JAX_Alg_1(differentiable=False)
-        pls_alg_2 = JAX_Alg_2(differentiable=False)
+        # Check that we can not differentiate the JAX implementations using reverse-mode differentiation without setting the parameter reverse_differentiable=True
+        pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
+        pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
         msg = "Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop with dynamic start/stop values."
         with pytest.raises(ValueError, match=msg):
             grad_fun = jax.value_and_grad(
@@ -1429,14 +1430,13 @@ class TestClass:
             )
             grad_fun(uniform_filter)
 
-        msg = "Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop with dynamic start/stop values."
         with pytest.raises(ValueError, match=msg):
             grad_fun = jax.value_and_grad(
                 preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components), argnums=0
             )
             grad_fun(uniform_filter)
 
-        # For good measure, let's assure ourselves that the results are equivalent across differentiable and non-differentiable versions:
+        # For good measure, let's assure ourselves that the results are equivalent across reverse differentiable and non reverse differentiable versions:
         output_val_alg_1 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components)(
             uniform_filter
         )
@@ -1582,10 +1582,10 @@ class TestClass:
         n_components = X.shape[1]
 
         sk_pls = SkPLS(n_components=n_components, scale=False)
-        jax_pls_alg_1 = JAX_Alg_1(differentiable=False)
-        jax_pls_alg_2 = JAX_Alg_2(differentiable=False)
-        diff_jax_pls_alg_1 = JAX_Alg_1(differentiable=True)
-        diff_jax_pls_alg_2 = JAX_Alg_2(differentiable=True)
+        jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
+        jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
+        diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
         def cv_splitter(splits):
             uniq_splits = np.unique(splits)
@@ -1920,23 +1920,23 @@ class TestClass:
 
 if __name__ == "__main__":
     tc = TestClass()
-    # tc.test_pls_1()
-    # tc.test_pls_2_m_less_k()
-    # tc.test_pls_2_m_eq_k()
-    # tc.test_pls_2_m_greater_k()
-    # tc.test_sanity_check_pls_regression()
-    # tc.test_sanity_check_pls_regression_constant_column_Y()
-    # tc.test_pls_1_constant_y()
-    # tc.test_pls_2_m_less_k_constant_y()
-    # tc.test_pls_2_m_eq_k_constant_y()
-    # tc.test_pls_2_m_greater_k_constant_y()
+    tc.test_pls_1()
+    tc.test_pls_2_m_less_k()
+    tc.test_pls_2_m_eq_k()
+    tc.test_pls_2_m_greater_k()
+    tc.test_sanity_check_pls_regression()
+    tc.test_sanity_check_pls_regression_constant_column_Y()
+    tc.test_pls_1_constant_y()
+    tc.test_pls_2_m_less_k_constant_y()
+    tc.test_pls_2_m_eq_k_constant_y()
+    tc.test_pls_2_m_greater_k_constant_y()
     tc.test_gradient_pls_1()
     tc.test_gradient_pls_2_m_less_k()
     tc.test_gradient_pls_2_m_eq_k()
     tc.test_gradient_pls_2_m_greater_k()
-    # tc.test_cross_val_pls_1()
-    # tc.test_cross_val_pls_2_m_less_k()
-    # tc.test_cross_val_pls_2_m_eq_k()
-    # tc.test_cross_val_pls_2_m_greater_k()
+    tc.test_cross_val_pls_1()
+    tc.test_cross_val_pls_2_m_less_k()
+    tc.test_cross_val_pls_2_m_eq_k()
+    tc.test_cross_val_pls_2_m_greater_k()
 
     # TODO: Doc strings for tests and algorithms.
