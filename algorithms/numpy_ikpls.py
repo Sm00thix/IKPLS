@@ -10,8 +10,10 @@ class PLS(BaseEstimator):
     Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
     Parameters:
-    algorithm: Whether to use algorithm #1 or #2. Defaults to #1.
-    dtype: The float datatype to use in computation of the PLS algorithm. Defaults to numpy.float64. Using a lower precision will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+    `algorithm` : int
+        Whether to use Improved Kernel PLS Algorithm #1 or #2. Defaults to 1.
+    `dtype` : np.float_, default=numpy.float64
+        The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
     """
 
     def __init__(self, algorithm: int = 1, dtype: np.float_ = np.float64) -> None:
@@ -32,10 +34,10 @@ class PLS(BaseEstimator):
 
         `Y` : Array of shape (N, M)
             Response variables.
-        
+
         `A` : int
             Number of components in the PLS model.
-        
+
         Assigns
         -------
         `self.B` : Array of shape (A, K, M)
@@ -55,7 +57,7 @@ class PLS(BaseEstimator):
 
         `self.T` : Array of shape (N, A)
             PLS scores matrix of X. Only assigned for Improved Kernel PLS Algorithm #1.
-        
+
         Returns
         -------
         `None`.
@@ -156,7 +158,9 @@ class PLS(BaseEstimator):
             # Compute regression coefficients
             self.B[i] = self.B[i - 1] + r @ q.T
 
-    def predict(self, X: npt.ArrayLike, n_components: None | int = None) -> npt.NDArray[np.float_]:
+    def predict(
+        self, X: npt.ArrayLike, n_components: None | int = None
+    ) -> npt.NDArray[np.float_]:
         """
         Description
         -----------
@@ -166,10 +170,10 @@ class PLS(BaseEstimator):
         ----------
         `X` : Array of shape (N, K)
             Predictor variables. The precision should be at least float64 for reliable results.
-        
+
         `n_components` : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
-        
+
         Returns
         -------
         `Y_pred` : Array of shape (N, M) or (A, N, M)

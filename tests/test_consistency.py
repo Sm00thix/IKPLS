@@ -1,32 +1,80 @@
+import pytest
+import numpy as np
+import numpy.typing as npt
+from numpy.testing import assert_allclose
+import jax
+from jax import numpy as jnp
+from typing import Tuple, Callable
 from sklearn.cross_decomposition import PLSRegression as SkPLS
 from algorithms.jax_ikpls_alg_1 import PLS as JAX_Alg_1
 from algorithms.jax_ikpls_alg_2 import PLS as JAX_Alg_2
 from algorithms.numpy_ikpls import PLS as NpPLS
-
-# import load_data
-
 from . import load_data
-
-import pytest
-import numpy as np
-import numpy.typing as npt
-import jax
-from jax import numpy as jnp
-from numpy.testing import assert_allclose
 
 
 class TestClass:
     csv = load_data.load_csv()
     raw_spectra = load_data.load_spectra()
 
-    def load_X(self):
+    def load_X(self) -> npt.NDArray[np.float_]:
+        """
+        Description
+        -----------
+        Load the raw spectral data.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            The raw spectral data.
+        """
         return np.copy(self.raw_spectra)
 
     def load_Y(self, values: list[str]) -> npt.NDArray[np.float_]:
+        """
+        Description
+        -----------
+        Load target values based on the specified column names.
+
+        Parameters
+        ----------
+        `values` : list[str]
+            List of column names to extract target values from the CSV data.
+
+        Returns
+        -------
+        NDArray[float]
+            Target values as a NumPy array.
+        """
         target_values = self.csv[values].to_numpy()
         return target_values
 
-    def fit_models(self, X, Y, n_components):
+    def fit_models(
+        self, X: npt.NDArray, Y: npt.NDArray, n_components: int
+    ) -> Tuple[
+        SkPLS, npt.NDArray, NpPLS, NpPLS, JAX_Alg_1, JAX_Alg_2, JAX_Alg_1, JAX_Alg_2
+    ]:
+        """
+        Description
+        -----------
+
+        Fit various PLS models using different implementations and preprocessing.
+
+        Parameters
+        ----------
+        `X` : NDArray[float]
+            Input data (spectra).
+
+        `Y` : NDArray[float]
+            Target values.
+
+        `n_components` : int
+            Number of PLS components.
+
+        Returns
+        -------
+        tuple
+            A tuple containing PLS models and their respective regression matrices.
+        """
         x_mean = X.mean(axis=0)
         X -= x_mean
         y_mean = Y.mean(axis=0)
@@ -66,25 +114,109 @@ class TestClass:
                 sk_pls.y_loadings_[..., : i + 1].T,
             )
             sk_B[i] = sk_B_at_component_i
-        return sk_pls, sk_B, np_pls_alg_1, np_pls_alg_2, jax_pls_alg_1, jax_pls_alg_2, diff_jax_pls_alg_1, diff_jax_pls_alg_2
+        return (
+            sk_pls,
+            sk_B,
+            np_pls_alg_1,
+            np_pls_alg_2,
+            jax_pls_alg_1,
+            jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
+        )
 
-    def assert_matrix_orthogonal(self, M, atol, rtol):
+    def assert_matrix_orthogonal(
+        self, M: npt.NDArray, atol: float, rtol: float
+    ) -> None:
+        """
+        Description
+        -----------
+
+        Check if a matrix is orthogonal.
+
+        Parameters
+        ----------
+        `M` : NDArray[float]
+            Matrix to check for orthogonality.
+
+        `atol` : float
+            Absolute tolerance for checking orthogonality.
+
+        `rtol` : float
+            Relative tolerance for checking orthogonality.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the matrix is not orthogonal within the specified tolerances.
+        """
         MTM = np.dot(M.T, M)
         assert_allclose(MTM, np.diag(np.diag(MTM)), atol=atol, rtol=rtol)
 
     def check_regression_matrices(
         self,
-        sk_B,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        diff_jax_pls_alg_1,
-        diff_jax_pls_alg_2,
-        atol,
-        rtol,
-        n_good_components=-1,
+        sk_B: npt.NDArray,
+        np_pls_alg_1: NpPLS,
+        np_pls_alg_2: NpPLS,
+        jax_pls_alg_1: NpPLS,
+        jax_pls_alg_2: NpPLS,
+        diff_jax_pls_alg_1: JAX_Alg_1,
+        diff_jax_pls_alg_2: JAX_Alg_2,
+        atol: float,
+        rtol: float,
+        n_good_components: int = -1,
     ):
+        """
+        Description
+        -----------
+
+        Check regression matrices of different PLS models for consistency.
+
+        Parameters
+        ----------
+        `sk_B` : NDArray[float]
+            Sklearn PLS regression matrix.
+
+        `np_pls_alg_1`
+            Numpy-based PLS model using algorithm 1.
+
+        `np_pls_alg_2`
+            Numpy-based PLS model using algorithm 2.
+
+        `jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1.
+
+        `jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2.
+
+        `diff_jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1 with reverse differentiation.
+
+        `diff_jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2 with reverse differentiation.
+
+        `atol` : float
+            Absolute tolerance for checking equality.
+
+        `rtol` : float
+            Relative tolerance for checking equality.
+
+        `n_good_components` : int, optional
+            Number of components to check, or -1 to use all possible number of components.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the regression matrices are not consistent.
+        """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
         assert_allclose(
@@ -126,26 +258,70 @@ class TestClass:
 
     def check_predictions(
         self,
-        sk_B,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        diff_jax_pls_alg_1,
-        diff_jax_pls_alg_2,
-        X,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
+        sk_B: npt.NDArray,
+        np_pls_alg_1: NpPLS,
+        np_pls_alg_2: NpPLS,
+        jax_pls_alg_1: JAX_Alg_1,
+        jax_pls_alg_2: JAX_Alg_2,
+        diff_jax_pls_alg_1: JAX_Alg_1,
+        diff_jax_pls_alg_2: JAX_Alg_2,
+        X: npt.NDArray,
+        atol: float,
+        rtol: float,
+        n_good_components: int = -1,
+    ) -> None:
+        """
+        Description
+        -----------
+        Check predictions of different PLS models for consistency.
+
+        Parameters
+        ----------
+        `sk_B` : NDArray[float]
+            Sklearn PLS regression matrix.
+
+        `np_pls_alg_1`
+            Numpy-based PLS model using algorithm 1.
+
+        `np_pls_alg_2`
+            Numpy-based PLS model using algorithm 2.
+
+        `jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1.
+
+        `jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2.
+
+        `diff_jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1 with reverse differentiation.
+
+        `diff_jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2 with reverse differentiation.
+
+        `X` : NDArray[float]
+            Input data (spectra) for making predictions.
+
+        `atol` : float
+            Absolute tolerance for checking equality.
+
+        `rtol` : float
+            Relative tolerance for checking equality.
+
+        `n_good_components` : int, optional
+            Number of components to check, or -1 to use all possible number of components.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the predictions are not consistent.
+        """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
-        # Check predictions for each and all possible number of components.
         sk_all_preds = X @ sk_B
-        diff = (
-            np_pls_alg_1.predict(X)[:n_good_components]
-            - sk_all_preds[:n_good_components]
-        )
         assert_allclose(
             np_pls_alg_1.predict(X)[:n_good_components],
             sk_all_preds[:n_good_components],
@@ -224,16 +400,57 @@ class TestClass:
 
     def check_orthogonality_properties(
         self,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        diff_jax_pls_alg_1,
-        diff_jax_pls_alg_2,
-        atol,
-        rtol,
-        n_good_components=-1,
-    ):
+        np_pls_alg_1: NpPLS,
+        np_pls_alg_2: NpPLS,
+        jax_pls_alg_1: JAX_Alg_1,
+        jax_pls_alg_2: JAX_Alg_2,
+        diff_jax_pls_alg_1: JAX_Alg_1,
+        diff_jax_pls_alg_2: JAX_Alg_2,
+        atol: float,
+        rtol: float,
+        n_good_components: int = -1,
+    ) -> None:
+        """
+        Check orthogonality properties of PLS algorithm results.
+
+        Parameters
+        ----------
+        `np_pls_alg_1`
+            Numpy-based PLS model using algorithm 1.
+
+        `np_pls_alg_2`
+            Numpy-based PLS model using algorithm 2.
+
+        `jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1.
+
+        `jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2.
+
+        `diff_jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1 with reverse differentiation.
+
+        `diff_jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2 with reverse differentiation.
+
+        `atol` : float
+            Absolute tolerance for checking equality.
+
+        `rtol` : float
+            Relative tolerance for checking equality.
+
+        `n_good_components` : int, optional
+            Number of components to check, or -1 to use all possible number of components.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If either of the X weights or X scores are not orthogonal.
+        """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
         # X weights should be orthogonal
@@ -250,10 +467,14 @@ class TestClass:
             np.array(jax_pls_alg_2.W)[..., :n_good_components], atol=atol, rtol=rtol
         )
         self.assert_matrix_orthogonal(
-            np.array(diff_jax_pls_alg_1.W)[..., :n_good_components], atol=atol, rtol=rtol
+            np.array(diff_jax_pls_alg_1.W)[..., :n_good_components],
+            atol=atol,
+            rtol=rtol,
         )
         self.assert_matrix_orthogonal(
-            np.array(diff_jax_pls_alg_2.W)[..., :n_good_components], atol=atol, rtol=rtol
+            np.array(diff_jax_pls_alg_2.W)[..., :n_good_components],
+            atol=atol,
+            rtol=rtol,
         )
 
         # X scores (only computed by algorithm 1) should be orthogonal
@@ -264,10 +485,56 @@ class TestClass:
             np.array(jax_pls_alg_1.T)[..., :n_good_components], atol=atol, rtol=rtol
         )
         self.assert_matrix_orthogonal(
-            np.array(diff_jax_pls_alg_1.T)[..., :n_good_components], atol=atol, rtol=rtol
+            np.array(diff_jax_pls_alg_1.T)[..., :n_good_components],
+            atol=atol,
+            rtol=rtol,
         )
 
-    def check_equality_properties(self, np_pls_alg_1, jax_pls_alg_1, diff_jax_pls_alg_1, X, atol, rtol, n_good_components=-1):
+    def check_equality_properties(
+        self,
+        np_pls_alg_1: NpPLS,
+        jax_pls_alg_1: JAX_Alg_1,
+        diff_jax_pls_alg_1: JAX_Alg_1,
+        X: npt.NDArray,
+        atol: float,
+        rtol: float,
+        n_good_components: int = -1,
+    ) -> None:
+        """
+        Check equality properties of PLS algorithm results.
+
+        Parameters
+        ----------
+        `np_pls_alg_1`
+            Numpy-based PLS model using algorithm 1.
+
+        `jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1.
+
+        `diff_jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1 with reverse differentiation.
+
+        `X` : ndarray
+            Original input matrix.
+
+        `atol` : float
+            Absolute tolerance for comparing matrix values.
+
+        `rtol` : float
+            Relative tolerance for comparing matrix values.
+
+        `n_good_components` : int, optional
+            Number of components to check, or -1 to use all possible number of components.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the equality properties are not satisfied.
+        """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
 
@@ -322,14 +589,49 @@ class TestClass:
 
     def check_cpu_gpu_equality(
         self,
-        np_pls_alg_1,
-        np_pls_alg_2,
-        jax_pls_alg_1,
-        jax_pls_alg_2,
-        diff_jax_pls_alg_1,
-        diff_jax_pls_alg_2,
-        n_good_components=-1,
-    ):
+        np_pls_alg_1: NpPLS,
+        np_pls_alg_2: NpPLS,
+        jax_pls_alg_1: JAX_Alg_1,
+        jax_pls_alg_2: JAX_Alg_2,
+        diff_jax_pls_alg_1: JAX_Alg_1,
+        diff_jax_pls_alg_2: JAX_Alg_2,
+        n_good_components: int = -1,
+    ) -> None:
+        """
+        Check equality properties between CPU and GPU implementations of PLS algorithm.
+
+        Parameters
+        ----------
+        `np_pls_alg_1`
+            Numpy-based PLS model using algorithm 1.
+
+        `np_pls_alg_2`
+            Numpy-based PLS model using algorithm 2.
+
+        `jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1.
+
+        `jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2.
+
+        `diff_jax_pls_alg_1`
+            JAX-based PLS model using algorithm 1 with reverse differentiation.
+
+        `diff_jax_pls_alg_2`
+            JAX-based PLS model using algorithm 2 with reverse differentiation.
+
+        `n_good_components` : int, optional
+            Number of components to check, or -1 to use all possible number of components.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the internal matrices are not consistent across NumPy and JAX implementations.
+        """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
 
@@ -479,9 +781,23 @@ class TestClass:
             rtol=rtol,
         )
 
-    def test_pls_1(self):
+    def test_pls_1(self) -> None:
         """
-        Test PLS1.
+        Description
+        -----------
+        Test PLS1 algorithm.
+
+        This method performs testing of the PLS1 algorithm using various models and checks for equality,
+        orthogonality, regression matrices, and predictions. It also validates the algorithm's numerical
+        stability for the "Protein" dataset.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        `None`
         """
         X = self.load_X()
         Y = self.load_Y(["Protein"])
@@ -553,7 +869,21 @@ class TestClass:
 
     def test_pls_2_m_less_k(self):
         """
-        Test PLS2 where the number of targets is less than the number of features (M < K).
+        Description
+        -----------
+        Test PLS2 algorithm when the number of targets is less than the number of features (M < K).
+
+        This method tests the PLS2 algorithm under the scenario where the number of target variables (M)
+        is less than the number of features (K) in the dataset. It performs various tests on different
+        PLS2 models, checks for equality, orthogonality, regression matrices, and predictions.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        `None`
         """
         X = self.load_X()
         Y = self.load_Y(
@@ -636,9 +966,23 @@ class TestClass:
             rtol=0,
         )  # PLS2 is not as numerically stable as PLS1.
 
-    def test_pls_2_m_eq_k(self):
+    def test_pls_2_m_eq_k(self) -> None:
         """
-        Test PLS2 where the number of targets is equal to the number of features (M = K).
+        Description
+        -----------
+        Test PLS2 algorithm where the number of targets is equal to the number of features (M = K).
+
+        This method tests the PLS2 algorithm under the scenario where the number of target variables (M)
+        is equal to the number of features (K) in the dataset. It performs various tests on different
+        PLS2 models, checks for equality, orthogonality, regression matrices, and predictions.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        `None`
         """
         X = self.load_X()
         X = X[..., :10]
@@ -722,9 +1066,24 @@ class TestClass:
             rtol=0,
         )  # PLS2 is not as numerically stable as PLS1.
 
-    def test_pls_2_m_greater_k(self):
+    def test_pls_2_m_greater_k(self) -> None:
         """
-        Test PLS2 where the number of targets is greater than the number of features (M > K).
+        Description
+        -----------
+
+        Test PLS2 algorithm where the number of targets is greater than the number of features (M > K).
+
+        This method tests the PLS2 algorithm under the scenario where the number of target variables (M)
+        is greater than the number of features (K) in the dataset. It performs various tests on different
+        PLS2 models, checks for equality, orthogonality, regression matrices, and predictions.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        `None`
         """
         X = self.load_X()
         X = X[..., :9]
@@ -810,7 +1169,26 @@ class TestClass:
 
     def test_sanity_check_pls_regression(
         self,
+    ) -> (
+        None
     ):  # Taken from SkLearn's test suite and modified to include own algorithms.
+        """
+        Description
+        -----------
+        Test the PLS regression algorithm with a sanity check.
+
+        This method performs a sanity check on the PLS regression algorithm. It loads the Linnerud dataset,
+        fits the PLS regression models using various algorithms, and checks for equality between implemenetations'
+        regression matrices, predictions, and for PLS properties. It also compares the results to expected values.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        `None`
+        """
         from sklearn.datasets import load_linnerud
 
         d = load_linnerud()
@@ -997,7 +1375,28 @@ class TestClass:
 
     def test_sanity_check_pls_regression_constant_column_Y(
         self,
+    ) -> (
+        None
     ):  # Taken from SkLearn's test suite and modified to include own algorithms.
+        """
+        Description
+        -----------
+
+        Test the PLS regression algorithm with a sanity check and a constant column in Y.
+
+        This method performs a sanity check on the PLS regression algorithm using a dataset that includes a constant
+        column in the target (Y) data. It loads the Linnerud dataset, sets the first column of Y to a constant, and fits
+        the PLS regression models using various algorithms. The test checks for equality between implemenetations' regression
+        matrices, predictions, and for PLS properties. It also compares the results to expected values.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        `None`
+        """
         from sklearn.datasets import load_linnerud
 
         d = load_linnerud()
@@ -1192,8 +1591,12 @@ class TestClass:
             rtol=0,
         )
 
-        diff_jax_alg_1_x_loadings_sign_flip = np.sign(diff_jax_pls_alg_1.P / expected_x_loadings)
-        diff_jax_alg_1_x_weights_sign_flip = np.sign(diff_jax_pls_alg_1.W / expected_x_weights)
+        diff_jax_alg_1_x_loadings_sign_flip = np.sign(
+            diff_jax_pls_alg_1.P / expected_x_loadings
+        )
+        diff_jax_alg_1_x_weights_sign_flip = np.sign(
+            diff_jax_pls_alg_1.W / expected_x_weights
+        )
         diff_jax_alg_1_y_loadings_sign_flip = np.sign(
             diff_jax_pls_alg_1.Q[1:] / expected_y_loadings[1:]
         )
@@ -1228,8 +1631,12 @@ class TestClass:
             rtol=0,
         )
 
-        diff_jax_alg_2_x_loadings_sign_flip = np.sign(diff_jax_pls_alg_2.P / expected_x_loadings)
-        diff_jax_alg_2_x_weights_sign_flip = np.sign(diff_jax_pls_alg_2.W / expected_x_weights)
+        diff_jax_alg_2_x_loadings_sign_flip = np.sign(
+            diff_jax_pls_alg_2.P / expected_x_loadings
+        )
+        diff_jax_alg_2_x_weights_sign_flip = np.sign(
+            diff_jax_pls_alg_2.W / expected_x_weights
+        )
         diff_jax_alg_2_y_loadings_sign_flip = np.sign(
             diff_jax_pls_alg_2.Q[1:] / expected_y_loadings[1:]
         )
@@ -1247,10 +1654,36 @@ class TestClass:
         )
 
     def check_pls_constant_y(
-        self, X, Y
+        self, X: npt.NDArray, Y: npt.NDArray
+    ) -> (
+        None
     ):  # Taken from SkLearn's test suite and modified to include own algorithms.
-        ## Taken from self.fit_models() to check each individual algorithm for early stopping.
-        """Checks warning when y is constant."""
+        """
+        Description
+        -----------
+        Check PLS regression behavior when Y is constant.
+
+        This method checks the behavior of PLS regression when the target data (Y) is constant. It first pre-processes the input
+        data by centering and scaling it. Then, it fits PLS regression models using different algorithms, including the sklearn,
+        NumPy-based, and JAX-based implementations. It checks for warnings related weights being close to zero during the fitting process.
+
+        Parameters
+        ----------
+        `X` : numpy.ndarray
+            The predictor variables.
+        `Y` : numpy.ndarray
+            The target variables.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the warnings for weights being close to zero are not raised for all implementations.
+        """
+        ## Taken from self.fit_models to check each individual algorithm for early stopping.
         x_mean = X.mean(axis=0)
         X -= x_mean
         y_mean = Y.mean(axis=0)
@@ -1294,6 +1727,19 @@ class TestClass:
             diff_jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
 
     def test_pls_1_constant_y(self):
+        """
+        Description
+        -----------
+        Test PLS regression when Y is constant with single target variable.
+
+        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with a single
+        column. It ensures that Y has only one column and calls the 'check_pls_constant_y' method to validate the behavior of
+        PLS regression in this scenario.
+
+        Returns
+        -------
+        None
+        """
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 1))
@@ -1301,6 +1747,19 @@ class TestClass:
         self.check_pls_constant_y(X, Y)
 
     def test_pls_2_m_less_k_constant_y(self):
+        """
+        Description
+        -----------
+        Test PLS regression when Y is constant with m < k target variables.
+
+        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with fewer
+        columns (m) than the number of columns in X (k). It ensures that Y has more than one column but less than the number
+        of columns in X and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
+
+        Returns
+        -------
+        None
+        """
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 2))
@@ -1309,6 +1768,19 @@ class TestClass:
         self.check_pls_constant_y(X, Y)
 
     def test_pls_2_m_eq_k_constant_y(self):
+        """
+        Description
+        -----------
+        Test PLS regression when Y is constant with m = k target variables.
+
+        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with the same
+        number of columns (m) as the number of columns in X (k). It ensures that Y has more than one column and the same number
+        of columns as X, and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
+
+        Returns
+        -------
+        None
+        """
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 3))
@@ -1317,6 +1789,19 @@ class TestClass:
         self.check_pls_constant_y(X, Y)
 
     def test_pls_2_m_greater_k_constant_y(self):
+        """
+        Description
+        -----------
+        Test PLS regression when Y is constant with m > k target variables.
+
+        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with more
+        columns (m) than the number of columns in X (k). It ensures that Y has more than one column and more columns than X,
+        and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
+
+        Returns
+        -------
+        None
+        """
         rng = np.random.RandomState(42)
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 4))
@@ -1326,19 +1811,57 @@ class TestClass:
 
     def check_gradient_pls(
         self,
-        X,
-        Y,
-        num_components,
-        filter_size,
-        val_atol,
-        val_rtol,
-        grad_atol,
-        grad_rtol,
-    ):
+        X: npt.NDArray,
+        Y: npt.NDArray,
+        num_components: int,
+        filter_size: int,
+        val_atol: float,
+        val_rtol: float,
+        grad_atol: float,
+        grad_rtol: float,
+    ) -> None:
         """
-        Tests that the gradient propagation works for reverse-mode differentiable JAX PLS. The input spectra are convolved with a filter. We compute the gradients of RMSE loss w.r.t. the parameters of the preprocessing filter.
+        Description
+        -----------
+        This method tests the gradient propagation for reverse-mode differentiable JAX PLS. It convolves the input spectra
+        with a filter, computes the gradients of the RMSE loss with respect to the parameters of the preprocessing filter,
+        and verifies the correctness of gradient values and numerical stability.
+
+        Parameters:
+        `X` : numpy.ndarray:
+            The input predictor variables.
+
+        `Y` : numpy.ndarray
+            The target variables.
+
+        `num_components` : int
+            The number of PLS components.
+
+        `filter_size` (int):
+            The size of the convolution filter.
+
+        `val_atol` : float
+            Absolute tolerance for value comparisons.
+
+        `val_rtol` : float
+            Relative tolerance for value comparisons.
+
+        `grad_atol` : float
+            Absolute tolerance for gradient comparisons.
+
+        `grad_rtol` : float
+            Relative tolerance for gradient comparisons.
+
+        Returns
+        -------
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the gradients are not computed, if the gradients are not equal across Improved Kernel PLS Algorithm #1 and #2, or if the output values are not consistent across all JAX implementations.
         """
-        # Taken from self.fit_models() to check each individual algorithm for early stopping.
+        # Taken from self.fit_models to check each individual algorithm for early stopping.
         x_mean = X.mean(axis=0)
         X -= x_mean
         y_mean = Y.mean(axis=0)
@@ -1360,7 +1883,9 @@ class TestClass:
 
         # Preprocessing convolution filter for which we will obtain the gradients.
         @jax.jit
-        def apply_1d_convolution(matrix, conv_filter):
+        def apply_1d_convolution(
+            matrix: jnp.ndarray, conv_filter: jnp.ndarray
+        ) -> jnp.ndarray:
             convolved_rows = jax.vmap(
                 lambda row: jnp.convolve(row, conv_filter, "valid")
             )(matrix)
@@ -1368,15 +1893,17 @@ class TestClass:
 
         # Loss function which we want to minimize.
         @jax.jit
-        def rmse(y_true, y_pred):
-            e = y_true - y_pred
+        def rmse(Y_true: jnp.ndarray, Y_pred: jnp.ndarray) -> float:
+            e = Y_true - Y_pred
             se = e**2
             mse = jnp.mean(se)
             rmse = jnp.sqrt(mse)
             return rmse
 
         # Function to differentiate.
-        def preprocess_fit_rmse(X, Y, pls_alg, A=None):
+        def preprocess_fit_rmse(
+            X: jnp.ndarray, Y: jnp.ndarray, pls_alg, A: int | None = None
+        ) -> Callable[[jnp.ndarray], float]:
             @jax.jit
             def helper(conv_filter):
                 filtered_X = apply_1d_convolution(X, conv_filter)
@@ -1447,6 +1974,15 @@ class TestClass:
         assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=1e-14)
 
     def test_gradient_pls_1(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables and a target variable with a single column and calls the 'check_gradient_pls'
+        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(["Protein"])
         num_components = 25
@@ -1464,6 +2000,15 @@ class TestClass:
         )
 
     def test_gradient_pls_2_m_less_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables and multiple target variables with m < k, and calls the 'check_gradient_pls'
+        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1497,6 +2042,15 @@ class TestClass:
         )
 
     def test_gradient_pls_2_m_eq_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables and multiple target variables with m = k, and calls the 'check_gradient_pls'
+        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1531,6 +2085,15 @@ class TestClass:
         )
 
     def test_gradient_pls_2_m_greater_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables and multiple target variables with m > k, and calls the 'check_gradient_pls'
+        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1564,13 +2127,52 @@ class TestClass:
             grad_rtol=1e-5,
         )
 
-    def check_cross_val_pls(self, X, Y, splits, atol, rtol):
+    def check_cross_val_pls(
+        self,
+        X: npt.NDArray,
+        Y: npt.NDArray,
+        splits: npt.NDArray,
+        atol: float,
+        rtol: float,
+    ) -> None:
         """
-        Test that we can cross validate to get RMSE and best number of components for each target and for each split
+        Description
+        -----------
+        This method tests the ability to perform cross-validation to obtain the root mean square error (RMSE) and the best number
+        of components for each target variable and each split.
+
+        Parameters:
+        `X` : numpy.ndarray
+            The input predictor variables.
+        `Y` : numpy.ndarray
+            The target variables.
+        `splits` : numpy.ndarray
+            Split indices for cross-validation.
+
+        `atol` : float
+            Absolute tolerance for value comparisons.
+
+        `rtol` : float
+            Relative tolerance for value comparisons.
+
+        Returns:
+        `None`
+
+        Raises
+        ------
+        AssertionError
+            If the best number of components found by cross validation with is not exactly equal across each different PLS implementation.
+
+            If the output RMSEs for the best number of components are not equal down to the specified tolerance across each different PLS implementation.
         """
         from sklearn.model_selection import cross_validate
 
-        def cross_val_preprocessing(X_train, Y_train, X_val, Y_val):
+        def cross_val_preprocessing(
+            X_train: jnp.ndarray,
+            Y_train: jnp.ndarray,
+            X_val: jnp.ndarray,
+            Y_val: jnp.ndarray,
+        ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
             x_mean = X_train.mean(axis=0, keepdims=True)
             X_train -= x_mean
             X_val -= x_mean
@@ -1587,22 +2189,24 @@ class TestClass:
         diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
         diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
-        def cv_splitter(splits):
+        def cv_splitter(splits: npt.NDArray):
             uniq_splits = np.unique(splits)
             for split in uniq_splits:
                 train_idxs = np.nonzero(splits != split)[0]
                 val_idxs = np.nonzero(splits == split)[0]
                 yield train_idxs, val_idxs
 
-        def rmse_per_component(Y_true, Y_pred):
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
             e = Y_true - Y_pred
             se = e**2
             mse = np.mean(se, axis=-2)
             rmse = np.sqrt(mse)
             return rmse
 
-        def jax_rmse_per_component(y_true, y_pred):
-            e = y_true - y_pred
+        def jax_rmse_per_component(
+            Y_true: jnp.ndarray, Y_pred: jnp.ndarray
+        ) -> jnp.ndarray:
+            e = Y_true - Y_pred
             se = e**2
             mse = jnp.mean(se, axis=-2)
             rmse = jnp.sqrt(mse)
@@ -1842,10 +2446,23 @@ class TestClass:
         assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
-        assert_allclose(diff_jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
-        assert_allclose(diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(
+            diff_jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
 
     def test_cross_val_pls_1(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, a single target variable, and split indices for cross-validation. It then calls
+        the 'check_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
@@ -1853,6 +2470,15 @@ class TestClass:
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
     def test_cross_val_pls_2_m_less_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where m is less than k), and split indices for
+        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1874,6 +2500,15 @@ class TestClass:
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
 
     def test_cross_val_pls_2_m_eq_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where m is equal to k), and split indices for
+        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1896,6 +2531,15 @@ class TestClass:
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
     def test_cross_val_pls_2_m_greater_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where m is greater than k), and split indices for
+        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
         X = self.load_X()
         Y = self.load_Y(
             [
@@ -1916,27 +2560,3 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
-
-
-if __name__ == "__main__":
-    tc = TestClass()
-    tc.test_pls_1()
-    tc.test_pls_2_m_less_k()
-    tc.test_pls_2_m_eq_k()
-    tc.test_pls_2_m_greater_k()
-    tc.test_sanity_check_pls_regression()
-    tc.test_sanity_check_pls_regression_constant_column_Y()
-    tc.test_pls_1_constant_y()
-    tc.test_pls_2_m_less_k_constant_y()
-    tc.test_pls_2_m_eq_k_constant_y()
-    tc.test_pls_2_m_greater_k_constant_y()
-    tc.test_gradient_pls_1()
-    tc.test_gradient_pls_2_m_less_k()
-    tc.test_gradient_pls_2_m_eq_k()
-    tc.test_gradient_pls_2_m_greater_k()
-    tc.test_cross_val_pls_1()
-    tc.test_cross_val_pls_2_m_less_k()
-    tc.test_cross_val_pls_2_m_eq_k()
-    tc.test_cross_val_pls_2_m_greater_k()
-
-    # TODO: Doc strings for tests and algorithms.

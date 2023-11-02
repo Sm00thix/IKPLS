@@ -33,6 +33,45 @@ class PLS(PLSBase):
     ) -> Tuple[
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
+        """
+        Description
+        -----------
+        Initialize the matrices and arrays needed for the PLS algorithm. This method is part of the PLS fitting process.
+
+        Parameters
+        ----------
+        `A` : int
+            Number of components in the PLS model.
+
+        `K` : int
+            Number of predictor variables.
+
+        `M` : int
+            Number of response variables.
+
+        `N` : int
+            Number of samples.
+
+        Returns
+        -------
+        `B` : Array of shape (A, K, M)
+            PLS regression coefficients tensor.
+
+        `W` : Array of shape (A, K)
+            PLS weights matrix for X.
+
+        `P` : Array of shape (A, K)
+            PLS loadings matrix for X.
+
+        `Q` : Array of shape (A, M)
+            PLS Loadings matrix for Y.
+
+        `R` : Array of shape (A, K)
+            PLS weights matrix to compute scores T directly from original X.
+
+        `T` : Array of shape (A, N)
+            PLS scores matrix of X.
+        """
         if self.verbose:
             print(f"_get_initial_matrices for {self.name} will be JIT compiled...")
         B, W, P, Q, R = super()._get_initial_matrices(A, K, M)
@@ -41,12 +80,64 @@ class PLS(PLSBase):
 
     @partial(jax.jit, static_argnums=(0,))
     def _step_1(self, X: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
+        """
+        Description
+        -----------
+        Perform the first step of Improved Kernel PLS Algorithm #1.
+
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+
+        `Y` : Array of shape (N, M)
+            Response variables. The precision should be at least float64 for reliable results.
+
+        Returns
+        -------
+        `XTY` : Array of shape (K, M)
+            Intermediate result used in the PLS algorithm.
+        """
         if self.verbose:
             print(f"_step_1 for {self.name} will be JIT compiled...")
         return self._compute_initial_XTY(X.T, Y)
 
     @partial(jax.jit, static_argnums=(0,))
     def _step_4(self, X: jnp.ndarray, XTY: jnp.ndarray, r: jnp.ndarray):
+        """
+        Description
+        -----------
+        Perform the fourth step of Improved Kernel PLS Algorithm #1.
+
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+
+        `XTY` : Array of shape (K, M)
+            Intermediate result used in the PLS algorithm.
+
+        `r` : Array of shape (K, 1)
+            Intermediate result used in the PLS algorithm.
+
+        Returns
+        -------
+        `tTt` : float
+            Intermediate result used in the PLS algorithm.
+
+        `p` : Array of shape (K, 1)
+            Intermediate result used in the PLS algorithm.
+
+        `q` : Array of shape (M, 1)
+            Intermediate result used in the PLS algorithm.
+
+        `t` : Array of shape (N, 1)
+            Intermediate result used in the PLS algorithm.
+
+        See Also
+        --------
+        _step_1 : Computes the initial intermediate result in the PLS algorithm.
+        """
         if self.verbose:
             print(f"_step_4 for {self.name} will be JIT compiled...")
         t = X @ r
@@ -67,17 +158,77 @@ class PLS(PLSBase):
         K: int,
         P: jnp.ndarray,
         R: jnp.ndarray,
-        differentiable: bool,
+        reverse_differentiable: bool,
     ) -> Tuple[
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
+        """
+        Description
+        -----------
+        Execute the main loop body of Improved Kernel PLS Algorithm #1. This function performs various steps of the PLS algorithm for each component.
+
+        Parameters
+        ----------
+        `A` : int
+            Number of components in the PLS model.
+
+        `i` : int
+            Current component index.
+
+        `X` : Array of shape (N, K)
+            Predictor variables. The precision should be at least float64 for reliable results.
+
+        `XTY` : Array of shape (K, M)
+            Intermediate result used in the PLS algorithm.
+
+        `M` : int
+            Number of response variables.
+
+        `K` : int
+            Number of predictor variables.
+
+        `P` : Array of shape (K, A)
+            PLS loadings matrix for X.
+
+        `R` : Array of shape (K, A)
+            PLS weights matrix to compute scores T directly from original X.
+
+        `reverse_differentiable` : bool
+            Whether to use a reverse_differentiable version of the algorithm.
+
+        Returns
+        -------
+        `XTY` : Array of shape (K, M)
+            Updated intermediate result used in the PLS algorithm.
+
+        `w` : Array of shape (K, 1)
+            Updated intermediate result used in the PLS algorithm.
+
+        `p` : Array of shape (K, 1)
+            Updated intermediate result used in the PLS algorithm.
+
+        `q` : Array of shape (M, 1)
+            Updated intermediate result used in the PLS algorithm.
+
+        `r` : Array of shape (K, 1)
+            Updated intermediate result used in the PLS algorithm.
+
+        `t` : Array of shape (N, 1)
+            Updated intermediate result used in the PLS algorithm.
+
+
+        Warns
+        -----
+        `UserWarning`.
+            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+        """
         if self.verbose:
             print(f"_main_loop_body for {self.name} will be JIT compiled...")
         # step 2
         w, norm = self._step_2(XTY, M, K)
         host_callback.id_tap(self._weight_warning, [i, norm])
         # step 3
-        if differentiable:
+        if reverse_differentiable:
             r = self._step_3(A, w, P, R)
         else:
             r = self._step_3(i, w, P, R)
@@ -100,10 +251,10 @@ class PLS(PLSBase):
 
         `Y` : Array of shape (N, M)
             Response variables. The precision should be at least float64 for reliable results.
-        
+
         `A` : int
             Number of components in the PLS model.
-        
+
         Assigns
         -------
         `self.B` : Array of shape (A, K, M)
@@ -123,7 +274,7 @@ class PLS(PLSBase):
 
         `self.T` : Array of shape (N, A)
             PLS scores matrix of X.
-        
+
         Returns
         -------
         `None`.
@@ -158,10 +309,10 @@ class PLS(PLSBase):
 
         `Y` : Array of shape (N, M)
             Response variables. The precision should be at least float64 for reliable results.
-        
+
         `A` : int
             Number of components in the PLS model.
-        
+
         Returns
         -------
         `B` : Array of shape (A, K, M)
