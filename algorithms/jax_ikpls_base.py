@@ -651,8 +651,9 @@ class PLSBase(abc.ABC):
             [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
             Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
         ],
-        metric_funtion: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
         metric_names: list[str],
+        show_progress=True,
     ) -> dict[str, Any]:
         """
         Description
@@ -682,6 +683,9 @@ class PLSBase(abc.ABC):
         `metric_names` : list of str
             A list of names for the metrics used for evaluation.
 
+        `show_progress` : bool, optional (default=True)
+            If True, displays a progress bar for the cross-validation.
+
         Returns
         -------
         `metrics` : dict[str, Any]
@@ -703,11 +707,11 @@ class PLSBase(abc.ABC):
         """
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
-        for split in tqdm(unique_splits):
+        for split in tqdm(unique_splits, disable=not show_progress):
             train_idxs = jnp.nonzero(cv_splits != split)[0]
             val_idxs = jnp.nonzero(cv_splits == split)[0]
             metric_values = self._inner_cv(
-                X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_funtion
+                X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_function
             )
             metric_value_lists = self._update_metric_value_lists(
                 metric_value_lists, metric_values
