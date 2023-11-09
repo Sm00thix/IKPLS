@@ -38,13 +38,7 @@ runs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       shell: bash
-
-    # - name: Test with pytest
-    #   run: |
-    #     pip install pytest pytest-cov
-    #     python${{ matrix.python-version }} -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=pls/ --cov-report=xml --cov-report=html
-    #   shell: bash  
-
+      
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
       shell: bash

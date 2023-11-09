@@ -1,0 +1,16 @@
+name: Test
+description: Test
+
+inputs:
+  PYTHON_VERSION:
+    description: test
+    required: true
+
+runs:
+    using: "composite"
+    steps:
+    - name: Test
+      run: |
+        pip install pytest pytest-cov
+        python3 -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html
+      shell: bash 
