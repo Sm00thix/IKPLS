@@ -7,9 +7,9 @@ from timings.timings import (
     gen_random_data,
     SK_PLS_All_Components,
 )
-from algorithms.numpy_ikpls import PLS as NP_PLS
-from algorithms.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
-from algorithms.jax_ikpls_alg_2 import PLS as JAX_PLS_Alg_2
+from ikpls.numpy_ikpls import PLS as NP_PLS
+from ikpls.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
+from ikpls.jax_ikpls_alg_2 import PLS as JAX_PLS_Alg_2
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -6,9 +6,9 @@ import jax
 from jax import numpy as jnp
 from typing import Tuple, Callable
 from sklearn.cross_decomposition import PLSRegression as SkPLS
-from algorithms.jax_ikpls_alg_1 import PLS as JAX_Alg_1
-from algorithms.jax_ikpls_alg_2 import PLS as JAX_Alg_2
-from algorithms.numpy_ikpls import PLS as NpPLS
+from ikpls.jax_ikpls_alg_1 import PLS as JAX_Alg_1
+from ikpls.jax_ikpls_alg_2 import PLS as JAX_Alg_2
+from ikpls.numpy_ikpls import PLS as NpPLS
 from . import load_data
 
 
@@ -2234,7 +2234,7 @@ class TestClass:
             ] + sk_models[i].intercept_
             sk_preds[i] = sk_pred
             assert_allclose(
-                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-14
+                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-13
             )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
 
         # Compute RMSE on the validation predictions

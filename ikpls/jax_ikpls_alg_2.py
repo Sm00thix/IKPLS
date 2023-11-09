@@ -1,4 +1,4 @@
-from algorithms.jax_ikpls_base import PLSBase
+from ikpls.jax_ikpls_base import PLSBase
 import jax
 from jax.experimental import host_callback
 import jax.numpy as jnp
