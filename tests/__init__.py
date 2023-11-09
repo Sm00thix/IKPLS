@@ -1,3 +1,3 @@
-from . import load_data, test_consistency
+from . import load_data, test_ikpls
 
-__all__ = ["load_data", "test_consistency"]
+__all__ = ["load_data", "test_ikpls"]

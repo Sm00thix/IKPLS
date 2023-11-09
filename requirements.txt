@@ -1,5 +1,0 @@
-jax
-numpy
-pandas
-scikit_learn
-tqdm
