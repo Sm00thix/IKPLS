@@ -95,6 +95,14 @@ if __name__ == "__main__":
             time = cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1)
         print(f"Time: {time}")
 
+    try:
+        with open("timings/timings.csv", "x") as f:
+            f.write("model,n_components,n_splits,n,m,k,time\n")
+            f.write(f"{model},{n_components},{n_splits},{n},{m},{k},{time}\n")
+    except FileExistsError:
+        with open("timings/timings.csv", "a") as f:
+            f.write(f"{model},{n_components},{n_splits},{n},{m},{k},{time}\n")
+
     # Freeze values:
     # 1. n_components = 30
     # 2. n_splits = {1, LOOCV} # The overhead of JIT-compilation is already negligible at 1e4 samples.
@@ -103,7 +111,7 @@ if __name__ == "__main__":
     # 5. k = {1, 10}
 
     # Dynamic values:
-    # 1. n_components = {10, 20, 50, 100, 200, 500, 1000}
+    # 1. n_components = {10, 20, 30, 50, 100, 200, 500, 1000}
     # 1. n = {1e1, 1e2, 1e3, 1e4, 1e5, 1e6}
     # 3. m = {20, 50, 100, 500, 1000, 5000, 10000}
 
