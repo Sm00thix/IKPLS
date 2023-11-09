@@ -16,6 +16,7 @@ jobs:
       - uses: ./.github/actions/build
 
   publish_package:
+    needs: [build_package]
     runs-on: ubuntu-latest
     steps:  
       - uses: ./.github/actions/publish
