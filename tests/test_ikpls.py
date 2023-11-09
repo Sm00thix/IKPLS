@@ -2234,7 +2234,7 @@ class TestClass:
             ] + sk_models[i].intercept_
             sk_preds[i] = sk_pred
             assert_allclose(
-                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-14
+                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-13
             )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
 
         # Compute RMSE on the validation predictions

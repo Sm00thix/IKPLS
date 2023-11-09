@@ -6,8 +6,6 @@ name: Python package
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   test_package:
@@ -40,5 +38,5 @@ jobs:
     permissions:
       id-token: write
     environment:
-      name: testpypi
-      url: https://test.pypi.org/p/ikpls
+      name: pypi
+      url: https://pypi.org/p/ikpls
