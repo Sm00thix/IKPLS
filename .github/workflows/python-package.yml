@@ -24,3 +24,8 @@ jobs:
     steps:  
       - uses: actions/checkout@v3
       - uses: ./.github/actions/publish
+    permissions:
+      id-token: write
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/ikpls

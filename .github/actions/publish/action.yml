@@ -1,17 +1,7 @@
 name: Publish
 
 runs:
-  publish-to-pypi:
-    name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
-    needs:
-    - build
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/ikpls  # Replace <package-name> with your PyPI project name
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    using: "composite"
     steps:
       - name: Download all the dists
         uses: actions/download-artifact@v3
