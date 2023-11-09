@@ -42,7 +42,6 @@ jobs:
         python -m pip install flake8 pytest
         python -m pip install build --user
         pip install -U "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Lint with flake8
       run: |
