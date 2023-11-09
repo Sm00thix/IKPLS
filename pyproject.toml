@@ -3,7 +3,7 @@ name = "ikpls"
 version = "0.1.0"
 description = ""
 authors = ["Sm00thix <oleemail@icloud.com>"]
-license = "Apache 2.0"
+license = "Apache-2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
