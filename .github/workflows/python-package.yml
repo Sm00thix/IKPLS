@@ -12,6 +12,8 @@ on:
 jobs:
   build_package:
     runs-on: ubuntu-latest  
+    env:
+      JAX_ENABLE_X64: True
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/build
