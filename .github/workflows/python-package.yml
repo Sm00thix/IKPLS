@@ -13,10 +13,12 @@ jobs:
   build_package:
     runs-on: ubuntu-latest  
     steps:
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/build
 
   publish_package:
     needs: [build_package]
     runs-on: ubuntu-latest
     steps:  
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/publish
