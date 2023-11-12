@@ -44,12 +44,12 @@ if __name__ == "__main__":
             pls = JAX_PLS_Alg_2()
             name = "JAX Improved Kernel PLS Algorithm #2"
         elif model == "diffjax1":
-            pls = JAX_PLS_Alg_1()
+            pls = JAX_PLS_Alg_1(reverse_differentiable=True)
             name = (
                 "JAX Improved Kernel PLS Algorithm #1 (backwards mode differentiable)"
             )
         elif model == "diffjax2":
-            pls = JAX_PLS_Alg_2()
+            pls = JAX_PLS_Alg_2(reverse_differentiable=True)
             name = (
                 "JAX Improved Kernel PLS Algorithm #2 (backwards mode differentiable)"
             )
