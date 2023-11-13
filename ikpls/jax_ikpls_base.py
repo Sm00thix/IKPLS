@@ -560,7 +560,9 @@ class PLSBase(abc.ABC):
         else:
             return X @ B[n_components - 1]
 
-    def predict(self, X: jnp.ndarray, n_components: Union[None, int] = None) -> jnp.ndarray:
+    def predict(
+        self, X: jnp.ndarray, n_components: Union[None, int] = None
+    ) -> jnp.ndarray:
         """
         Description
         -----------

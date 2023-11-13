@@ -22,7 +22,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-n_splits", type=int, help="Number of splits to use in cross-validation."
     )
-    parser.add_argument("-n_jobs", type=int, help="Number of parallel jobs to use. Only used for CPU implementations. A value of -1 will use all available cores.")
+    parser.add_argument(
+        "-n_jobs",
+        type=int,
+        help="Number of parallel jobs to use. Only used for CPU implementations. A value of -1 will use all available cores.",
+    )
     parser.add_argument("-n", type=int, help="Number of samples to generate.")
     parser.add_argument("-k", type=int, help="Number of features to generate.")
     parser.add_argument("-m", type=int, help="Number of targets to generate.")
@@ -55,14 +59,16 @@ if __name__ == "__main__":
             )
         if n_splits == 1:
             print(
-            f"Fitting {name} with {n_components} components on {n} samples with {k} features and {m} targets."
-        )
+                f"Fitting {name} with {n_components} components on {n} samples with {k} features and {m} targets."
+            )
             time = single_fit_gpu_pls(pls, X, Y, n_components)
         else:
             print(
-            f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets."
-        )
-            time = cross_val_gpu_pls(pls, X, Y, n_components, n_splits, show_progress=True)
+                f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets."
+            )
+            time = cross_val_gpu_pls(
+                pls, X, Y, n_components, n_splits, show_progress=True
+            )
         print(f"Time: {time}")
     else:
         n_jobs = config["n_jobs"]
@@ -82,17 +88,19 @@ if __name__ == "__main__":
             raise ValueError(
                 f"Unknown model: {model}. Must be one of 'sk', 'np1', 'np2', 'jax1', 'jax2', 'diffjax1', 'diffjax2'."
             )
-        
+
         if n_splits == 1:
             print(
-            f"Fitting {name} with {n_components} components on {n} samples with {k} features and {m} targets."
-        )
+                f"Fitting {name} with {n_components} components on {n} samples with {k} features and {m} targets."
+            )
             time = single_fit_cpu_pls(pls, X, Y, fit_params)
         else:
             print(
-            f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets. Using {n_jobs} concurrent workers."
-        )
-            time = cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1)
+                f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets. Using {n_jobs} concurrent workers."
+            )
+            time = cross_val_cpu_pls(
+                pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1
+            )
         print(f"Time: {time}")
 
     try:

@@ -8,9 +8,12 @@ from sklearn.base import BaseEstimator
 
 class PLS(BaseEstimator):
     """
+    Description
+    -----------
     Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
     Parameters:
+    ----------
     `algorithm` : int
         Whether to use Improved Kernel PLS Algorithm #1 or #2. Defaults to 1.
     `dtype` : np.float_, default=numpy.float64
