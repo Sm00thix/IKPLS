@@ -81,25 +81,25 @@ if __name__ == "__main__":
 
     constants_dict_n_single_fit_pls1 = {"n_components": 30, "k": 500, "m": 1}
     name_x_t_dict_n_single_fit_pls1 = get_name_x_t_dict(df, "n", constants_dict_n_single_fit_pls1, "single_fit")
-    plot_timings(name_x_t_dict_n_single_fit_pls1, "n", constants_dict_n_single_fit_pls1, True, False, "single_fit")
+    plot_timings(name_x_t_dict_n_single_fit_pls1, "N", constants_dict_n_single_fit_pls1, True, False, "single_fit")
 
     constants_dict_m_single_fit_pls1 = {"n_components": 30, "n": 10000, "m": 1}
     name_x_t_dict_m_single_fit_pls1 = get_name_x_t_dict(df, "k", constants_dict_m_single_fit_pls1, "single_fit")
-    plot_timings(name_x_t_dict_m_single_fit_pls1, "m", constants_dict_m_single_fit_pls1, True, False, "single_fit")
+    plot_timings(name_x_t_dict_m_single_fit_pls1, "K", constants_dict_m_single_fit_pls1, True, False, "single_fit")
 
     constants_dict_nc_single_fit_pls1 = {"n": 10000, "k": 500, "m": 1}
     name_x_t_dict_nc_single_fit_pls1 = get_name_x_t_dict(df, "n_components", constants_dict_nc_single_fit_pls1, "single_fit")
-    plot_timings(name_x_t_dict_nc_single_fit_pls1, "n_components", constants_dict_nc_single_fit_pls1, False, True, "single_fit")
+    plot_timings(name_x_t_dict_nc_single_fit_pls1, "A", constants_dict_nc_single_fit_pls1, False, True, "single_fit")
     
     constants_dict_n_single_fit_pls2 = {"n_components": 30, "k": 500, "m": 10}
     name_x_t_dict_n_single_fit_pls2 = get_name_x_t_dict(df, "n", constants_dict_n_single_fit_pls2, "single_fit")
-    plot_timings(name_x_t_dict_n_single_fit_pls2, "n", constants_dict_n_single_fit_pls2, True, True, "single_fit")
+    plot_timings(name_x_t_dict_n_single_fit_pls2, "N", constants_dict_n_single_fit_pls2, True, True, "single_fit")
 
     constants_dict_m_single_fit_pls2 = {"n_components": 30, "n": 10000, "m": 10}
     name_x_t_dict_m_single_fit_pls2 = get_name_x_t_dict(df, "k", constants_dict_m_single_fit_pls2, "single_fit")
-    plot_timings(name_x_t_dict_m_single_fit_pls2, "k", constants_dict_m_single_fit_pls2, True, True, "single_fit")
+    plot_timings(name_x_t_dict_m_single_fit_pls2, "K", constants_dict_m_single_fit_pls2, True, True, "single_fit")
 
     constants_dict_nc_single_fit_pls2 = {"n": 10000, "k": 500, "m": 10}
     name_x_t_dict_nc_single_fit_pls2 = get_name_x_t_dict(df, "n_components", constants_dict_nc_single_fit_pls2, "single_fit")
-    plot_timings(name_x_t_dict_nc_single_fit_pls2, "n_components", constants_dict_nc_single_fit_pls2, False, True, "single_fit")
+    plot_timings(name_x_t_dict_nc_single_fit_pls2, "A", constants_dict_nc_single_fit_pls2, False, True, "single_fit")
     # name_x_t_dict_n_loocv = get_name_x_t_dict(df, "n", constants_dict, "loocv")
