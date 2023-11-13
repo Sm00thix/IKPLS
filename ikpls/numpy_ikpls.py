@@ -2,6 +2,7 @@ import numpy as np
 import numpy.linalg as la
 import numpy.typing as npt
 import warnings
+from typing import Union
 from sklearn.base import BaseEstimator
 
 
@@ -159,7 +160,7 @@ class PLS(BaseEstimator):
             self.B[i] = self.B[i - 1] + r @ q.T
 
     def predict(
-        self, X: npt.ArrayLike, n_components: None | int = None
+        self, X: npt.ArrayLike, n_components: Union[None, int] = None
     ) -> npt.NDArray[np.float_]:
         """
         Description

@@ -526,7 +526,7 @@ class PLSBase(abc.ABC):
 
     @partial(jax.jit, static_argnums=(0, 3))
     def stateless_predict(
-        self, X: jnp.ndarray, B: jnp.ndarray, n_components: None | int = None
+        self, X: jnp.ndarray, B: jnp.ndarray, n_components: Union[None, int] = None
     ) -> jnp.ndarray:
         """
         Description
@@ -560,7 +560,7 @@ class PLSBase(abc.ABC):
         else:
             return X @ B[n_components - 1]
 
-    def predict(self, X: jnp.ndarray, n_components: None | int = None) -> jnp.ndarray:
+    def predict(self, X: jnp.ndarray, n_components: Union[None, int] = None) -> jnp.ndarray:
         """
         Description
         -----------

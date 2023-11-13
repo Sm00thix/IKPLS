@@ -37,10 +37,10 @@ class SK_PLS_All_Components(SK_PLS):
         return (X - self._x_mean) / self._x_std @ self.B + self.intercept_
 
 
-def gen_random_data(n, m, k):
+def gen_random_data(n, k, m):
     rng = np.random.default_rng(seed=42)
-    X = rng.random((n, m), dtype=np.float64)
-    Y = rng.random((n, k), dtype=np.float64)
+    X = rng.random((n, k), dtype=np.float64)
+    Y = rng.random((n, m), dtype=np.float64)
     return X, Y
 
 
@@ -143,13 +143,3 @@ def single_fit_gpu_pls(pls, X, Y, n_components):
         globals=locals() | globals(),
     )
     return t.timeit(number=1)
-
-
-if __name__ == "__main__":
-    X, Y = gen_random_data(9, 100, 10)
-    from algorithms.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
-
-    pls = SK_PLS_All_Components()
-    n_components = 20
-    n_splits = 5
-    cross_val_cpu_pls(pls, X, Y, n_splits, {})
