@@ -2,6 +2,7 @@ from numpy import ndarray
 from sklearn.cross_decomposition import PLSRegression as SK_PLS
 import numpy as np
 import numpy.typing as npt
+import jax
 import jax.numpy as jnp
 from sklearn.model_selection import KFold, cross_validate
 from timeit import Timer
@@ -70,7 +71,7 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
     all_values = np.concatenate((lowest_mses, num_components)) # Array of all values.
     return dict(zip(all_names, all_values))
 
-
+@jax.jit # JIT compile it for optimal performance.
 def jax_mse_for_each_target(Y_true, Y_pred):
     # Y_true has shape (N, M)
     e = Y_true - Y_pred # Shape (A, N, M)

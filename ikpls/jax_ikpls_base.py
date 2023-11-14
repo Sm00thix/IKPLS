@@ -709,6 +709,7 @@ class PLSBase(abc.ABC):
         """
         X = jnp.asarray(X)
         Y = jnp.asarray(Y)
+        cv_splits = jnp.asarray(cv_splits)
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
         for split in tqdm(unique_splits, disable=not show_progress):
