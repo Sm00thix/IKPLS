@@ -2210,7 +2210,7 @@ class TestClass:
             se = e**2
             mse = jnp.mean(se, axis=-2)
             rmse = jnp.sqrt(mse)
-            return (rmse,)
+            return rmse
 
         jnp_splits = jnp.array(splits)
 

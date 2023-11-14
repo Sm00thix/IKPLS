@@ -44,16 +44,17 @@ Y = np.random.uniform(size=(N, M)).astype(np.float64)
 np_ikpls_alg_1 = PLS(algorithm=1)
 np_ikpls_alg_1.fit(X, Y, A)
 
-y_pred = np_ikpls_alg_1.predict(X) # Will have shape (A, N, M) = (20, 100, 10).
-y_pred_20_components = np_ikpls_alg_1.predict(X, n_components=20) # Will have shape (N, M) = (100, 10).
+y_pred = np_ikpls_alg_1.predict(X) # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible number of components up to and including A.
+y_pred_20_components = np_ikpls_alg_1.predict(X, n_components=20) # Has shape (N, M) = (100, 10).
+(y_pred_20_components == y_pred[19]).all() # True
 
 # The internal model parameters can be accessed as follows:
 np_ikpls_alg_1.B # Regression coefficients tensor of shape (A, K, M) = (20, 50, 10).
-np_ikpls_alg_1.W # X weights matrix of (K, A) = (50, 20).
-np_ikpls_alg_1.P # X loadings matrix of (K, A) = (50, 20).
-np_ikpls_alg_1.Q # Y loadings matrix of (M, A) = (10, 20).
-np_ikpls_alg_1.R # X rotations matrix of (K, A) = (50, 20).
-np_ikpls_alg_1.T # X scores matrix of (N, A) = (100, 20). This is only computed for IKPLS Algorithm #1.
+np_ikpls_alg_1.W # X weights matrix of shape (K, A) = (50, 20).
+np_ikpls_alg_1.P # X loadings matrix of shape (K, A) = (50, 20).
+np_ikpls_alg_1.Q # Y loadings matrix of shape (M, A) = (10, 20).
+np_ikpls_alg_1.R # X rotations matrix of shape (K, A) = (50, 20).
+np_ikpls_alg_1.T # X scores matrix of shape (N, A) = (100, 20). This is only computed for IKPLS Algorithm #1.
 ```
 
 ## Examples
