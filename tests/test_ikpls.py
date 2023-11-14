@@ -4,7 +4,7 @@ import numpy.typing as npt
 from numpy.testing import assert_allclose
 import jax
 from jax import numpy as jnp
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union
 from sklearn.cross_decomposition import PLSRegression as SkPLS
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_Alg_1
 from ikpls.jax_ikpls_alg_2 import PLS as JAX_Alg_2
@@ -1902,7 +1902,7 @@ class TestClass:
 
         # Function to differentiate.
         def preprocess_fit_rmse(
-            X: jnp.ndarray, Y: jnp.ndarray, pls_alg, A: int | None = None
+            X: jnp.ndarray, Y: jnp.ndarray, pls_alg, A: Union[int, None] = None
         ) -> Callable[[jnp.ndarray], float]:
             @jax.jit
             def helper(conv_filter):
@@ -2264,7 +2264,7 @@ class TestClass:
                 return super().fit(X, Y, A)
 
             def predict(
-                self, X: npt.ArrayLike, A: None | int = None
+                self, X: npt.ArrayLike, A: Union[None, int] = None
             ) -> npt.NDArray[np.float_]:
                 return super().predict(X - self.X_mean, A) + self.Y_mean
 
