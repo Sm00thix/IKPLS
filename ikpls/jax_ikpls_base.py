@@ -718,7 +718,7 @@ class PLSBase(abc.ABC):
                 X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_function
             )
             metric_value_lists = self._update_metric_value_lists(
-                metric_value_lists, metric_values
+                metric_value_lists, metric_names, metric_values
             )
         return self._finalize_metric_values(metric_value_lists, metric_names)
 
@@ -788,7 +788,12 @@ class PLSBase(abc.ABC):
         )
         return metric_values
 
-    def _update_metric_value_lists(self, metric_value_lists: list[list[Any]], metric_names: list[str], metric_values: Any):
+    def _update_metric_value_lists(
+        self,
+        metric_value_lists: list[list[Any]],
+        metric_names: list[str],
+        metric_values: Any,
+    ):
         """
         Description
         -----------
@@ -812,7 +817,7 @@ class PLSBase(abc.ABC):
         This method updates the lists of metric values for each metric and fold during cross-validation.
         """
         # for j, m in enumerate(metric_values):
-            # metric_value_lists[j].append(m)
+        # metric_value_lists[j].append(m)
         if len(metric_names) == 1:
             metric_value_lists[0].append(metric_values)
         else:
@@ -846,6 +851,8 @@ class PLSBase(abc.ABC):
         This method organizes and finalizes the metric values into a dictionary for the specified metric names, making it easy to analyze the cross-validation results.
         """
         metrics = {}
-        for name, lst_of_metric_value_for_each_split in zip(metric_names, metrics_results):
+        for name, lst_of_metric_value_for_each_split in zip(
+            metric_names, metrics_results
+        ):
             metrics[name] = lst_of_metric_value_for_each_split
         return metrics

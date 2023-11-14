@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     try:
         with open("timings/timings.csv", "x") as f:
-            f.write("model,n_components,n_splits,n,m,k,time\n")
+            f.write("model,n_components,n_splits,n,k,m,time\n")
             f.write(f"{model},{n_components},{n_splits},{n},{k},{m},{time}\n")
     except FileExistsError:
         with open("timings/timings.csv", "a") as f:
