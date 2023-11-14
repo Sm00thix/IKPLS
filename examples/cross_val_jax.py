@@ -101,4 +101,3 @@ if __name__ == "__main__":
         ]
     )  # shape (n_splits, M) = (5, 10)
     (best_mse_for_each_split == equivalent_best_mse_for_each_split).all()  # True
-    pass
