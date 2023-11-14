@@ -1795,7 +1795,7 @@ class TestClass:
         Test PLS regression when Y is constant with m > k target variables.
 
         This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with more
-        columns (m) than the number of columns in X (k). It ensures that Y has more than one column and more columns than X,
+        columns (M) than the number of columns in X (K). It ensures that Y has more than one column and more columns than X,
         and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
 
         Returns
@@ -2003,7 +2003,7 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables and multiple target variables with m < k, and calls the 'check_gradient_pls'
+        This test loads input predictor variables and multiple target variables with M < K, and calls the 'check_gradient_pls'
         method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
@@ -2045,7 +2045,7 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables and multiple target variables with m = k, and calls the 'check_gradient_pls'
+        This test loads input predictor variables and multiple target variables with M = K, and calls the 'check_gradient_pls'
         method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
@@ -2088,7 +2088,7 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables and multiple target variables with m > k, and calls the 'check_gradient_pls'
+        This test loads input predictor variables and multiple target variables with M > K, and calls the 'check_gradient_pls'
         method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
@@ -2210,7 +2210,7 @@ class TestClass:
             se = e**2
             mse = jnp.mean(se, axis=-2)
             rmse = jnp.sqrt(mse)
-            return (rmse,)
+            return rmse
 
         jnp_splits = jnp.array(splits)
 
@@ -2473,7 +2473,7 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where m is less than k), and split indices for
+        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
         cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
 
         Returns:
@@ -2503,7 +2503,7 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where m is equal to k), and split indices for
+        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
         cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
 
         Returns:
@@ -2534,7 +2534,7 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where m is greater than k), and split indices for
+        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
         cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
 
         Returns:
