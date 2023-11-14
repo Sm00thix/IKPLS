@@ -707,6 +707,8 @@ class PLSBase(abc.ABC):
         -----
         This method is used to perform cross-validation on the PLS model with different data splits and evaluate its performance using user-defined metrics.
         """
+        X = jnp.asarray(X)
+        Y = jnp.asarray(Y)
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
         for split in tqdm(unique_splits, disable=not show_progress):
@@ -732,7 +734,7 @@ class PLSBase(abc.ABC):
             [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
             Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
         ],
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Tuple[Any]],
+        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
     ):
         """
         Description
@@ -764,8 +766,8 @@ class PLSBase(abc.ABC):
 
         Returns
         -------
-        `metric_values` : Tuple of Any
-            A tuple of metric values based on the true and predicted values for a single fold.
+        `metric_values` : Any
+            metric values based on the true and predicted values for a single fold.
 
         Notes
         -----
@@ -786,7 +788,7 @@ class PLSBase(abc.ABC):
         )
         return metric_values
 
-    def _update_metric_value_lists(self, metric_value_lists, metric_values):
+    def _update_metric_value_lists(self, metric_value_lists: list[list[Any]], metric_names: list[str], metric_values: Any):
         """
         Description
         -----------
@@ -809,8 +811,13 @@ class PLSBase(abc.ABC):
         -----
         This method updates the lists of metric values for each metric and fold during cross-validation.
         """
-        for j, m in enumerate(metric_values):
-            metric_value_lists[j].append(m)
+        # for j, m in enumerate(metric_values):
+            # metric_value_lists[j].append(m)
+        if len(metric_names) == 1:
+            metric_value_lists[0].append(metric_values)
+        else:
+            for i in range(len(metric_names)):
+                metric_value_lists[i].append(metric_values[i])
         return metric_value_lists
 
     def _finalize_metric_values(
@@ -831,7 +838,7 @@ class PLSBase(abc.ABC):
 
         Returns
         -------
-        `metrics` : dict[str, Any]
+        `metrics` : dict[str, list[Any]]
             A dictionary containing evaluation metrics for each metric specified in `metric_names`. The keys are metric names, and the values are lists of metric values for each cross-validation fold.
 
         Notes
@@ -839,6 +846,6 @@ class PLSBase(abc.ABC):
         This method organizes and finalizes the metric values into a dictionary for the specified metric names, making it easy to analyze the cross-validation results.
         """
         metrics = {}
-        for name, lst in zip(metric_names, metrics_results):
-            metrics[name] = lst
+        for name, lst_of_metric_value_for_each_split in zip(metric_names, metrics_results):
+            metrics[name] = lst_of_metric_value_for_each_split
         return metrics
