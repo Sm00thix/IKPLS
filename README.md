@@ -17,7 +17,7 @@ To ensure that JAX implementations use Float64, set the environment variable JAX
 
 ## Installation
 * Install the package for Python3 using the following command:
-`$ pip3 install ikpls`
+``$ pip3 install ikpls``
 * Now you can import the NumPy and JAX implementations with:
 ```python
 from ikpls.numpy_ikpls import PLS as NpPLS
@@ -58,9 +58,9 @@ np_ikpls_alg_1.T # X scores matrix of shape (N, A) = (100, 20). This is only com
 ```
 
 ## Examples
-In [examples](examples/) you will find:
-* [Example](examples/fit_predict_numpy.py) of fitting and predicting with the NumPy implementations.
-* [Example](examples/fit_predict_jax.py) of fitting and predicting with the JAX implementations.
-* [Example](examples/cross_val_numpy.py) of cross validating with the NumPy implementations.
-* [Example](examples/cross_val_jax.py) of cross validating with the JAX implementations.
-* [Example](examples/gradient_jax.py) of computing the gradient of a preprocessing filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
+In [examples](https://github.com/Sm00thix/IKPLS/tree/main/examples) you will find:
+* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py) of fitting and predicting with the NumPy implementations.
+* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py) of fitting and predicting with the JAX implementations.
+* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py) of cross validating with the NumPy implementations.
+* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py) of cross validating with the JAX implementations.
+* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py) of computing the gradient of a preprocessing filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
