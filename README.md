@@ -16,7 +16,7 @@ The JAX implementations support running on both CPU, GPU, and TPU. To use the GP
 To ensure that JAX implementations use Float64, set the environment variable JAX_ENABLE_X64=True as per the [Current Gotchas](https://github.com/google/jax#current-gotchas).
 
 ## Installation
-* Install the package for Python3 using the following command:
+* Install the package for Python3 using the following command:  
 ``$ pip3 install ikpls``
 * Now you can import the NumPy and JAX implementations with:
 ```python
