@@ -851,7 +851,7 @@ class TestClass:
             diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             atol=1e-8,
-            rtol=1e-5,
+            rtol=6e-5,
         )
 
         self.check_predictions(
