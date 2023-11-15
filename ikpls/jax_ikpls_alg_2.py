@@ -230,10 +230,10 @@ class PLS(PLSBase):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `A` : int
             Number of components in the PLS model.
@@ -268,6 +268,8 @@ class PLS(PLSBase):
         --------
         `stateless_fit` : Performs the same operation but returns the output matrices instead of storing them in the class instance.
         """
+        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 precision
+        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 precision
         self.B, W, P, Q, R = self.stateless_fit(X, Y, A)
         self.W = W.T
         self.P = P.T
@@ -282,10 +284,10 @@ class PLS(PLSBase):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `A` : int
             Number of components in the PLS model.
@@ -322,6 +324,9 @@ class PLS(PLSBase):
         """
         if self.verbose:
             print(f"stateless_fit for {self.name} will be JIT compiled...")
+
+        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 precision
+        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 precision
 
         # Get shapes
         N, K = X.shape
