@@ -1902,7 +1902,7 @@ class TestClass:
 
         # Function to differentiate.
         def preprocess_fit_rmse(
-            X: jnp.ndarray, Y: jnp.ndarray, pls_alg, A: Union[int, None] = None
+            X: jnp.ndarray, Y: jnp.ndarray, pls_alg, A: int
         ) -> Callable[[jnp.ndarray], float]:
             @jax.jit
             def helper(conv_filter):
