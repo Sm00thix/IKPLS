@@ -2,7 +2,6 @@ from numpy import ndarray
 from sklearn.cross_decomposition import PLSRegression as SK_PLS
 import numpy as np
 import numpy.typing as npt
-import jax
 import jax.numpy as jnp
 from sklearn.model_selection import KFold, cross_validate
 from timeit import Timer

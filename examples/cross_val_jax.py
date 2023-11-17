@@ -3,7 +3,6 @@ from ikpls.jax_ikpls_alg_1 import (
 )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
 import jax.numpy as jnp
 import numpy as np
-import jax
 from typing import Tuple
 
 
