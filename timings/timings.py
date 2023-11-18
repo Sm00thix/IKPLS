@@ -9,8 +9,8 @@ from timeit import default_timer
 
 
 class SK_PLS_All_Components(SK_PLS):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, n_components, **kwargs):
+        super().__init__(n_components=n_components, **kwargs)
 
     def fit(
         self,
@@ -98,21 +98,24 @@ def jax_metric_names(K):
 
 def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
     cv = KFold(n_splits=n_splits, shuffle=False)
-    t = Timer(
-        stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
-        timer=default_timer,
-        globals=locals() | globals(),
-    )
-    return t.timeit(number=1)
+    # t = Timer(
+    #     stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
+    #     timer=default_timer,
+    #     globals=locals() | globals(),
+    # )
+    # return t.timeit(number=1)
+    scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )
+    pass
 
 
 def single_fit_cpu_pls(pls, X, Y, fit_params=None):
-    t = Timer(
-        stmt="pls.fit(X, Y, **fit_params)",
-        timer=default_timer,
-        globals=locals() | globals(),
-    )
-    return t.timeit(number=1)
+    # t = Timer(
+    #     stmt="pls.fit(X, Y, **fit_params)",
+    #     timer=default_timer,
+    #     globals=locals() | globals(),
+    # )
+    # return t.timeit(number=1)
+    pls.fit(X, Y, **fit_params)
 
 
 def jax_preprocessing_function(X_train, Y_train, X_val, Y_val):
