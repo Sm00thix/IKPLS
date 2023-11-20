@@ -9,6 +9,19 @@ from timeit import default_timer
 
 
 class SK_PLS_All_Components(SK_PLS):
+    """
+    Description
+    -----------
+    Subclass of sklearn's PLSRegression that stores regression matrices for all possible components during fitting.
+    
+    Parameters
+    ----------
+    `n_components` : int
+        Number of components to use in the PLS fit.
+
+    `**kwargs`:
+        Additional keyword arguments to pass to the superclass constructor.
+    """
     def __init__(self, n_components, **kwargs):
         super().__init__(n_components=n_components, **kwargs)
 
@@ -17,6 +30,19 @@ class SK_PLS_All_Components(SK_PLS):
         X,
         Y,
     ):  # Override fit method to store regression matrices for all possible number of components. This is MUCH faster than fitting an entirely new model for every single number of components
+        """
+        Description
+        -----------
+        Fit the PLS model and store regression matrices for all possible components.
+
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables.
+
+        `Y` : Array of shape (N, M)
+            Response variables.
+        """
         super().fit(X, Y)
         B = np.empty(
             (self.n_components, self.n_features_in_, self.y_loadings_.shape[0])
@@ -33,19 +59,79 @@ class SK_PLS_All_Components(SK_PLS):
         self, X: npt.ArrayLike
     ) -> (
         ndarray
-    ):  # Override predict function to give a prediction for each number of components up to A. This is MUCH faster than calling the predict function n_components number of times with different number of components.
+    ):
+        """
+        Description
+        -----------
+        Predict the output for each number of components up to A.
+        This is MUCH faster than calling the predict function
+        n_components number of times with different number of components.
+
+        Parameters
+        ----------
+        `X` : Array of shape (N, K)
+            Predictor variables.
+
+        Returns:
+        `Y_pred` : Array of shape (A, N, M)
+            Predicted response variables for each number of components up to A.
+        """
         return (X - self._x_mean) / self._x_std @ self.B + self.intercept_
 
 
-def gen_random_data(n, k, m):
+def gen_random_data(N, K, M):
+    """
+    Description
+    -----------
+    Generate random data for testing.
+
+    Parameters
+    ----------
+    `N` : int
+        Number of samples.
+
+    `K` : int
+        Number of features in X.
+    `M` : int
+        Number of features in Y.
+
+    Returns
+    -------
+    (X, Y) : Tuple of arrays
+        Randomly generated input X and target Y.
+    """
     rng = np.random.default_rng(seed=42)
-    X = rng.random((n, k), dtype=np.float64)
-    Y = rng.random((n, m), dtype=np.float64)
+    X = rng.random((N, K), dtype=np.float64)
+    Y = rng.random((N, M), dtype=np.float64)
     return X, Y
 
 
 def mse_for_each_target(estimator, X, Y_true, **kwargs):
-    # We must return a dict of singular values. Let's choose the number of components that achieves the lowest MSE value for each target and return both MSE and the number of components.
+    """
+    Description
+    -----------
+    Calculate lowest mean squared error (mse) for each target and the corresponding number of components that minimizes the mse.
+
+    Parameters
+    ----------
+    `estimator` : Estimator object
+        PLS estimator with a 'predict' method.
+    
+    `X` : Array of shape (N, K)
+        Predictor variables.
+    
+    `Y_true` : Array of shape (N, M)
+        True response variables.
+
+    `**kwargs`:
+        Additional keyword arguments to pass to the 'predict' method.
+
+    Returns
+    -------
+    `metrics`: dict
+        Dictionary containing MSE and number of components for each target.
+    """
+    
     # Y_true has shape (N, M)
     Y_pred = estimator.predict(
         X, **kwargs
@@ -72,6 +158,21 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
 
 
 def jax_mse_for_each_target(Y_true, Y_pred):
+    """
+    Calculate mean squared error for each target and the corresponding number of components using JAX.
+
+    Parameters
+    ----------
+    `Y_true` : Array of shape (N, M)
+        True target values.
+
+    `Y_pred` : Array of shape (A, N, M)
+        Predicted target values.
+
+    Returns
+    -------
+    `all_values` : Array of shape (2*M,)
+    """
     # Y_true has shape (N, M)
     e = Y_true - Y_pred # Shape (A, N, M)
     se = e**2 # Shape (A, N, M)
@@ -90,6 +191,21 @@ def jax_mse_for_each_target(Y_true, Y_pred):
 
 
 def jax_metric_names(K):
+    """
+    Description
+    -----------
+    Generate metric names for MSE and number of components.
+
+    Parameters
+    ----------
+    `K` : int
+        Number of targets.
+
+    Returns
+    -------
+    `all_names` : list[str]
+        List of metric names.
+    """
     mse_names = [f"lowest_mse_target_{i}" for i in range(K)] # List of names for the lowest MSE values.
     num_components_names = [f"num_components_lowest_mse_target_{i}" for i in range(K)] # List of names for the number of components that achieves the lowest MSE for each target.
     all_names = mse_names + num_components_names # List of all names.
@@ -97,32 +213,129 @@ def jax_metric_names(K):
 
 
 def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
+    """
+    Description
+    -----------
+    Perform cross-validation for PLS on CPU and measure the execution time.
+
+    Parameters
+    ----------
+    `pls` : Estimator object
+        PLS estimator with a 'predict' method.
+    `X` : Array of shape (N, K)
+        Predictor variables.
+    `Y` : Array of shape (N, M)
+        Response variables.
+    `n_splits` : int
+        Number of splits in cross-validation.
+    `fit_params` : dict
+        Parameters to pass to the fit method.
+    `n_jobs` : int
+        Number of jobs to run in parallel.
+    `verbose` : int
+        Verbosity level.
+
+    Returns
+    -------
+    `time` : float
+        Execution time for cross-validation.
+    """
     cv = KFold(n_splits=n_splits, shuffle=False)
-    # t = Timer(
-    #     stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
-    #     timer=default_timer,
-    #     globals=locals() | globals(),
-    # )
-    # return t.timeit(number=1)
-    scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )
-    pass
+    t = Timer(
+        stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
+        timer=default_timer,
+        globals=locals() | globals(),
+    )
+    return t.timeit(number=1)
 
 
 def single_fit_cpu_pls(pls, X, Y, fit_params=None):
-    # t = Timer(
-    #     stmt="pls.fit(X, Y, **fit_params)",
-    #     timer=default_timer,
-    #     globals=locals() | globals(),
-    # )
-    # return t.timeit(number=1)
-    pls.fit(X, Y, **fit_params)
+    """
+    Description
+    -----------
+    Fit PLS model on CPU and measure the execution time.
+
+    Parameters
+    ----------
+    `pls` : Estimator object
+        PLS estimator with a 'predict' method.
+    `X` : Array of shape (N, K)
+        Predictor variables.
+    `Y` : Array of shape (N, M)
+        Response variables.
+    `fit_params` : dict
+        Parameters to pass to the fit method.
+
+    Returns
+    -------
+    `time` : float
+        Execution time for single fit.
+    """
+    t = Timer(
+        stmt="pls.fit(X, Y, **fit_params)",
+        timer=default_timer,
+        globals=locals() | globals(),
+    )
+    return t.timeit(number=1)
 
 
 def jax_preprocessing_function(X_train, Y_train, X_val, Y_val):
+    """
+    Description
+    -----------
+    Preprocessing function for JAX PLS.
+
+    Parameters
+    ----------
+    `X_train` : Array of shape (N_train, K)
+        Training predictor variables.
+    `Y_train` : Array of shape (N_train, M)
+        Training response variables.
+    `X_val` : Array of shape (N_val, K)
+        Validation predictor variables.
+    `Y_val` : Array of shape (N_val, M)
+        Validation response variables.
+
+    Returns
+    -------
+    `X_train` : Array of shape (N_train, K)
+        Preprocessed training predictor variables.
+    `Y_train` : Array of shape (N_train, M)
+        Preprocessed training response variables.
+    `X_val` : Array of shape (N_val, K)
+        Preprocessed validation predictor variables.
+    `Y_val` : Array of shape (N_val, M)
+        Preprocessed validation response variables.
+    """
     return X_train, Y_train, X_val, Y_val
 
 
 def cross_val_gpu_pls(pls, X, Y, n_components, n_splits, show_progress):
+    """
+    Description
+    -----------
+    Perform cross-validation for PLS on GPU and measure the execution time.
+
+    Parameters
+    ----------
+    `pls` : Estimator object
+        PLS estimator with a 'predict' method.
+    `X` : Array of shape (N, K)
+        Predictor variables.
+    `Y` : Array of shape (N, M)
+        Response variables.
+    `n_components` : int
+        Number of components.
+    `n_splits` : int
+        Number of splits in cross-validation.
+    `show_progress` : bool
+        Whether to show progress.
+
+    Returns
+    -------
+    `time` : float
+        Execution time for cross-validation.
+    """
     cv_splits = np.zeros(X.shape[0])
     for i in range(X.shape[0] % n_splits):
         split_size = X.shape[0] // n_splits + 1
@@ -142,6 +355,27 @@ def cross_val_gpu_pls(pls, X, Y, n_components, n_splits, show_progress):
 
 
 def single_fit_gpu_pls(pls, X, Y, n_components):
+    """
+    Description
+    -----------
+    Fit PLS model on GPU and measure the execution time.
+
+    Parameters
+    ----------
+    `pls` : Estimator object
+        PLS estimator with a 'predict' method.
+    `X` : Array of shape (N, K)
+        Predictor variables.
+    `Y` : Array of shape (N, M)
+        Response variables.
+    `n_components` : int
+        Number of components.
+
+    Returns
+    -------
+    `time` : float
+        Execution time for single fit.
+    """
     t = Timer(
         stmt="pls.fit(X, Y, A=n_components)",
         timer=default_timer,
