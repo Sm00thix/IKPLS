@@ -79,7 +79,7 @@ def plot_timings(
         elif name == "n_components":
             name = "a"
         name = name.upper()
-        title_str += f"{name}={value}, "
+        title_str += f"${name}$={value}, "
     title_str = title_str[:-2]
     ax.set_title(title_str, fontsize=10)
     # ax.legend()
@@ -271,9 +271,9 @@ if __name__ == "__main__":
     # axs[0, 0].twiny().set_xlabel("Time vs. N")
     # axs[0, 1].twiny().set_xlabel("Time vs. K")
     # axs[0, 2].twiny().set_xlabel("Time vs. A")
-    axs[3, 0].set_xlabel("N")
-    axs[3, 1].set_xlabel("K")
-    axs[3, 2].set_xlabel("A")
+    axs[3, 0].set_xlabel("$N$")
+    axs[3, 1].set_xlabel("$K$")
+    axs[3, 2].set_xlabel("$A$")
     handles, labels = axs[0, 0].get_legend_handles_labels()
     
     first_legend = fig.legend(handles, labels, loc='lower center', fancybox=True, shadow=True, ncol=len(labels), prop={'size': 9})

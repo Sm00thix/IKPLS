@@ -71,9 +71,9 @@ In an attempt to give guidelines for algorithm choice for the most common use-ca
 
 $N \in [10^1, 10^2, 10^3, 10^4, 10^5, 10^6]$, $K \in [30, 50, 10^2, 5\cdot 10^2, 10^3, 5\cdot 10^3, 10^4]$, $A \in [10, 20, 30, 50, 100, 200, 500]$, and $M \in [1, 10]$.
 
-All the experiments are executed on the hardware shown in \autoref{hardware} on a machine running Ubuntu 22.04 Jammy Jellyfish.
+All the experiments are executed on the hardware shown in \autoref{tab:hardware} on a machine running Ubuntu 22.04 Jammy Jellyfish.
 
-: Hardware used in the execution time experiments. \label{hardware}
+: Hardware used in the execution time experiments. \label{tab:hardware}
 
 | Component   | Name                      |
 |-------------|---------------------------|
