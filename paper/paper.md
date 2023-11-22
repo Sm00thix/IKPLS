@@ -67,7 +67,9 @@ This section offers a comparison of the execution times of the `ikpls` implement
 
 The benchmarks use randomly generated data. The random seed is fixed such that all implementations are given the same random data. The default parameters for the benchmarks are $N=10,000$, $K=500$, and $A=30$. We benchmark using both a single target variable $M=1$ and multiple target variables with $M=10$. PLS with $M=1$ is commonly referred to as PLS1 and PLS2 with $M>1$
 
-In an attempt to give guidelines for algorithm choice for the most common use-cases, we report the execution time of the implementations with varying values for each of the aforementioned parameters. Specifically, we define a list of values for each of the parameters to take while the rest of the parameters mantain their default settings. We use $N \in \[10^1, 10^2, 10^3, 10^4, 10^5, 10^6\]$, $K \in \[30, 50, 10^2, 5\cdot 10^2, 10^3, 5\cdot 10^3, 10^4\]$, $A \in \[10, 20, 30, 50, 100, 200, 500\]$, and $M \in \[1, 10\]$.
+In an attempt to give guidelines for algorithm choice for the most common use-cases, we report the execution time of the implementations with varying values for each of the aforementioned parameters. Specifically, we define a list of values for each of the parameters to take while the rest of the parameters mantain their default settings. We use 
+
+$N \in [10^1, 10^2, 10^3, 10^4, 10^5, 10^6]$, $K \in [30, 50, 10^2, 5\cdot 10^2, 10^3, 5\cdot 10^3, 10^4]$, $A \in [10, 20, 30, 50, 100, 200, 500]$, and $M \in [1, 10]$.
 
 All the experiments are executed on the hardware shown in \autoref{hardware} on a machine running Ubuntu 22.04 Jammy Jellyfish.
 
@@ -86,6 +88,8 @@ All the experiments are executed on the hardware shown in \autoref{hardware} on 
 +-------------+---------------------------+
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
 +=============+===========================+
+
+![Timings.\label{fig:timings}](timings.png)
 
 # Possible further algorithmic improvements
 
