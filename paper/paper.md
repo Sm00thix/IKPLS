@@ -74,20 +74,14 @@ $N \in [10^1, 10^2, 10^3, 10^4, 10^5, 10^6]$, $K \in [30, 50, 10^2, 5\cdot 10^2,
 All the experiments are executed on the hardware shown in \autoref{hardware} on a machine running Ubuntu 22.04 Jammy Jellyfish.
 
 : Comparison of programming languages used in the publishing tool. []{label=”hardware”}
-+-------------+---------------------------+
+
 | Component   | Name                      |
-|             |                           |
-+:===========:+:=========================:+
+|-------------|---------------------------|
 | Motherboard | ASUS PRO WS X570-ACE      |
-+-------------+---------------------------+
 | CPU         | AMD Ryzen 9 5950X         |
-+-------------+---------------------------+
 | CPU Cooler  | NZXT Kraken X73           |
-+-------------+---------------------------+
 | GPU         | NVIDIA GeForce RTX3090 Ti |
-+-------------+---------------------------+
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
-+=============+===========================+
 
 ![Timings.\label{fig:timings}](timings.png)
 
