@@ -73,7 +73,7 @@ $N \in [10^1, 10^2, 10^3, 10^4, 10^5, 10^6]$, $K \in [30, 50, 10^2, 5\cdot 10^2,
 
 All the experiments are executed on the hardware shown in \autoref{hardware} on a machine running Ubuntu 22.04 Jammy Jellyfish.
 
-: Comparison of programming languages used in the publishing tool. []{label=”hardware”}
+: Hardware used in the execution time experiments. \label{hardware}
 
 | Component   | Name                      |
 |-------------|---------------------------|
