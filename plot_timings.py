@@ -26,19 +26,19 @@ def get_name_x_t_dict(df, x_name, constants_dict, single_fit_or_loocv):
         x = sub_df[x_name].values
         t = sub_df["time"].values
         if model_name == "sk":
-            model_name = "scikit-learn NIPALS"
+            model_name = "scikit-learn NIPALS (CPU)"
         elif model_name == "np1":
-            model_name = "IKPLS #1"
+            model_name = "NumPy IKPLS #1 (CPU)"
         elif model_name == "np2":
-            model_name = "IKPLS #2"
+            model_name = "NumPy IKPLS #2 (CPU)"
         elif model_name == "jax1":
-            model_name = "IKPLS #1 (GPU)"
+            model_name = "JAX IKPLS #1 (GPU)"
         elif model_name == "jax2":
-            model_name = "IKPLS #2 (GPU)"
+            model_name = "JAX IKPLS #2 (GPU)"
         elif model_name == "diffjax1":
-            model_name = "IKPLS #1 (GPU, BMD)"
+            model_name = "JAX IKPLS #1 (GPU, BMD)"
         elif model_name == "diffjax2":
-            model_name = "IKPLS #2 (GPU, BMD)"
+            model_name = "JAX IKPLS #2 (GPU, BMD)"
         name_x_t_dict[model_name] = {"x": x, "t": t}
     return name_x_t_dict
 
