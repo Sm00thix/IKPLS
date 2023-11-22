@@ -63,7 +63,7 @@ Fitting a PLS model consists exclusively of matrix and vector operations. Theref
 
 # Benchmarks
 
-This section offers a comparison of the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and varying number of components, $A$. Additionally, the comparisons are made using just a single fit and using leave-one-out cross-validation. For the sake of estimating the execution time in a realistic scenario, the mean squared error and the number of components that minimizes this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the device on which the cross validation is computed. When cross-validating with the NumPy CPU implementations, we use 32 parallel jobs corresponding to one for each thread on the CPU that we used.
+This section offers a comparison of the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and varying number of components, $A$. Additionally, the comparisons are made using just a single fit and using leave-one-out cross-validation. For the sake of estimating the execution time in a realistic scenario, the mean squared error and the number of components that minimizes this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross validation is computed. When cross-validating with the NumPy CPU implementations, we use 32 parallel jobs corresponding to one for each thread on the CPU that we used.
 
 The benchmarks use randomly generated data. The random seed is fixed such that all implementations are given the same random data. The default parameters for the benchmarks are $N=10,000$, $K=500$, and $A=30$. We benchmark using both a single target variable $M=1$ and multiple target variables with $M=10$. PLS with $M=1$ is commonly referred to as PLS1 and PLS2 with $M>1$
 
@@ -85,9 +85,9 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 
 ![Timings.\label{fig:timings}](timings.png)
 
-# Possible further algorithmic improvements
+# Algorithmic improvement for cross-validation
 
-Write about shortcut here.
+Cross-validating PLS algorithms has an inherent redundant structure. Each cross-validation iteration invovles operations on subsets of $\mathbf{X}$ and $\mathbf{Y}$ that typically have a large overlap with subsets from other iterations. Here, we provide some insight into how to avoid redundant operations yielding a dramatic speedup in cross-validation. Both IKPLS algorithms initially compute $\mathbf{X^{T}Y}$. Algorithm #2 also computes $\mathbf{X^{T}X}$ for subsequent analysis while Algorithm #1 retains the original $\mathbf{X}$ instead. The computation
 
 # Acknowledgements
 
