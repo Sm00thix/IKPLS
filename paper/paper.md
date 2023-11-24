@@ -1,5 +1,6 @@
 ---
 title: 'Improved Kernel Partial Least Squares for Python: Fast CPU and GPU Implementations with NumPy and JAX'
+license: Apache-2.0
 tags:
   - Python
   - PLS
@@ -63,7 +64,7 @@ Fitting a PLS model consists exclusively of matrix and vector operations. Theref
 
 # Benchmarks
 
-This section offers a comparison of the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and varying number of components, $A$. Additionally, the comparisons are made using just a single fit and using leave-one-out cross-validation. For the sake of estimating the execution time in a realistic scenario, the mean squared error and the number of components that minimizes this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross validation is computed. When cross-validating with the NumPy CPU implementations, we use 32 parallel jobs corresponding to one for each thread on the CPU that we used.
+This section offers a comparison of the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and varying number of components, $A$. Additionally, the comparisons are made using just a single fit and using leave-one-out cross-validation. For the sake of estimating the execution time in a realistic scenario, the mean squared error and the number of components that minimizes this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross validation is computed. While some sources on the internet claim that JAX is faster than NumPy on CPU we did not find that to be the case for our scenarios. Therefore, we exclusively test the JAX implementations on GPU. When cross-validating with the NumPy CPU implementations and scikit-learn's NIPALS, we use 32 parallel jobs corresponding to one for each thread on the CPU that we used.
 
 The benchmarks use randomly generated data. The random seed is fixed such that all implementations are given the same random data. The default parameters for the benchmarks are $N=10,000$, $K=500$, and $A=30$. We benchmark using both a single target variable $M=1$ and multiple target variables with $M=10$. PLS with $M=1$ is commonly referred to as PLS1 and PLS2 with $M>1$
 
@@ -91,6 +92,6 @@ Cross-validating PLS algorithms has an inherent redundant structure. Each cross-
 
 # Acknowledgements
 
-This work is part of an industrial Ph.D. project receiving funding from FOSS Analytical A/S and The Innovation Fund Denmark. Grant Number: 1044-00108B.
+This work is part of an industrial Ph.D. project receiving funding from FOSS Analytical A/S and The Innovation Fund Denmark. Grant Number: 1044-00108B. Neither FOSS Analytical A/S nor The Innovation Fund Denmark have affec
 
 # References
