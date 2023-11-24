@@ -1,6 +1,5 @@
 ---
 title: 'Improved Kernel Partial Least Squares for Python: Fast CPU and GPU Implementations with NumPy and JAX'
-license: Apache-2.0
 tags:
   - Python
   - PLS
@@ -31,7 +30,7 @@ affiliations:
     index: 4
   - name: Natural History Museum of Denmark (NHMD), University of Copenhagen, Denmark
     index: 5
-date: 20 November 2023
+date: 24 November 2023
 bibliography: paper.bib
 ---
 
@@ -88,7 +87,9 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 
 # Algorithmic improvement for cross-validation
 
-Cross-validating PLS algorithms has an inherent redundant structure. Each cross-validation iteration invovles operations on subsets of $\mathbf{X}$ and $\mathbf{Y}$ that typically have a large overlap with subsets from other iterations. Here, we provide some insight into how to avoid redundant operations yielding a dramatic speedup in cross-validation. Both IKPLS algorithms initially compute $\mathbf{X^{T}Y}$. Algorithm #2 also computes $\mathbf{X^{T}X}$ for subsequent analysis while Algorithm #1 retains the original $\mathbf{X}$ instead. The computation
+Cross-validating PLS algorithms has an inherent redundant structure. Each cross-validation iteration invovles operations on subsets of $\mathbf{X}$ (Algorithm #1) or $\mathbf{X^{T}X}$ (Algorithm #2) and $\mathbf{X^{T}Y}$ that typically have a large overlap with subsets from other iterations. Here, we provide some insight into how to avoid redundant operations yielding a dramatic speedup in cross-validation. These insights are inspired by related insights from [@stefansson2019orders] and [@liland2020much]. They show how to achieve a similar speedup for feature selection with algorithms using $\mathbf{X^{T}X}$ and cross-validation with algorithms using $\mathbf{XX^{T}}$, respectively.
+
+
 
 # Acknowledgements
 
