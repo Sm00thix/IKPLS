@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from matplotlib import patches
-
+import matplotlib.ticker as mticker
 
 def remove_rows_where_all_values_except_time_are_same(df):
     df = df.drop_duplicates(subset=df.columns[:-1])
@@ -73,13 +73,16 @@ def plot_timings(
     xlabel = xlabel.upper()
     # title_str = f"Time vs. {xlabel} for "
     title_str = ""
+    f = mticker.ScalarFormatter(useMathText=True)
     for name, value in constants_dict.items():
         if name == "n_splits":
             continue
         elif name == "n_components":
             name = "a"
         name = name.upper()
-        title_str += f"${name}$={value}, "
+        if value >= 1000:
+            value = f.format_data(value)
+        title_str += f"${name}={value}$, "
     title_str = title_str[:-2]
     ax.set_title(title_str, fontsize=10)
     # ax.legend()
