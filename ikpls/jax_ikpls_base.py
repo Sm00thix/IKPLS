@@ -430,10 +430,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `A` : int
             Number of components in the PLS model.
@@ -482,10 +482,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `A` : int
             Number of components in the PLS model.
@@ -536,7 +536,7 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `B` : Array of shape (A, K, M)
             PLS regression coefficients tensor.
@@ -553,6 +553,7 @@ class PLSBase(abc.ABC):
         --------
         `predict` : Performs the same operation but uses the class instance of `B`.
         """
+        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
         if self.verbose:
             print(f"stateless_predict for {self.name} will be JIT compiled...")
         if n_components is None:
@@ -571,7 +572,7 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `n_components` : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
@@ -585,6 +586,7 @@ class PLSBase(abc.ABC):
         --------
         `stateless_predict` : Performs the same operation but uses an input `B` instead of the one stored in the class instance.
         """
+        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
         if n_components is None:
             return X @ self.B
         else:
@@ -608,19 +610,19 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X_train` : Array of shape (N_train, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y_train` : Array of shape (N_train, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `A` : int
             Number of components in the PLS model.
 
         `X_test` : Array of shape (N_test, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y_test` : Array of shape (N_test, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `metric_function` : Callable receiving arrays `Y_test` of shape (N, M) and `Y_pred` (A, N, M) and returns Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
@@ -637,6 +639,11 @@ class PLSBase(abc.ABC):
         """
         if self.verbose:
             print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled...")
+
+        X_train = jnp.asarray(X_train, dtype=jnp.float64) # Ensure float64 for reliable results
+        Y_train = jnp.asarray(Y_train, dtype=jnp.float64) # Ensure float64 for reliable results
+        X_test = jnp.asarray(X_test, dtype=jnp.float64) # Ensure float64 for reliable results
+        Y_test = jnp.asarray(Y_test, dtype=jnp.float64) # Ensure float64 for reliable results
 
         matrices = self.stateless_fit(X_train, Y_train, A)
         B = matrices[0]
@@ -665,10 +672,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `A` : int
             Number of components in the PLS model.
@@ -707,9 +714,9 @@ class PLSBase(abc.ABC):
         -----
         This method is used to perform cross-validation on the PLS model with different data splits and evaluate its performance using user-defined metrics.
         """
-        X = jnp.asarray(X)
-        Y = jnp.asarray(Y)
-        cv_splits = jnp.asarray(cv_splits)
+        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
+        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 for reliable results
+        cv_splits = jnp.asarray(cv_splits, dtype=jnp.int64)
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
         for split in tqdm(unique_splits, disable=not show_progress):
@@ -745,10 +752,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable results.
 
         `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable results.
 
         `train_idxs` : Array of shape (N_train,)
             Indices of data points in the training set.
@@ -776,6 +783,7 @@ class PLSBase(abc.ABC):
         """
         if self.verbose:
             print(f"_inner_cv for {self.name} will be JIT compiled...")
+
         X_train = jnp.take(X, train_idxs, axis=0)
         Y_train = jnp.take(Y, train_idxs, axis=0)
 
@@ -817,8 +825,6 @@ class PLSBase(abc.ABC):
         -----
         This method updates the lists of metric values for each metric and fold during cross-validation.
         """
-        # for j, m in enumerate(metric_values):
-        # metric_value_lists[j].append(m)
         if len(metric_names) == 1:
             metric_value_lists[0].append(metric_values)
         else:

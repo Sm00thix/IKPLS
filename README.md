@@ -10,8 +10,21 @@ The GPU and TPU implementations are made using Google's JAX[^6]. While allowing 
 [^5]: [scikit-learn.](https://scikit-learn.org/stable/)
 [^6]: [JAX.](https://jax.readthedocs.io/en/latest/)
 
+# Improved Kernel PLS
+Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor[^1]. Improved Kernel PLS has been shown to be both fast[^2] and numerically stable[^3].
+The CPU implementations are made using NumPy[^4] and subclass BaseEstimator from scikit-learn[^5] allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's [`cross_validate`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html).
+The GPU and TPU implementations are made using Google's JAX[^6]. While allowing CPU, GPU, and TPU execution, automatic differentiation is also supported by JAX. This implies that the JAX implementations can be used together with deep learning approaches as the PLS fit is differentiable.
+
+[^1]: [Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 11(1), 73-85.](https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23)
+[^2]: [Alin, A. (2009). Comparison of PLS algorithms when number of objects is much larger than number of variables. Statistical papers, 50, 711-720.](https://link.springer.com/content/pdf/10.1007/s00362-009-0251-7.pdf)
+[^3]: [Andersson, M. (2009). A comparison of nine PLS1 algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 23(10), 518-529.](https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/pdf/10.1002/cem.1248?)
+[^4]: [NumPy.](https://numpy.org/)
+[^5]: [scikit-learn.](https://scikit-learn.org/stable/)
+[^6]: [JAX.](https://jax.readthedocs.io/en/latest/)
+
 
 ## Pre-requisites
+The JAX implementations support running on both CPU, GPU, and TPU. To use the GPU or TPU, follow the instructions from the [JAX Installation Guide](https://jax.readthedocs.io/en/latest/installation.html).
 The JAX implementations support running on both CPU, GPU, and TPU. To use the GPU or TPU, follow the instructions from the [JAX Installation Guide](https://jax.readthedocs.io/en/latest/installation.html).
 To ensure that JAX implementations use Float64, set the environment variable JAX_ENABLE_X64=True as per the [Current Gotchas](https://github.com/google/jax#current-gotchas).
 
