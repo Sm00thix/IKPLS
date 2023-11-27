@@ -18,12 +18,21 @@ class PLS(BaseEstimator):
         Whether to use Improved Kernel PLS Algorithm #1 or #2. Defaults to 1.
     `dtype` : np.float_, default=numpy.float64
         The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+    
+    Raises:
+    ------
+    `ValueError`
+        If `algorithm` is not 1 or 2.
     """
 
     def __init__(self, algorithm: int = 1, dtype: np.float_ = np.float64) -> None:
         self.algorithm = algorithm
         self.dtype = dtype
         self.name = f"Improved Kernel PLS Algorithm #{algorithm}"
+        if self.algorithm not in [1, 2]:
+            raise ValueError(
+                f"Invalid algorithm: {self.algorithm}. Algorithm must be 1 or 2."
+            )
 
     def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
         """

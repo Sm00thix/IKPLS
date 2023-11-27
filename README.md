@@ -76,4 +76,4 @@ In [examples](https://github.com/Sm00thix/IKPLS/tree/main/examples) you will fin
 * [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py) of fitting and predicting with the JAX implementations.
 * [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py) of cross validating with the NumPy implementations.
 * [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py) of cross validating with the JAX implementations.
-* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py) of computing the gradient of a preprocessing filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
+* [Example](https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py) of computing the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.

@@ -5,6 +5,8 @@ tags:
   - PLS
   - latent variables
   - multivariate statistics
+  - cross-validation
+  - deep learning
 authors:
   - name: Ole-Christian Galbo Engstrøm
     orcid: 0000-0002-7906-4589
@@ -51,7 +53,7 @@ The implementations introduced in this work have been tested for equivalency aga
 
 ## NumPy
 
-A Python class implementing both IKPLS algorithms using NumPy is available in `ikpls` as `ikpls.numpy_ikpls.PLS`. Pass in `algorithm=1` or `algorithm=2` in the constructor to choose between algorithms. The class subclasses [`BaseEstimator`](https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html) from scikit-learn. This allows the IKPLS classes to be used in combination with e.g. scikit-learn's [`cross_validate`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html) for a simple interface to parallel cross-validaiton with user-defined metric functions.
+A Python class implementing both IKPLS algorithms using NumPy is available in `ikpls` as `ikpls.numpy_ikpls.PLS`. Pass in `algorithm=1` or `algorithm=2` in the constructor to choose between algorithms. The class subclasses [`BaseEstimator`](https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html) from scikit-learn, allowing the IKPLS class to be used in combination with e.g., scikit-learn's [`cross_validate`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html) for a simple interface to parallel cross-validation with user-defined metric functions.
 
 ## JAX
 
@@ -59,15 +61,15 @@ A Python class for each IKPLS algorithm using JAX is available in `ikpls` as `ik
 
 Using Autograd, JAX enables automatic differentiation of the IKPLS algorithms. JAX supports both forward and backward mode differentiation. The implementations in this work are naturally compatible with forward mode differentiation. This work also offers implementations that are compatible with backward mode differentiation. While mathematically equivalent to the other implementations, the backward mode differentiation compatible implementations incur a slight increase in computation time that increases with the number of components, $A$. Therefore, the backward mode differentiable algorithms should only be used if their specific functionality is desired. The differentiation, either backward or forward, allows users to combine PLS with deep learning techniques. For example, the input data may be preprocessed with a convolution filter. The differentiation allows computing the gradient of the convolution filter with respect to a loss function that measures the discrepancy between the PLS prediction and some ground truth value. [This](https://github.com/Sm00thix/IKPLS/blob/main/examples/gradient_jax.py) is an example of such a use case.
 
-Fitting a PLS model consists exclusively of matrix and vector operations. Therefore, the JAX implementations of IKPLS were explicitly made with the idea that massively parallel hardware, such as GPUs and TPUs, optimized for these kinds of operations could be used. To this end, custom implementations of cross-validation using JAX were made part of the IKPLS classes. In particular, this ensures that the input data only needs to be transferred to GPU/TPU memory once and will be partitioned for cross-validation segments on this device. Additionally, the implementations allow for evaluating user-defined metric functions. JAX ensures these functions are compiled and executed on-device, enabling maximum utilization of the massively parallel hardware.
+Fitting a PLS model consists exclusively of matrix and vector operations. Therefore, the JAX implementations of IKPLS were explicitly made with the idea that massively parallel hardware, such as GPUs and TPUs, optimized for these operations could be used. To this end, custom implementations of cross-validation using JAX were made part of the IKPLS classes. In particular, this ensures that the input data only needs to be transferred to GPU/TPU memory once and will be partitioned for cross-validation segments on this device. Additionally, the implementations allow for evaluating user-defined metric functions. JAX ensures these functions are compiled and executed on-device, enabling maximum utilization of the massively parallel hardware.
 
 # Benchmarks
 
-This section offers a comparison of the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and varying number of components, $A$. Additionally, the comparisons are made using just a single fit and using leave-one-out cross-validation. For the sake of estimating the execution time in a realistic scenario, the mean squared error and the number of components that minimizes this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross validation is computed. While some sources on the internet claim that JAX is faster than NumPy on CPU we did not find that to be the case for our scenarios. Therefore, we exclusively test the JAX implementations on GPU. When cross-validating with the NumPy CPU implementations and scikit-learn's NIPALS, we use 32 parallel jobs corresponding to one for each thread on the CPU that we used.
+This section compares the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and variable number of components, $A$. Additionally, the comparisons are made using a single fit and leave-one-out cross-validation. To estimate the execution time in a realistic scenario, the mean squared error and the number of components that minimize this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross-validation is computed. While some sources on the internet claim that JAX is faster than NumPy on CPU, we did not find that to be the case for our scenarios. Therefore, we exclusively test the JAX implementations on GPU. When cross-validating with the NumPy CPU implementations and scikit-learn's NIPALS, we use 32 parallel jobs corresponding to one for each available thread on the CPU that we used. We use only eight parallel jobs when performing cross-validating with 1 million samples due to memory constraints. In practice, however, we had 100% CPU utilization using eight jobs for such a large dataset due to the parallel nature of NumPy operations.
 
-The benchmarks use randomly generated data. The random seed is fixed such that all implementations are given the same random data. The default parameters for the benchmarks are $N=10,000$, $K=500$, and $A=30$. We benchmark using both a single target variable $M=1$ and multiple target variables with $M=10$. PLS with $M=1$ is commonly referred to as PLS1 and PLS2 with $M>1$
+The benchmarks use randomly generated data. The random seed is fixed to give all implementations the same random data. The default parameters for the benchmarks are $N=10,000$, $K=500$, and $A=30$. We benchmark using a single target variable $M=1$ and multiple target variables with $M=10$. PLS with $M=1$ is commonly referred to as PLS1 and PLS2 with $M>1$
 
-In an attempt to give guidelines for algorithm choice for the most common use-cases, we report the execution time of the implementations with varying values for each of the aforementioned parameters. Specifically, we define a list of values for each of the parameters to take while the rest of the parameters mantain their default settings. We use 
+In an attempt to give guidelines for algorithm choice for the most common use cases, we report the execution time of the implementations with varying values for each of the parameters above. Specifically, we define a list of values for each parameter to take while the rest of the parameters maintain their default settings. We use 
 
 $N \in [10^1, 10^2, 10^3, 10^4, 10^5, 10^6]$, $K \in [30, 50, 10^2, 5\cdot 10^2, 10^3, 5\cdot 10^3, 10^4]$, $A \in [10, 20, 30, 50, 100, 200, 500]$, and $M \in [1, 10]$.
 
@@ -83,7 +85,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 | GPU         | NVIDIA GeForce RTX3090 Ti |
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
 
-![Timings.\label{fig:timings}](timings.png)
+![Timings. A circle means that the experiment was run until the end and the time reported is exact. A star means that the experiment was run until the time per iterations had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
 # Algorithmic improvement for cross-validation
 
