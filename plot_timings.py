@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import patches
 import matplotlib.ticker as mticker
+from matplotlib.transforms import blended_transform_factory
 
 def remove_rows_where_all_values_except_time_are_same(df):
     df = df.drop_duplicates(subset=df.columns[:-1])
@@ -48,6 +49,10 @@ def plot_timings(
     ax, name_x_t_dict, xlabel, constants_dict, log_scale_x, log_scale_t, single_fit_or_loocv
 ):
     # fig, ax = plt.subplots()
+    fixed_points = [1, 60, 3600, 86400, 604800, 2592000, 31536000]
+    fixed_points_labels = ["1 second", "1 minute", "1 hour", "1 day", "1 week", "30 days", "365 days"]
+    min_t = np.inf
+    max_t = -np.inf
     for name, x_t_dict in name_x_t_dict.items():
         x = x_t_dict["x"]
         t = x_t_dict["t"]
@@ -66,6 +71,18 @@ def plot_timings(
                 ax.plot(x, t, "o-", label=name)
         if name not in legend_dict:
             legend_dict[name] = True
+        try:
+            if min_t > np.min(t):
+                min_t = np.min(t)
+            if max_t < np.max(t):
+                max_t = np.max(t)
+        except:
+            pass
+    trans = blended_transform_factory(ax.transAxes, ax.transData)
+    for fp, fpl in zip(fixed_points, fixed_points_labels):
+        if min_t <= fp <= max_t:
+            ax.axhline(fp, color="k", linestyle="--", linewidth=1)
+            ax.text(0.25, fp, fpl, fontsize=10, ha="center", va="bottom", transform=trans) #bbox=dict(boxstyle="round", facecolor="white", alpha=0.5))
     # ax.set_xlabel(xlabel)
     # ax.set_ylabel("Time (s)")
     if xlabel == "n_components":
