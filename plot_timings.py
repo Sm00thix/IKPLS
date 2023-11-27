@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from matplotlib import patches
-
+import matplotlib.ticker as mticker
 
 def remove_rows_where_all_values_except_time_are_same(df):
     df = df.drop_duplicates(subset=df.columns[:-1])
@@ -73,13 +73,16 @@ def plot_timings(
     xlabel = xlabel.upper()
     # title_str = f"Time vs. {xlabel} for "
     title_str = ""
+    f = mticker.ScalarFormatter(useMathText=True)
     for name, value in constants_dict.items():
         if name == "n_splits":
             continue
         elif name == "n_components":
             name = "a"
         name = name.upper()
-        title_str += f"${name}$={value}, "
+        if value >= 1000:
+            value = f.format_data(value)
+        title_str += f"${name}={value}$, "
     title_str = title_str[:-2]
     ax.set_title(title_str, fontsize=10)
     # ax.legend()
@@ -268,16 +271,16 @@ if __name__ == "__main__":
 
     
     fig.supylabel("Time (s)")
+    space = " "*85
+    fig.supxlabel("$N$" + space + "$K$" + space + "$A$")
     # axs[0, 0].twiny().set_xlabel("Time vs. N")
     # axs[0, 1].twiny().set_xlabel("Time vs. K")
     # axs[0, 2].twiny().set_xlabel("Time vs. A")
-    axs[3, 0].set_xlabel("$N$")
-    axs[3, 1].set_xlabel("$K$")
-    axs[3, 2].set_xlabel("$A$")
+    # axs[3, 0].set_xlabel("$N$")
+    # axs[3, 1].set_xlabel("$K$")
+    # axs[3, 2].set_xlabel("$A$")
     handles, labels = axs[0, 0].get_legend_handles_labels()
     
-    first_legend = fig.legend(handles, labels, loc='lower center', fancybox=True, shadow=True, ncol=len(labels), prop={'size': 9})
-    ax = plt.gca().add_artist(first_legend)
 
     rect1 = patches.Rectangle((0.04, 0.47), 0.92, 0.43, transform=fig.transFigure, linewidth=1, edgecolor='b', facecolor='none')
     rect2 = patches.Rectangle((0.04, 0.039), 0.92, 0.43, transform=fig.transFigure, linewidth=1, edgecolor='r', facecolor='none')
@@ -288,7 +291,10 @@ if __name__ == "__main__":
     rect21 = patches.Rectangle((0.045, 0.258), 0.91, 0.205, transform=fig.transFigure, linewidth=1, edgecolor='c', facecolor='none')
     rect22 = patches.Rectangle((0.045, 0.042), 0.91, 0.205, transform=fig.transFigure, linewidth=1, edgecolor='m', facecolor='none')
 
-    plt.legend(handles=[rect1, rect2, rect11, rect12], labels=["PLS1", "PLS2", "Single Fit", "LOOCV"], loc='upper center', fancybox=True, shadow=True, ncol=2, prop={'size': 9}, bbox_to_anchor=(0.5, 0.95), bbox_transform=plt.gcf().transFigure)
+    first_legend = fig.legend(handles, labels, loc='upper center', fancybox=True, shadow=True, ncol=len(labels), prop={'size': 9}, bbox_to_anchor=(0.5, 0.95), bbox_transform=plt.gcf().transFigure)
+    ax = plt.gca().add_artist(first_legend)
+    plt.legend(handles=[rect1, rect2, rect11, rect12], labels=["PLS1", "PLS2", "Single Fit", "LOOCV"], loc='lower center', fancybox=True, shadow=True, ncol=2, prop={'size': 9}, bbox_to_anchor=(0.5, 0.95), bbox_transform=plt.gcf().transFigure)
+
 
     fig.patches.extend([rect1, rect2, rect11, rect12, rect21, rect22])
     # fig.tight_layout()
