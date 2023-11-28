@@ -49,7 +49,7 @@ def plot_timings(
     xlabel,
     constants_dict,
 ):
-    fixed_points = [1, 60, 3600, 86400, 604800, 2592000, 31536000]
+    fixed_points = [1, 60, 3600, 86400, 604800, 2592000, 31536000, 315360000]
     fixed_points_labels = [
         "1 second",
         "1 minute",
@@ -58,6 +58,7 @@ def plot_timings(
         "1 week",
         "30 days",
         "365 days",
+        "3650 days",
     ]
     min_t = np.inf
     max_t = -np.inf
