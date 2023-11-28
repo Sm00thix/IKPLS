@@ -242,8 +242,7 @@ def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
     """
     cv = KFold(n_splits=n_splits, shuffle=False)
     t = Timer(
-        # stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
-        stmt="pls.cv(X=X, Y=Y, A=n_components, cv_splits=cv_splits, preprocessing_function=jax_preprocessing_function, metric_function=jax_mse_for_each_target, num_metrics=2*Y.shape[1], metric_names=jax_metric_names(Y.shape[1]), show_progress=show_progress)",
+        stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
         timer=default_timer,
         globals=locals() | globals(),
     )
@@ -348,7 +347,8 @@ def cross_val_gpu_pls(pls, X, Y, n_components, n_splits, show_progress):
             prev_max_idx + i * split_size : prev_max_idx + (i + 1) * split_size
         ] = (i + X.shape[0] % n_splits)
     t = Timer(
-        stmt="pls.cv(X=X, Y=Y, A=n_components, cv_splits=cv_splits, preprocessing_function=jax_preprocessing_function, metric_function=jax_mse_for_each_target, metric_names=jax_metric_names(Y.shape[1]), show_progress=show_progress)",
+        stmt="pls.cv(X=X, Y=Y, A=n_components, cv_splits=cv_splits, preprocessing_function=jax_preprocessing_function, metric_function=jax_mse_for_each_target, metric_targets=2*Y.shape[1], metric_names=jax_metric_names(Y.shape[1]), show_progress=show_progress)",
+        # stmt="pls.cv(X=X, Y=Y, A=n_components, cv_splits=cv_splits, preprocessing_function=jax_preprocessing_function, metric_function=jax_mse_for_each_target, metric_names=jax_metric_names(Y.shape[1]), show_progress=show_progress)",
         timer=default_timer,
         globals=locals() | globals(),
     )
