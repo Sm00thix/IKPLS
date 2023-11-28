@@ -91,6 +91,30 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 
 Cross-validating PLS algorithms has an inherent redundant structure. Each cross-validation iteration invovles operations on subsets of $\mathbf{X}$ (Algorithm #1) or $\mathbf{X^{T}X}$ (Algorithm #2) and $\mathbf{X^{T}Y}$ that typically have a large overlap with subsets from other iterations. Here, we provide some insight into how to avoid redundant operations yielding a dramatic speedup in cross-validation. These insights are inspired by related insights from [@stefansson2019orders] and [@liland2020much]. They show how to achieve a similar speedup for feature selection with algorithms using $\mathbf{X^{T}X}$ and cross-validation with algorithms using $\mathbf{XX^{T}}$, respectively.
 
+We propose an algorithmic improvement that consists of combining the training and validation data to compute the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ only once in the beginning and then subtract outer vector products from these during each cross-validation iteration, avoiding recomputation of the full matrix products.
+
+Using IKPLS Algorithm 2 (for Algorithm 1, ignore any terms related to $\mathbf{X^{T}X}$), the improved algorithm for cross-validation is defined by the following pseudo-code:
+
+1. Compute $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$. Set cross-validation split $i=0$
+
+2. Let $V_{i}$ denote the set of validation indices for cross-validation split $i$, i.e., the samples that should be used for validation instead of training.
+
+3. Copy $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ into new matrices $\mathbf{(X^{T}X)^{i}}$ and $\mathbf{(X^{T}Y)^{i}}$.
+
+4. We must remove the contribution of all samples, $\mathbf{X}_{j}$ and $\mathbf{Y}_{j}$ for $j$ in $V_{i}$.
+   This can be done with the following operations
+   for $j$ in $V_{i}$:
+     $\mathbf{(X^{T}X)^{i}}$ = $\mathbf{(X^{T}X)^{i}}$ - $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$
+     $\mathbf{(X^{T}Y)^{i}}$ = $\mathbf{(X^{T}Y)^{i}}$ - $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$
+
+5. Fit PLS with $\mathbf{(X^{T}X)^{i}}$ and $\mathbf{(X^{T}Y)^{i}}$ which now only contains samples with an index not in $V_{i}$.
+
+6. Evaluate the calibrated PLS model on the validation data as per usual:
+   for $j$ in $V_{i}$:
+     predict on the validation samples $\mathbf{X}_{j}$ and evaluate the predictions against validation targets $\mathbf{Y}_{j}$
+
+7. Terminate if there are no more cross-validation splits. Otherwise increment the split counter: $i = i + 1$ and go to step 2.
+
 
 
 # Acknowledgements
