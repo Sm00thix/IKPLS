@@ -1,9 +1,11 @@
-from ikpls.jax_ikpls_base import PLSBase
-import jax
-from jax.experimental import host_callback
-import jax.numpy as jnp
 from functools import partial
 from typing import Tuple
+
+import jax
+import jax.numpy as jnp
+from jax.experimental import host_callback
+
+from ikpls.jax_ikpls_base import PLSBase
 
 
 class PLS(PLSBase):
@@ -268,8 +270,8 @@ class PLS(PLSBase):
         --------
         `stateless_fit` : Performs the same operation but returns the output matrices instead of storing them in the class instance.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 precision
-        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 precision
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 precision
+        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 precision
         self.B, W, P, Q, R = self.stateless_fit(X, Y, A)
         self.W = W.T
         self.P = P.T
@@ -325,8 +327,8 @@ class PLS(PLSBase):
         if self.verbose:
             print(f"stateless_fit for {self.name} will be JIT compiled...")
 
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 precision
-        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 precision
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 precision
+        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 precision
 
         # Get shapes
         N, K = X.shape

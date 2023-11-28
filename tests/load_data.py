@@ -1,7 +1,8 @@
+import io
 from urllib.request import urlopen
+
 import numpy as np
 import pandas as pd
-import io
 
 GITHUB_DATADIR = "https://raw.githubusercontent.com/Sm00thix/IKPLSTestData/main/data/"
 

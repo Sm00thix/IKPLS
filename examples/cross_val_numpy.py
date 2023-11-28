@@ -1,8 +1,10 @@
 from typing import Union
-from ikpls.numpy_ikpls import PLS
+
 import numpy as np
 import numpy.typing as npt
 from sklearn.model_selection import cross_validate
+
+from ikpls.numpy_ikpls import PLS
 
 
 class PLSWithPreprocessing(
@@ -76,7 +78,9 @@ if __name__ == "__main__":
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
-    np_pls_alg_1 = PLSWithPreprocessing(algorithm=1) # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
+    np_pls_alg_1 = PLSWithPreprocessing(
+        algorithm=1
+    )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
     fit_params = {"A": A}
     np_pls_alg_1_results = cross_validate(
         np_pls_alg_1,

@@ -1,14 +1,17 @@
-import pytest
+from typing import Callable, Tuple, Union
+
+import jax
 import numpy as np
 import numpy.typing as npt
-from numpy.testing import assert_allclose
-import jax
+import pytest
 from jax import numpy as jnp
-from typing import Tuple, Callable, Union
+from numpy.testing import assert_allclose
 from sklearn.cross_decomposition import PLSRegression as SkPLS
+
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_Alg_1
 from ikpls.jax_ikpls_alg_2 import PLS as JAX_Alg_2
 from ikpls.numpy_ikpls import PLS as NpPLS
+
 from . import load_data
 
 

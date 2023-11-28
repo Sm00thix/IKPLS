@@ -1,9 +1,11 @@
+from typing import Tuple
+
+import jax.numpy as jnp
+import numpy as np
+
 from ikpls.jax_ikpls_alg_1 import (
     PLS,
 )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
-import jax.numpy as jnp
-import numpy as np
-from typing import Tuple
 
 
 # Function to apply mean centering to X and Y based on training data.
@@ -90,7 +92,9 @@ if __name__ == "__main__":
     # The -1 in the index is due to the fact that mse_for_each_split is 0-indexed but the number of components go from 1 to A.
     This could also have been implemented using jax.numpy in mse_per_component_and_best_components directly as part of the metric function.
     """
-    best_mse_for_each_split = np.amin(mse_for_each_split, axis=-2) # (n_splits, M) shape (5, 10)
+    best_mse_for_each_split = np.amin(
+        mse_for_each_split, axis=-2
+    )  # (n_splits, M) shape (5, 10)
     equivalent_best_mse_for_each_split = np.array(
         [
             mse_for_each_split[

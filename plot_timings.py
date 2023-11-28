@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-from matplotlib import patches
 import matplotlib.ticker as mticker
+import numpy as np
+import pandas as pd
+from matplotlib import patches
 from matplotlib.transforms import blended_transform_factory
+
 
 def remove_rows_where_all_values_except_time_are_same(df):
     df = df.drop_duplicates(subset=df.columns[:-1])
@@ -43,10 +44,21 @@ def get_name_x_t_dict(df, x_name, constants_dict, single_fit_or_loocv):
 
 
 def plot_timings(
-    ax, name_x_t_dict, xlabel, constants_dict,
+    ax,
+    name_x_t_dict,
+    xlabel,
+    constants_dict,
 ):
     fixed_points = [1, 60, 3600, 86400, 604800, 2592000, 31536000]
-    fixed_points_labels = ["1 second", "1 minute", "1 hour", "1 day", "1 week", "30 days", "365 days"]
+    fixed_points_labels = [
+        "1 second",
+        "1 minute",
+        "1 hour",
+        "1 day",
+        "1 week",
+        "30 days",
+        "365 days",
+    ]
     min_t = np.inf
     max_t = -np.inf
     for name, x_t_dict in name_x_t_dict.items():
@@ -76,7 +88,9 @@ def plot_timings(
     for fp, fpl in zip(fixed_points, fixed_points_labels):
         if min_t <= fp <= max_t:
             ax.axhline(fp, color="k", linestyle="--", linewidth=1)
-            ax.text(0.25, fp, fpl, fontsize=10, ha="center", va="bottom", transform=trans)
+            ax.text(
+                0.25, fp, fpl, fontsize=10, ha="center", va="bottom", transform=trans
+            )
     if xlabel == "n_components":
         xlabel = "a"
     xlabel = xlabel.upper()
@@ -104,7 +118,6 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(4, 3, figsize=(15, 15))
     legend_dict = {}
 
-
     # Single fit
     constants_dict_n_single_fit_pls1 = {"n_components": 30, "k": 500, "m": 1}
     name_x_t_dict_n_single_fit_pls1 = get_name_x_t_dict(
@@ -115,7 +128,7 @@ if __name__ == "__main__":
         name_x_t_dict_n_single_fit_pls1,
         "N",
         constants_dict_n_single_fit_pls1,
-)
+    )
 
     constants_dict_k_single_fit_pls1 = {"n_components": 30, "n": 10000, "m": 1}
     name_x_t_dict_k_single_fit_pls1 = get_name_x_t_dict(
@@ -126,7 +139,7 @@ if __name__ == "__main__":
         name_x_t_dict_k_single_fit_pls1,
         "K",
         constants_dict_k_single_fit_pls1,
-)
+    )
 
     constants_dict_nc_single_fit_pls1 = {"n": 10000, "k": 500, "m": 1}
     name_x_t_dict_nc_single_fit_pls1 = get_name_x_t_dict(
@@ -137,7 +150,7 @@ if __name__ == "__main__":
         name_x_t_dict_nc_single_fit_pls1,
         "A",
         constants_dict_nc_single_fit_pls1,
-)
+    )
 
     constants_dict_n_single_fit_pls2 = {"n_components": 30, "k": 500, "m": 10}
     name_x_t_dict_n_single_fit_pls2 = get_name_x_t_dict(
@@ -148,7 +161,7 @@ if __name__ == "__main__":
         name_x_t_dict_n_single_fit_pls2,
         "N",
         constants_dict_n_single_fit_pls2,
-)
+    )
 
     constants_dict_k_single_fit_pls2 = {"n_components": 30, "n": 10000, "m": 10}
     name_x_t_dict_k_single_fit_pls2 = get_name_x_t_dict(
@@ -159,7 +172,7 @@ if __name__ == "__main__":
         name_x_t_dict_k_single_fit_pls2,
         "K",
         constants_dict_k_single_fit_pls2,
-)
+    )
 
     constants_dict_nc_single_fit_pls2 = {"n": 10000, "k": 500, "m": 10}
     name_x_t_dict_nc_single_fit_pls2 = get_name_x_t_dict(
@@ -170,7 +183,7 @@ if __name__ == "__main__":
         name_x_t_dict_nc_single_fit_pls2,
         "A",
         constants_dict_nc_single_fit_pls2,
-)
+    )
 
     # LOOCV
     constants_dict_n_loocv_pls1 = {"n_components": 30, "k": 500, "m": 1}
@@ -182,7 +195,7 @@ if __name__ == "__main__":
         name_x_t_dict_n_loocv_pls1,
         "N",
         constants_dict_n_loocv_pls1,
-)
+    )
 
     constants_dict_k_loocv_pls1 = {"n_components": 30, "n": 10000, "m": 1}
     name_x_t_dict_k_loocv_pls1 = get_name_x_t_dict(
@@ -193,7 +206,7 @@ if __name__ == "__main__":
         name_x_t_dict_k_loocv_pls1,
         "K",
         constants_dict_k_loocv_pls1,
-)
+    )
 
     constants_dict_nc_loocv_pls1 = {"n": 10000, "k": 500, "m": 1}
     name_x_t_dict_nc_loocv_pls1 = get_name_x_t_dict(
@@ -204,7 +217,7 @@ if __name__ == "__main__":
         name_x_t_dict_nc_loocv_pls1,
         "A",
         constants_dict_nc_loocv_pls1,
-)
+    )
 
     constants_dict_n_loocv_pls2 = {"n_components": 30, "k": 500, "m": 10}
     name_x_t_dict_n_loocv_pls2 = get_name_x_t_dict(
@@ -215,7 +228,7 @@ if __name__ == "__main__":
         name_x_t_dict_n_loocv_pls2,
         "N",
         constants_dict_n_loocv_pls2,
-)
+    )
 
     constants_dict_k_loocv_pls2 = {"n_components": 30, "n": 10000, "m": 10}
     name_x_t_dict_k_loocv_pls2 = get_name_x_t_dict(
@@ -226,7 +239,7 @@ if __name__ == "__main__":
         name_x_t_dict_k_loocv_pls2,
         "K",
         constants_dict_k_loocv_pls2,
-)
+    )
 
     constants_dict_nc_loocv_pls2 = {"n": 10000, "k": 500, "m": 10}
     name_x_t_dict_nc_loocv_pls2 = get_name_x_t_dict(
@@ -237,12 +250,17 @@ if __name__ == "__main__":
         name_x_t_dict_nc_loocv_pls2,
         "A",
         constants_dict_nc_loocv_pls2,
-)
+    )
 
-    
     fig.supylabel("Time (s)")
-    space = " "*60
-    fig.supxlabel("$N$ (no. samples)" + space + "$K$ (no. X features)" + space + "$A$ (no. components)")
+    space = " " * 60
+    fig.supxlabel(
+        "$N$ (no. samples)"
+        + space
+        + "$K$ (no. X features)"
+        + space
+        + "$A$ (no. components)"
+    )
     # axs[0, 0].twiny().set_xlabel("Time vs. N")
     # axs[0, 1].twiny().set_xlabel("Time vs. K")
     # axs[0, 2].twiny().set_xlabel("Time vs. A")
@@ -250,21 +268,87 @@ if __name__ == "__main__":
     # axs[3, 1].set_xlabel("$K$")
     # axs[3, 2].set_xlabel("$A$")
     handles, labels = axs[0, 0].get_legend_handles_labels()
-    
 
-    rect1 = patches.Rectangle((0.04, 0.47), 0.92, 0.43, transform=fig.transFigure, linewidth=1, edgecolor='b', facecolor='none')
-    rect2 = patches.Rectangle((0.04, 0.039), 0.92, 0.43, transform=fig.transFigure, linewidth=1, edgecolor='r', facecolor='none')
-    
-    rect11 = patches.Rectangle((0.045, 0.692), 0.91, 0.205, transform=fig.transFigure, linewidth=1, edgecolor='c', facecolor='none')
-    rect12 = patches.Rectangle((0.045, 0.476), 0.91, 0.205, transform=fig.transFigure, linewidth=1, edgecolor='m', facecolor='none')
+    rect1 = patches.Rectangle(
+        (0.04, 0.47),
+        0.92,
+        0.43,
+        transform=fig.transFigure,
+        linewidth=1,
+        edgecolor="b",
+        facecolor="none",
+    )
+    rect2 = patches.Rectangle(
+        (0.04, 0.039),
+        0.92,
+        0.43,
+        transform=fig.transFigure,
+        linewidth=1,
+        edgecolor="r",
+        facecolor="none",
+    )
 
-    rect21 = patches.Rectangle((0.045, 0.258), 0.91, 0.205, transform=fig.transFigure, linewidth=1, edgecolor='c', facecolor='none')
-    rect22 = patches.Rectangle((0.045, 0.042), 0.91, 0.205, transform=fig.transFigure, linewidth=1, edgecolor='m', facecolor='none')
+    rect11 = patches.Rectangle(
+        (0.045, 0.692),
+        0.91,
+        0.205,
+        transform=fig.transFigure,
+        linewidth=1,
+        edgecolor="c",
+        facecolor="none",
+    )
+    rect12 = patches.Rectangle(
+        (0.045, 0.476),
+        0.91,
+        0.205,
+        transform=fig.transFigure,
+        linewidth=1,
+        edgecolor="m",
+        facecolor="none",
+    )
 
-    first_legend = fig.legend(handles, labels, loc='upper center', fancybox=True, shadow=True, ncol=len(labels), prop={'size': 9}, bbox_to_anchor=(0.5, 0.95), bbox_transform=plt.gcf().transFigure)
+    rect21 = patches.Rectangle(
+        (0.045, 0.258),
+        0.91,
+        0.205,
+        transform=fig.transFigure,
+        linewidth=1,
+        edgecolor="c",
+        facecolor="none",
+    )
+    rect22 = patches.Rectangle(
+        (0.045, 0.042),
+        0.91,
+        0.205,
+        transform=fig.transFigure,
+        linewidth=1,
+        edgecolor="m",
+        facecolor="none",
+    )
+
+    first_legend = fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        fancybox=True,
+        shadow=True,
+        ncol=len(labels),
+        prop={"size": 9},
+        bbox_to_anchor=(0.5, 0.95),
+        bbox_transform=plt.gcf().transFigure,
+    )
     ax = plt.gca().add_artist(first_legend)
-    plt.legend(handles=[rect1, rect2, rect11, rect12], labels=["PLS1", "PLS2", "Single Fit", "LOOCV"], loc='lower center', fancybox=True, shadow=True, ncol=2, prop={'size': 9}, bbox_to_anchor=(0.5, 0.95), bbox_transform=plt.gcf().transFigure)
-
+    plt.legend(
+        handles=[rect1, rect2, rect11, rect12],
+        labels=["PLS1", "PLS2", "Single Fit", "LOOCV"],
+        loc="lower center",
+        fancybox=True,
+        shadow=True,
+        ncol=2,
+        prop={"size": 9},
+        bbox_to_anchor=(0.5, 0.95),
+        bbox_transform=plt.gcf().transFigure,
+    )
 
     fig.patches.extend([rect1, rect2, rect11, rect12, rect21, rect22])
     # fig.tight_layout()
