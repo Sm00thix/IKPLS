@@ -17,6 +17,7 @@ class PLS(BaseEstimator):
     ----------
     `algorithm` : int
         Whether to use Improved Kernel PLS Algorithm #1 or #2. Defaults to 1.
+
     `dtype` : np.float_, default=numpy.float64
         The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
 
@@ -81,8 +82,8 @@ class PLS(BaseEstimator):
         `UserWarning`.
             If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
         """
-        X = np.array(X, dtype=self.dtype)
-        Y = np.array(Y, dtype=self.dtype)
+        X = np.asarray(X, dtype=self.dtype)
+        Y = np.asarray(Y, dtype=self.dtype)
 
         N, K = X.shape
         M = Y.shape[1]
@@ -193,7 +194,7 @@ class PLS(BaseEstimator):
         `Y_pred` : Array of shape (N, M) or (A, N, M)
             If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
         """
-        X = np.array(X, dtype=self.dtype)
+        X = np.asarray(X, dtype=self.dtype)
         if n_components is None:
             return X @ self.B
         return X @ self.B[n_components - 1]

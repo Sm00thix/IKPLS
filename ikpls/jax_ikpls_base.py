@@ -554,7 +554,7 @@ class PLSBase(abc.ABC):
         --------
         `predict` : Performs the same operation but uses the class instance of `B`.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 for reliable results
         if self.verbose:
             print(f"stateless_predict for {self.name} will be JIT compiled...")
         if n_components is None:
@@ -587,7 +587,7 @@ class PLSBase(abc.ABC):
         --------
         `stateless_predict` : Performs the same operation but uses an input `B` instead of the one stored in the class instance.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 for reliable results
         if n_components is None:
             return X @ self.B
         else:
@@ -641,10 +641,18 @@ class PLSBase(abc.ABC):
         if self.verbose:
             print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled...")
 
-        X_train = jnp.asarray(X_train, dtype=jnp.float64) # Ensure float64 for reliable results
-        Y_train = jnp.asarray(Y_train, dtype=jnp.float64) # Ensure float64 for reliable results
-        X_test = jnp.asarray(X_test, dtype=jnp.float64) # Ensure float64 for reliable results
-        Y_test = jnp.asarray(Y_test, dtype=jnp.float64) # Ensure float64 for reliable results
+        X_train = jnp.asarray(
+            X_train, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
+        Y_train = jnp.asarray(
+            Y_train, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
+        X_test = jnp.asarray(
+            X_test, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
+        Y_test = jnp.asarray(
+            Y_test, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
 
         matrices = self.stateless_fit(X_train, Y_train, A)
         B = matrices[0]
@@ -715,8 +723,8 @@ class PLSBase(abc.ABC):
         -----
         This method is used to perform cross-validation on the PLS model with different data splits and evaluate its performance using user-defined metrics.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
-        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 for reliable results
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 for reliable results
+        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 for reliable results
         cv_splits = jnp.asarray(cv_splits, dtype=jnp.int64)
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)

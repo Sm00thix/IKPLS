@@ -101,21 +101,23 @@ Using IKPLS Algorithm 2 (for Algorithm 1, ignore any terms related to $\mathbf{X
 
 3. Copy $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ into new matrices $\mathbf{(X^{T}X)^{i}}$ and $\mathbf{(X^{T}Y)^{i}}$.
 
-4. We must remove the contribution of all samples, $\mathbf{X}_{j}$ and $\mathbf{Y}_{j}$ for $j$ in $V_{i}$.
-   This can be done with the following operations
-   for $j$ in $V_{i}$:
-     $\mathbf{(X^{T}X)^{i}}$ = $\mathbf{(X^{T}X)^{i}}$ - $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$
-     $\mathbf{(X^{T}Y)^{i}}$ = $\mathbf{(X^{T}Y)^{i}}$ - $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$
+4. We must remove the contribution of all samples, $\mathbf{X}_{j}$ and $\mathbf{Y}_{j}$ for $j \in $V_{i}$.
+   This can be done with the following operations  
+   for $j$ in $V_{i}$:  
+   &nbsp;&nbsp;$\mathbf{(X^{T}X)^{i}}$ = $\mathbf{(X^{T}X)^{i}}$ - $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$  
+   &nbsp;&nbsp;$\mathbf{(X^{T}Y)^{i}}$ = $\mathbf{(X^{T}Y)^{i}}$ - $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$
 
 5. Fit PLS with $\mathbf{(X^{T}X)^{i}}$ and $\mathbf{(X^{T}Y)^{i}}$ which now only contains samples with an index not in $V_{i}$.
 
-6. Evaluate the calibrated PLS model on the validation data as per usual:
-   for $j$ in $V_{i}$:
-     predict on the validation samples $\mathbf{X}_{j}$ and evaluate the predictions against validation targets $\mathbf{Y}_{j}$
+6. Evaluate the calibrated PLS model on the validation data as per usual:  
+   for $j$ in $V_{i}$:  
+    &nbsp;&nbsp;predict on the validation samples $\mathbf{X}_{j}$ and evaluate the predictions against validation targets $\mathbf{Y}_{j}$
 
 7. Terminate if there are no more cross-validation splits. Otherwise increment the split counter: $i = i + 1$ and go to step 2.
 
+This algorithm avoids recomputing the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ for each cross-validation iteration which would require $N \times K^2$ and $N \times K \times M$ multiplications per cross-validation split, respectively. Instead, we compute in each cross-validation iteration $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$ and $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$, requiring only $K^2$ and $K \times M$ for each $j \in V_{i}$. Thus, if $N > |V_{i}|$, the latter approach is faster. As $|V_{i}|$ can never be larger than $N$ when performing cross-validation, the proposed algorithm is always faster than recomputing the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$. The achieved speedup is proportional to the number of cross-validation splits. In the most extreme case of leave-one-out cross-validation, $|V_{i}|=1$ for all cross-validation splits $i$, and a speedup of order $N$ is achieved.  
 
+The caveat with this algorithm, and in fact the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\mathbf{X}$ to affect the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ and a single row in $\mathbf{Y}$ to affect the full $\mathbf{X^{T}Y}$. These effects must be taken into account in step 4 of the proposed algorithm to avoid data leakage between training and validation splits. The authors conceive no easy way to take this into account but welcome any future contributions adressing this issue.
 
 # Acknowledgements
 
