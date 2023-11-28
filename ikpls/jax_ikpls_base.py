@@ -803,7 +803,7 @@ class PLSBase(abc.ABC):
         cv_splits = jnp.asarray(cv_splits, dtype=jnp.int64)
         unique_splits = jnp.unique(cv_splits)
         metric_values = jnp.zeros(shape=(unique_splits.shape[0], num_metrics), dtype=jnp.float64)
-        for i, split in tqdm(enumerate(unique_splits), disable=not show_progress):
+        for i, split in tqdm(enumerate(unique_splits), total=unique_splits.shape[0], disable=not show_progress):
             train_idxs = jnp.nonzero(cv_splits != split)[0]
             val_idxs = jnp.nonzero(cv_splits == split)[0]
             metric_values = self._inner_cv(
