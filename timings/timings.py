@@ -129,10 +129,10 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
         Dictionary containing MSE and number of components for each target.
     """
 
-    # Y_true has shape (N, M)
-    Y_pred = estimator.predict(X, **kwargs)  # Shape (A, N, M)
-    e = Y_true - Y_pred  # Shape (A, N, M)
-    se = e**2  # Shape (A, N, M)
+    # Y_true has shape (N, M).
+    Y_pred = estimator.predict(X, **kwargs)  # Shape (A, N, M).
+    e = Y_true - Y_pred  # Shape (A, N, M).
+    se = e**2  # Shape (A, N, M).
     mse = np.mean(se, axis=-2)  # Compute the mean over samples. Shape (A, M).
     row_idxs = np.argmin(
         mse, axis=0
