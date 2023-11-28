@@ -190,7 +190,7 @@ def jax_mse_for_each_target(Y_true, Y_pred):
     return all_values
 
 
-def jax_metric_names(K):
+def jax_metric_names(M):
     """
     Description
     -----------
@@ -198,7 +198,7 @@ def jax_metric_names(K):
 
     Parameters
     ----------
-    `K` : int
+    `M` : int
         Number of targets.
 
     Returns
@@ -206,8 +206,8 @@ def jax_metric_names(K):
     `all_names` : list[str]
         List of metric names.
     """
-    mse_names = [f"lowest_mse_target_{i}" for i in range(K)] # List of names for the lowest MSE values.
-    num_components_names = [f"num_components_lowest_mse_target_{i}" for i in range(K)] # List of names for the number of components that achieves the lowest MSE for each target.
+    mse_names = [f"lowest_mse_target_{i}" for i in range(M)] # List of names for the lowest MSE values.
+    num_components_names = [f"num_components_lowest_mse_target_{i}" for i in range(M)] # List of names for the number of components that achieves the lowest MSE for each target.
     all_names = mse_names + num_components_names # List of all names.
     return all_names
 
@@ -242,7 +242,8 @@ def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
     """
     cv = KFold(n_splits=n_splits, shuffle=False)
     t = Timer(
-        stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
+        # stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
+        stmt="pls.cv(X=X, Y=Y, A=n_components, cv_splits=cv_splits, preprocessing_function=jax_preprocessing_function, metric_function=jax_mse_for_each_target, num_metrics=2*Y.shape[1], metric_names=jax_metric_names(Y.shape[1]), show_progress=show_progress)",
         timer=default_timer,
         globals=locals() | globals(),
     )

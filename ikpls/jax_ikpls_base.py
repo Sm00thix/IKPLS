@@ -650,6 +650,86 @@ class PLSBase(abc.ABC):
         Y_pred = self.stateless_predict(X_test, B)
         return metric_function(Y_test, Y_pred)
 
+    # def cv(
+    #     self,
+    #     X: jnp.ndarray,
+    #     Y: jnp.ndarray,
+    #     A: int,
+    #     cv_splits: jnp.ndarray,
+    #     preprocessing_function: Callable[
+    #         [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+    #         Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+    #     ],
+    #     metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+    #     metric_names: list[str],
+    #     show_progress=True,
+    # ) -> dict[str, Any]:
+    #     """
+    #     Description
+    #     -----------
+    #     Performs cross-validation for the Partial Least-Squares (PLS) model on given data.
+
+    #     Parameters
+    #     ----------
+    #     `X` : Array of shape (N, K)
+    #         Predictor variables. Its dtype will be converted to float64 for reliable results.
+
+    #     `Y` : Array of shape (N, M)
+    #         Response variables. Its dtype will be converted to float64 for reliable results.
+
+    #     `A` : int
+    #         Number of components in the PLS model.
+
+    #     `cv_splits` : Array of shape (N,)
+    #         An array defining cross-validation splits. Each unique value in `cv_splits` corresponds to a different fold.
+
+    #     `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
+    #         A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
+
+    #     `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
+    #         Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+
+    #     `metric_names` : list of str
+    #         A list of names for the metrics used for evaluation.
+
+    #     `show_progress` : bool, optional (default=True)
+    #         If True, displays a progress bar for the cross-validation.
+
+    #     Returns
+    #     -------
+    #     `metrics` : dict[str, Any]
+    #         A dictionary containing evaluation metrics for each metric specified in `metric_names`. The keys are metric names, and the values are lists of metric values for each cross-validation fold.
+
+    #     See Also
+    #     --------
+    #     `_inner_cv` : Performs cross-validation for a single fold and computes evaluation metrics.
+
+    #     `_update_metric_value_lists` : Updates lists of metric values for each metric and fold.
+
+    #     `_finalize_metric_values` : Organizes and finalizes the metric values into a dictionary for the specified metric names.
+
+    #     stateless_fit_predict_eval : Fits the PLS model, makes predictions, and evaluates metrics for a given fold.
+
+    #     Notes
+    #     -----
+    #     This method is used to perform cross-validation on the PLS model with different data splits and evaluate its performance using user-defined metrics.
+    #     """
+    #     X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
+    #     Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 for reliable results
+    #     cv_splits = jnp.asarray(cv_splits, dtype=jnp.int64)
+    #     metric_value_lists = [[] for _ in metric_names]
+    #     unique_splits = jnp.unique(cv_splits)
+    #     for split in tqdm(unique_splits, disable=not show_progress):
+    #         train_idxs = jnp.nonzero(cv_splits != split)[0]
+    #         val_idxs = jnp.nonzero(cv_splits == split)[0]
+    #         metric_values = self._inner_cv(
+    #             X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_function
+    #         )
+    #         metric_value_lists = self._update_metric_value_lists(
+    #             metric_value_lists, metric_names, metric_values
+    #         )
+    #     return self._finalize_metric_values(metric_value_lists, metric_names)
+
     def cv(
         self,
         X: jnp.ndarray,
@@ -660,10 +740,11 @@ class PLSBase(abc.ABC):
             [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
             Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
         ],
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        metric_function: Callable[[jnp.ndarray, jnp.ndarray], jnp.ndarray],
+        num_metrics: int,
         metric_names: list[str],
         show_progress=True,
-    ) -> dict[str, Any]:
+    ) -> dict[str, jnp.ndarray]:
         """
         Description
         -----------
@@ -686,19 +767,22 @@ class PLSBase(abc.ABC):
         `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
             A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
 
-        `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
-            Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning an array of shape (`num_metrics`,)
+            Computes an array of metrics based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        
+        `num_metrics` : int
+            Number of metrics used for evaluation.
 
         `metric_names` : list of str
-            A list of names for the metrics used for evaluation.
+            A list of length `num_metrics` of names for the metrics used for evaluation.
 
         `show_progress` : bool, optional (default=True)
             If True, displays a progress bar for the cross-validation.
 
         Returns
         -------
-        `metrics` : dict[str, Any]
-            A dictionary containing evaluation metrics for each metric specified in `metric_names`. The keys are metric names, and the values are lists of metric values for each cross-validation fold.
+        `metrics` : dict[str, jnp.ndarray]
+            A dictionary containing evaluation metrics for each metric specified in `metric_names`. The keys are metric names, and the values are arrays of metric values for each cross-validation fold.
 
         See Also
         --------
@@ -717,22 +801,22 @@ class PLSBase(abc.ABC):
         X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
         Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 for reliable results
         cv_splits = jnp.asarray(cv_splits, dtype=jnp.int64)
-        metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
-        for split in tqdm(unique_splits, disable=not show_progress):
+        metric_values = jnp.zeros(shape=(unique_splits.shape[0], num_metrics), dtype=jnp.float64)
+        for i, split in tqdm(enumerate(unique_splits), disable=not show_progress):
             train_idxs = jnp.nonzero(cv_splits != split)[0]
             val_idxs = jnp.nonzero(cv_splits == split)[0]
             metric_values = self._inner_cv(
-                X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_function
+                i, metric_values, X, Y, train_idxs, val_idxs, A, preprocessing_function, metric_function
             )
-            metric_value_lists = self._update_metric_value_lists(
-                metric_value_lists, metric_names, metric_values
-            )
-        return self._finalize_metric_values(metric_value_lists, metric_names)
-
-    @partial(jax.jit, static_argnums=(0, 5, 6, 7))
+        metrics = {metric_names[j]: metric_values[:, j] for j in range(num_metrics)}
+        return metrics
+    
+    @partial(jax.jit, static_argnums=(0, 7, 8, 9))
     def _inner_cv(
         self,
+        i,
+        metric_values: jnp.ndarray,
         X: jnp.ndarray,
         Y: jnp.ndarray,
         train_idxs: jnp.ndarray,
@@ -742,7 +826,7 @@ class PLSBase(abc.ABC):
             [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
             Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
         ],
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        metric_function: Callable[[jnp.ndarray, jnp.ndarray], jnp.ndarray],
     ):
         """
         Description
@@ -751,6 +835,12 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
+        `i` : int
+            The current fold number.
+
+        `metric_values` : Array of shape (number_of_folds, `num_metrics`)
+            An array containing the current metric values for each fold.
+
         `X` : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
@@ -769,13 +859,13 @@ class PLSBase(abc.ABC):
         `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
             A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val.
 
-        `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
-            Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning an array of shape (`num_metrics`,)
+            Computes an array of metrics based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         Returns
         -------
-        `metric_values` : Any
-            metric values based on the true and predicted values for a single fold.
+        `metric_values` : Array of shape (number_of_folds, `num_metrics`)
+            An array containing the updated metric values for each fold, updated for fold `i`.
 
         Notes
         -----
@@ -792,10 +882,79 @@ class PLSBase(abc.ABC):
         X_train, Y_train, X_val, Y_val = preprocessing_function(
             X_train, Y_train, X_val, Y_val
         )
-        metric_values = self.stateless_fit_predict_eval(
-            X_train, Y_train, A, X_val, Y_val, metric_function
+        metric_values = metric_values.at[i].set(
+            self.stateless_fit_predict_eval(
+                X_train, Y_train, A, X_val, Y_val, metric_function
+            )
         )
         return metric_values
+
+    # @partial(jax.jit, static_argnums=(0, 5, 6, 7))
+    # def _inner_cv(
+    #     self,
+    #     X: jnp.ndarray,
+    #     Y: jnp.ndarray,
+    #     train_idxs: jnp.ndarray,
+    #     val_idxs: jnp.ndarray,
+    #     A: int,
+    #     preprocessing_function: Callable[
+    #         [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+    #         Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+    #     ],
+    #     metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+    # ):
+    #     """
+    #     Description
+    #     -----------
+    #     Performs cross-validation for a single fold of the data and computes evaluation metrics.
+
+    #     Parameters
+    #     ----------
+    #     `X` : Array of shape (N, K)
+    #         Predictor variables. Its dtype will be converted to float64 for reliable results.
+
+    #     `Y` : Array of shape (N, M)
+    #         Response variables. Its dtype will be converted to float64 for reliable results.
+
+    #     `train_idxs` : Array of shape (N_train,)
+    #         Indices of data points in the training set.
+
+    #     `val_idxs` : Array of shape (N_val,)
+    #         Indices of data points in the validation set.
+
+    #     `A` : int
+    #         Number of components in the PLS model.
+
+    #     `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
+    #         A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val.
+
+    #     `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
+    #         Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+
+    #     Returns
+    #     -------
+    #     `metric_values` : Any
+    #         metric values based on the true and predicted values for a single fold.
+
+    #     Notes
+    #     -----
+    #     This method performs cross-validation for a single fold of the data, including preprocessing, fitting, predicting, and evaluating the PLS model.
+    #     """
+    #     if self.verbose:
+    #         print(f"_inner_cv for {self.name} will be JIT compiled...")
+
+    #     X_train = jnp.take(X, train_idxs, axis=0)
+    #     Y_train = jnp.take(Y, train_idxs, axis=0)
+
+    #     X_val = jnp.take(X, val_idxs, axis=0)
+    #     Y_val = jnp.take(Y, val_idxs, axis=0)
+    #     X_train, Y_train, X_val, Y_val = preprocessing_function(
+    #         X_train, Y_train, X_val, Y_val
+    #     )
+    #     metric_values = self.stateless_fit_predict_eval(
+    #         X_train, Y_train, A, X_val, Y_val, metric_function
+    #     )
+    #     return metric_values
 
     def _update_metric_value_lists(
         self,

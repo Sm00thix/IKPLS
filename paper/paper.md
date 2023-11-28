@@ -95,6 +95,6 @@ Cross-validating PLS algorithms has an inherent redundant structure. Each cross-
 
 # Acknowledgements
 
-This work is part of an industrial Ph.D. project receiving funding from FOSS Analytical A/S and The Innovation Fund Denmark. Grant Number: 1044-00108B. Neither FOSS Analytical A/S nor The Innovation Fund Denmark have affec
+This work is part of an industrial Ph.D. project receiving funding from FOSS Analytical A/S and The Innovation Fund Denmark. Grant Number: 1044-00108B.
 
 # References
