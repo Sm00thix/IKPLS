@@ -85,7 +85,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 | GPU         | NVIDIA GeForce RTX3090 Ti |
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
 
-![Timings. A circle means that the experiment was run until the end and the time reported is exact. A star means that the experiment was run until the time per iterations had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
+![Timings. A circle indicates that the experiment was run until the end and the time reported is exact. A square indicates that the experiment was run until the time per iterations had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
 # Algorithmic improvement for cross-validation
 

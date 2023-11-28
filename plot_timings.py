@@ -74,7 +74,7 @@ def plot_timings(
             if np.isnan(point_inferred):
                 ax.loglog(point_x, point_t, "o", color=color)
             else:
-                ax.loglog(point_x, point_t, "*", color=color)
+                ax.loglog(point_x, point_t, "s", color=color)
         if name not in legend_dict:
             legend_dict[name] = True
         try:
