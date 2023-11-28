@@ -87,7 +87,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 
 ![Timings. A circle indicates that the experiment was run until the end and the time reported is exact. A square indicates that the experiment was run until the time per iterations had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
-# Algorithmic improvement for cross-validation
+# Possible algorithmic improvement for cross-validation
 
 Cross-validating PLS algorithms have an inherent redundant structure. Each cross-validation iteration involves operations on subsets of $\mathbf{X}$ (Algorithm #1) or $\mathbf{X^{T}X}$ (Algorithm #2) and $\mathbf{X^{T}Y}$ that typically have a significant overlap with subsets from other iterations. Here, we provide some insight into how to avoid redundant operations, yielding a dramatic speedup in cross-validation. These insights are inspired by related insights from [@stefansson2019orders] and [@liland2020much]. They show how to achieve a similar speedup for feature selection with algorithms using $\mathbf{X^{T}X}$ and cross-validation with algorithms using $\mathbf{XX^{T}}$, respectively.
 
@@ -99,23 +99,25 @@ Using IKPLS Algorithm 2 (for Algorithm 1, ignore any terms related to $\mathbf{X
 
 2. Let $V_{i}$ denote the set of validation indices for cross-validation split $i$, i.e., the indices in $\mathbf{X}$ and $\mathbf{Y}$ that that should be used for validation instead of training.
 
-3. Copy $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ into $\mathbf{(X^{T}X)^{\text{train}}}$ and $\mathbf{(X^{T}Y)^{\text{train}}}$.
+3. Copy $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ into $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$.
 
-4. We must remove from $\mathbf{(X^{T}X)^{\text{train}}}$ and $\mathbf{(X^{T}Y)^{\text{train}}}$ the contribution of all samples, $\mathbf{X}_{j}$ and $\mathbf{Y}_{j}$ for $j \in V_{i}$ as these samples belong to the validation set of the current cross-validation split.
+4. We must remove from $\mathbf{(X^{T}X)^{\text{train}, i}}$ and $\mathbf{(X^{T}Y)^{\text{train}, i}}$ the contribution of all samples, $\mathbf{X}_{j}$ and $\mathbf{Y}_{j}$ for $j \in V_{i}$ as these samples belong to the validation set of the current cross-validation split.
    This removal can be done with the following operations  
    for $j$ in $V_{i}$:  
-   &nbsp;&nbsp;$\mathbf{(X^{T}X)^{\text{train}}}$ = $\mathbf{(X^{T}X)^{\text{train}}}$ - $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$  
-   &nbsp;&nbsp;$\mathbf{(X^{T}Y)^{\text{train}}}$ = $\mathbf{(X^{T}Y)^{\text{train}}}$ - $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$
+   &nbsp;&nbsp;$\mathbf{(X^{T}X)^{\text{train},i}}$ = $\mathbf{(X^{T}X)^{\text{train},i}}$ - $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$  
+   &nbsp;&nbsp;$\mathbf{(X^{T}Y)^{\text{train},i}}$ = $\mathbf{(X^{T}Y)^{\text{train},i}}$ - $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$
 
-5. Fit PLS with $\mathbf{(X^{T}X)^{\text{train}}}$ and $\mathbf{(X^{T}Y)^{\text{train}}}$ which now only contains samples with an index not in $V_{i}$.
+5. Fit PLS with $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$ which now only contains samples with an index not in $V_{i}$.
 
 6. Evaluate the calibrated PLS model on the validation data as per usual:  
    for $j$ in $V_{i}$:  
     &nbsp;&nbsp;predict on the validation samples $\mathbf{X}_{j}$ and evaluate the predictions against validation targets $\mathbf{Y}_{j}$
 
-7. Terminate if there are no more cross-validation splits. Otherwise, increment the split counter: $i = i + 1$ and go to step 2.
+7. Delete $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$ to free memory.
 
-This algorithm avoids recomputing the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ for each cross-validation iteration, which would require $N \times K^2$ and $N \times K \times M$ multiplications per cross-validation split, respectively. Instead, we compute in each cross-validation iteration $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$ and $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$, requiring only $K^2$ and $K \times M$ for each $j \in V_{i}$. Thus, the latter approach is faster if $N > |V_{i}|$. As $|V_{i}|$ can never be larger than $N$ when performing cross-validation, the proposed algorithm is always faster than recomputing the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$. The achieved speedup is proportional to the number of cross-validation splits. In the most extreme case of leave-one-out cross-validation, $|V_{i}|=1$ for all cross-validation splits $i$, and a speedup of order $N$ is achieved.  
+8. Terminate if there are no more cross-validation splits. Otherwise, increment the split counter: $i = i + 1$ and go to step 2.
+
+This algorithm avoids recomputing the full $\mathbf{X^{T}X}^{\text{train},i}$ and $\mathbf{X^{T}Y}^{\text{train},i}$ for each cross-validation iteration, which would require $N^{\text{train},i} \times K^2$ and $N^{\text{train},i} \times K \times M$ multiplications per cross-validation split, respectively. Instead, we compute in each cross-validation iteration $\mathbf{X}_{j}^{T}\mathbf{X}_{j}$ and $\mathbf{X}_{j}^{T}\mathbf{Y}_{j}$, requiring only $K^2$ and $K \times M$ for each $j \in V_{i}$. Thus, the latter approach is faster for any cross-validation split $i$ if $N^{\text{train}, i} > |V_{i}|$; this is the case when performing cross-validation, where the size of the training split is larger than that of the validation split, which is usually the case. The achieved speedup is proportional to the number of cross-validation splits. In the most extreme case of leave-one-out cross-validation, $|V_{i}|=1$ for all cross-validation splits $i$, and a speedup of order $N$ is achieved.  
 
 The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\mathbf{X}$ to affect the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ and a single row in $\mathbf{Y}$ to affect the full $\mathbf{X^{T}Y}$. These effects must be considered in step 4 of the proposed algorithm to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
 
