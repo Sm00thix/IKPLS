@@ -37,11 +37,11 @@ bibliography: paper.bib
 ---
 
 # Summary
-The `ikpls` software package introduces fast and versatile implementations of the Improved Kernel Partial Least Squares (IKPLS) Algorithm #1 and Algorithm #2. PLS is a widely used method in chemometrics for regression (PLS-R) and classification (PLS-DA) tasks, requiring the selection of optimal components and preprocessing methods. However, conventional implementations, such as NIPALS in scikit-learn, can be computationally expensive.
+The `ikpls` software package introduces fast and versatile implementations of the Improved Kernel Partial Least Squares (IKPLS) Algorithm #1 and Algorithm #2. PLS is a widely used method in chemometrics for regression (PLS-R) and classification (PLS-DA) tasks, requiring selecting optimal components and preprocessing methods. However, conventional implementations, such as NIPALS in scikit-learn, can be computationally expensive.
 
-`ikpls` offers NumPy-based CPU and JAX-based CPU/GPU/TPU implementations. The JAX implementations are also differentiable, allowing seamless integration with deep learning techniques. This versatility enables users to efficiently handle diverse data shapes and sizes.
+`ikpls` offers NumPy-based CPU and JAX-based CPU/GPU/TPU implementations. The JAX implementations are also differentiable, allowing seamless integration with deep learning techniques. This versatility enables users to handle diverse data shapes and sizes efficiently.
 
-Benchmarks demonstrate the superior performance of `ikpls` compared to scikit-learn's NIPALS across various scenarios, emphasizing the importance of choosing the right implementation for specific data characteristics. Additionally, this article addresses the redundant structure in cross-validation, proposing an algorithmic improvement for substantial speedup without recomputing full matrix products.
+Benchmarks demonstrate the superior performance of `ikpls` compared to scikit-learn's NIPALS across various scenarios, emphasizing the importance of choosing the proper implementation for specific data characteristics. Additionally, this article addresses the redundant structure in cross-validation, proposing an algorithmic improvement for substantial speedup without recomputing total matrix products.
 
 In conclusion, `ikpls` empowers researchers and practitioners in chemometrics and related fields with efficient, scalable, and end-to-end differentiable tools for PLS modeling, facilitating optimal component selection and preprocessing decisions.
 
