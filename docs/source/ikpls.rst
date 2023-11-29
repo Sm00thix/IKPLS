@@ -4,7 +4,7 @@ ikpls module
 Module contents
 ---------------
 
-ikpls.jax\_ikpls\_alg_1
+ikpls.numpy\_ikpls
 ======================
 
 .. automodule:: ikpls.numpy_ikpls

@@ -51,22 +51,22 @@ class PLS(BaseEstimator):
 
         Attributes
         ----------
-        self.B : Array of shape (A, K, M)
+        B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
-        self.W : Array of shape (K, A)
+        W : Array of shape (K, A)
             PLS weights matrix for X.
 
-        self.P : Array of shape (K, A)
+        P : Array of shape (K, A)
             PLS loadings matrix for X.
 
-        self.Q : Array of shape (M, A)
+        Q : Array of shape (M, A)
             PLS Loadings matrix for Y.
 
-        self.R : Array of shape (K, A)
+        R : Array of shape (K, A)
             PLS weights matrix to compute scores T directly from original X.
 
-        self.T : Array of shape (N, A)
+        T : Array of shape (N, A)
             PLS scores matrix of X. Only assigned for Improved Kernel PLS Algorithm #1.
 
         Returns
