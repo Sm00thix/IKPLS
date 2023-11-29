@@ -79,15 +79,20 @@ Use the ikpls package for PLS modelling
 
 Examples
 ~~~~~~~~
-In `examples`_ you will find:
+   | In `examples`_ you will find:
 .. _examples: https://github.com/Sm00thix/IKPLS/tree/main/examples
+
 -  | `Example`_ of fitting and predicting with the NumPy implementations.
 .. _Example: https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py
+
 -  | `Example`_ of fitting and predicting with the JAX implementations.
 .. _Example: https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py
+
 -  | `Example`_ of cross validating with the NumPy implementations.
 .. _Example: https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py
+
 -  | `Example`_ of cross validating with the JAX implementations.
 .. _Example: https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py
+
 -  | Example_ of computing the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
 .. _Example: https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py
