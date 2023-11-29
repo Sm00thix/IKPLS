@@ -10,6 +10,9 @@ project = 'IKPLS'
 copyright = '2023, Ole-Christian Galbo Engstrøm'
 author = 'Ole-Christian Galbo Engstrøm'
 
+import ikpls
+release = ikpls.__version__
+
 # -- General configuration ---------------------------------------------------
 
 extensions = [
