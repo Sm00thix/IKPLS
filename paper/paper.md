@@ -123,23 +123,23 @@ This algorithm avoids recomputing the full $\mathbf{X^{T}X}^{\text{train},i}$ an
 The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\mathbf{X}$ to affect the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ and a single row in $\mathbf{Y}$ to affect the full $\mathbf{X^{T}Y}$. These effects must be considered in step 4 of the proposed algorithm to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
 
 \textbf{Proof of correctness:}
-We wish to prove that after step 4, $\mathbf{(X^{T}Y)^{\text{train},i}} = \mathbf{(X^{\text{train},i})^{T}Y^{\text{train},i}}$ where the latter is the matrix that could be fully computed directly using $\mathbf{(X^{\text{train},i})^T}$ and $\mathbf{Y^{\text{train},i}}$. The proof for $\mathbf{(X^{T}X)^{\text{train},i}} = \mathbf{(X^{\text{train},i})^{T}X^{\text{train},i}}$ is identical.
+We wish to prove that after step 4, $\mathbf{(X^{T}Y)^{\text{train},i}} = \mathbf{(X^{\text{train},i})^{T}(Y^{\text{train},i}})$ where the latter is the matrix that could be fully computed directly using training $\mathbf{X^T}$ and training $\mathbf{Y}$ for cross-validation iteration $i$: $\mathbf{(X^{\text{train},i})^T}$ and $(\mathbf{Y^{\text{train},i}})$. The proof for $\mathbf{(X^{T}X)^{\text{train},i}} = \mathbf{(X^{\text{train},i})^{T}(X^{\text{train},i}})$ is identical.
 
 Consider $\mathbf{X^{T}Y}$ as it looks prior to step 4. That is, it contains both training and validation data. Now, consider an arbitrary entry (row, column) = $(k, m)$ in $\mathbf{X^{T}Y}$. It is computed as follows
 
-$$\mathbf{X^{T}Y}_{k, m} = \sum_{n=1}^{N}(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{X^{T}Y}_{k, m} = \sum_{n=1}^{N}(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
 
 Let us consider an arbitrary set of indices for samples in the validation split $V_{i}$ to remove. Each sample index will correspond to a row index $j$ in $\mathbf{X}$, corresponding to column index $j$ in $\mathbf{X}^T$, and correspond to row index $j$ in $\mathbf{Y}$.
 
 Thus, denoting the indicator function as $\mathbf{1}$, we can define the update in step 4 at cross-validation iteration $i$ as:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \overbrace{\sum_{n=1}^{N}(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}}^{\mathbf{X^{T}Y}_{k, m}} - \sum_{n=1}^{N}\mathbf{1}(n \in V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \overbrace{\sum_{n=1}^{N}(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}}^{\mathbf{X^{T}Y}_{k, m}} - \sum_{n=1}^{N}\mathbf{1}(n \in V_{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
 
 Notice how the right hand side consists of first summing over all $n=1,...,N$ and then subtracting over all $n \in V_{i}$. We can simplify this by instead summing over all $n=1,...,N \notin V_{i}$:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathbf{1}(n \notin V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathbf{1}(n \notin V_{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
 
-The right hand side of the above is the definition of $\mathbf{(X^{\text{train},i})^{T}Y^{\text{train},i}}_{k, m}$ and thus the proof is concluded.
+The right hand side of the above is the definition of $\mathbf{(X^{\text{train},i})^{T}(Y^{\text{train},i}}_{k, m})$ and thus the proof is concluded.
 
 # Acknowledgements
 
