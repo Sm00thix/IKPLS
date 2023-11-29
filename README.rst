@@ -7,12 +7,12 @@ The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator fro
 
 The GPU and TPU implementations are made using Google's JAX [6]_. While allowing CPU, GPU, and TPU execution, automatic differentiation is also supported by JAX. This implies that the JAX implementations can be used together with deep learning approaches as the PLS fit is differentiable.
 
-.. [1] : [Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 11(1), 73-85.](https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23)
-.. [2] : [Alin, A. (2009). Comparison of PLS algorithms when the number of objects is much larger than the number of variables. Statistical papers, 50, 711-720.](https://link.springer.com/content/pdf/10.1007/s00362-009-0251-7.pdf)
-.. [3] : [Andersson, M. (2009). A comparison of nine PLS1 algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 23(10), 518-529.](https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/pdf/10.1002/cem.1248?)
-.. [4] : [NumPy.](https://numpy.org/)
-.. [5] : [scikit-learn.](https://scikit-learn.org/stable/)
-.. [6] : [JAX.](https://jax.readthedocs.io/en/latest/)
+.. [1] : `Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 11(1), 73-85.<https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23?>`_
+.. [2] : `Alin, A. (2009). Comparison of PLS algorithms when the number of objects is much larger than the number of variables. Statistical papers, 50, 711-720.<https://link.springer.com/content/pdf/10.1007/s00362-009-0251-7.pdf?>`_
+.. [3] : `Andersson, M. (2009). A comparison of nine PLS1 algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 23(10), 518-529.<https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/pdf/10.1002/cem.1248?>`_
+.. [4] : `NumPy.<https://numpy.org/>`_
+.. [5] : `scikit-learn.<https://scikit-learn.org/stable/>`_
+.. [6] : `JAX.<https://jax.readthedocs.io/en/latest/>`_
 
 Pre-requisites
 --------------
@@ -36,7 +36,7 @@ Installation
 Quick Start
 -----------
 Use the ikpls package for PLS modelling
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
 
   .. code:: python
 
@@ -68,3 +68,12 @@ Use the ikpls package for PLS modelling
     np_ikpls_alg_1.Q  # Y loadings matrix of shape (M, A) = (10, 20).
     np_ikpls_alg_1.R  # X rotations matrix of shape (K, A) = (50, 20).
     np_ikpls_alg_1.T  # X scores matrix of shape (N, A) = (100, 20). This is only computed for IKPLS Algorithm #1.
+
+Examples
+~~~~~~~~
+In `examples<https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will find:
+* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py>`_ of fitting and predicting with the NumPy implementations.
+* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py>`_ of fitting and predicting with the JAX implementations.
+* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py>`_ of cross validating with the NumPy implementations.
+* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_ of cross validating with the JAX implementations.
+* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_ of computing the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
