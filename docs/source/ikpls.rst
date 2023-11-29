@@ -4,10 +4,6 @@ ikpls module
 Module contents
 ---------------
 
-.. automodule:: ikpls
+.. automodule:: ikpls.numpy_ikpls
    :members:
    :undoc-members:
-   :show-inheritance:
-
-.. toc::
-    :maxdepth: 4
