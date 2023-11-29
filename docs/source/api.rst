@@ -1,6 +1,6 @@
 API Reference
 -------------
-.. automodule:: mbpls
+.. automodule:: ikpls
     :members:
     :undoc-members:
 
