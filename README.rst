@@ -2,7 +2,7 @@ Improved Kernel Partial Least Squares (IKPLS)
 =============================================
 
 .. image:: https://img.shields.io/pypi/v/ikpls.svg
-   :target: https://pypi.python.org/pypi/ikpls
+   :target: https://pypi.python.org/pypi/ikpls/
    :alt: PyPI Version
 .. image:: https://img.shields.io/pypi/l/ikpls.svg
     :target: https://pypi.python.org/pypi/ikpls/
