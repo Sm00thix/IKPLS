@@ -3,3 +3,4 @@ jax>=0.4.19
 jaxlib>=0.4.19
 scikit-learn>=1.3.2
 tqdm>=4.66.1
+sphinx-rtd-theme
