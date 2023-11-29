@@ -133,7 +133,7 @@ Let us consider an arbitrary set of indices for samples in the validation split 
 
 Thus, denoting the indicator function as $\mathbf{1}$, we can define the update in step 4 at cross-validation iteration $i$ as:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \mathbf{X^{T}Y}_{k, m} - \sum_{n=1}^{N}\mathbf{1}(n \in V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \overbrace{\sum_{n=1}^{N}(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}}^{\mathbf{X^{T}Y}_{k, m}} - \sum_{n=1}^{N}\mathbf{1}(n \in V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
 
 Notice how the right hand side consists of first summing over all $n=1,...,N$ and then subtracting over all $n \in V_{i}$. We can simplify this by instead summing over all $n=1,...,N \notin V_{i}$:
 
