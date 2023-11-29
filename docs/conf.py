@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'IKPLS'
+copyright = '2023, Ole-Christian Galbo Engstrøm'
 author = 'Ole-Christian Galbo Engstrøm'
 
 # -- General configuration ---------------------------------------------------
