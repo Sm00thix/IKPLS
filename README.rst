@@ -1,6 +1,19 @@
 Improved Kernel Partial Least Squares (IKPLS)
 =============================================
 
+.. image:: https://img.shields.io/pypi/v/ikpls.svg
+   :target: https://pypi.python.org/pypi/ikpls
+   :alt: PyPI Version
+.. image:: https://img.shields.io/pypi/l/ikpls.svg
+    :target: https://pypi.python.org/pypi/ikpls/
+    :alt: License
+.. image:: https://readthedocs.org/projects/ikpls/badge/?version=latest
+    :target: https://ikpls.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+.. image:: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml/badge.svg
+    :target: https://https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
+    :alt: Build Status
+
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS has been shown to be both fast [2]_ and numerically stable [3]_.
 
 The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate` .
