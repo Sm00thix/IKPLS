@@ -109,20 +109,20 @@ Using IKPLS Algorithm 2 (for Algorithm 1, ignore any terms related to $\mathbf{X
 
 1. Compute $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$. Set cross-validation split $i=0$
 
-2. Let $V_{i}$ denote the set of validation indices for cross-validation split $i$, i.e., the indices in $\mathbf{X}$ and $\mathbf{Y}$ that that should be used for validation instead of training.
+2. Let $V^{i}$ denote the set of validation indices for cross-validation split $i$, i.e., the indices in $\mathbf{X}$ and $\mathbf{Y}$ that that should be used for validation instead of training.
 
 3. Copy $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ into $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$.
 
-4. We must remove from $\mathbf{(X^{T}X)^{\text{train}, i}}$ and $\mathbf{(X^{T}Y)^{\text{train}, i}}$ the contribution of all samples, $\mathbf{X}_{n}$ and $\mathbf{Y}_{n}$ for $n \in V_{i}$ as these samples belong to the validation set of the current cross-validation split.
+4. We must remove from $\mathbf{(X^{T}X)^{\text{train}, i}}$ and $\mathbf{(X^{T}Y)^{\text{train}, i}}$ the contribution of all samples, $\mathbf{X}_{n}$ and $\mathbf{Y}_{n}$ for $n \in V^{i}$ as these samples belong to the validation set of the current cross-validation split.
    This removal can be done with the following operations  
-   for $n$ in $V_{i}$:  
+   for $n$ in $V^{i}$:  
    &nbsp;&nbsp;$\mathbf{(X^{T}X)^{\text{train},i}}$ = $\mathbf{(X^{T}X)^{\text{train},i}}$ - $\mathbf{X}_{n}^{T}\mathbf{X}_{n}$  
    &nbsp;&nbsp;$\mathbf{(X^{T}Y)^{\text{train},i}}$ = $\mathbf{(X^{T}Y)^{\text{train},i}}$ - $\mathbf{X}_{n}^{T}\mathbf{Y}_{n}$
 
-5. Fit PLS with $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$ which now only contains samples with an index not in $V_{i}$.
+5. Fit PLS with $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$ which now only contains samples with an index not in $V^{i}$.
 
 6. Evaluate the calibrated PLS model on the validation data as per usual:  
-   for $n$ in $V_{i}$:  
+   for $n$ in $V^{i}$:  
     &nbsp;&nbsp;predict on the validation samples $\mathbf{X}_{n}$ and evaluate the predictions against validation  
     &nbsp;&nbsp;targets $\mathbf{Y}_{n}$
 
@@ -130,7 +130,7 @@ Using IKPLS Algorithm 2 (for Algorithm 1, ignore any terms related to $\mathbf{X
 
 8. Terminate if there are no more cross-validation splits. Otherwise, increment the split counter: $i = i + 1$ and go to step 2.
 
-This algorithm avoids recomputing the full $\mathbf{X^{T}X}^{\text{train},i}$ and $\mathbf{X^{T}Y}^{\text{train},i}$ for each cross-validation iteration, which would require $N^{\text{train},i} \times K^2$ and $N^{\text{train},i} \times K \times M$ multiplications per cross-validation split, respectively. Instead, we compute in each cross-validation iteration $\mathbf{X}_{n}^{T}\mathbf{X}_{n}$ and $\mathbf{X}_{n}^{T}\mathbf{Y}_{n}$, requiring only $K^2$ and $K \times M$ for each $n \in V_{i}$. Thus, the latter approach is faster for any cross-validation split $i$ if $N^{\text{train}, i} > |V_{i}|$; this is the case when performing cross-validation, where the size of the training split is larger than that of the validation split, which is usually the case. The achieved speedup is proportional to the number of cross-validation splits. In the most extreme case of leave-one-out cross-validation, $|V_{i}|=1$ for all cross-validation splits $i$, and a speedup of order $N$ is achieved for each matrix-product and for every cross-validation split.  
+This algorithm avoids recomputing the full $\mathbf{X^{T}X}^{\text{train},i}$ and $\mathbf{X^{T}Y}^{\text{train},i}$ for each cross-validation iteration, which would require $N^{\text{train},i} \times K^2$ and $N^{\text{train},i} \times K \times M$ multiplications per cross-validation split, respectively. Instead, we compute in each cross-validation iteration $\mathbf{X}_{n}^{T}\mathbf{X}_{n}$ and $\mathbf{X}_{n}^{T}\mathbf{Y}_{n}$, requiring only $K^2$ and $K \times M$ for each $n \in V^{i}$. Thus, the latter approach is faster for any cross-validation split $i$ if $N^{\text{train}, i} > |V^{i}|$; this is the case when performing cross-validation, where the size of the training split is larger than that of the validation split, which is usually the case. The achieved speedup is proportional to the number of cross-validation splits. In the most extreme case of leave-one-out cross-validation, $|V^{i}|=1$ for all cross-validation splits $i$, and a speedup of order $N$ is achieved for each matrix-product and for every cross-validation split.  
 
 The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\mathbf{X}$ to affect the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ and a single row in $\mathbf{Y}$ to affect the full $\mathbf{X^{T}Y}$. These effects must be considered in step 4 of the proposed algorithm to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
 
@@ -141,15 +141,15 @@ Consider $\mathbf{X^{T}Y}$ as it looks before step 4. That is, it contains both 
 
 $$\mathbf{X^{T}Y}_{k, m} = \sum_{n=1}^{N}(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
 
-Let us consider an arbitrary set of indices for samples in the validation split $V_{i}$ to remove. Each sample index will correspond to a row index $n$ in $\mathbf{X}$, corresponding to column index $n$ in $\mathbf{X^{T}}$, and correspond to row index $n$ in $\mathbf{Y}$.
+Let us consider an arbitrary set of indices for samples in the validation split $V^{i}$ to remove. Each sample index will correspond to a row index $n$ in $\mathbf{X}$, corresponding to column index $n$ in $\mathbf{X^{T}}$, and correspond to row index $n$ in $\mathbf{Y}$.
 
 Thus, denoting the indicator function as $\mathbf{1}$, we can define the update in step 4 at cross-validation iteration $i$ as:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \overbrace{\sum_{n=1}^{N}(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}}^{\mathbf{X^{T}Y}_{k, m}} - \sum_{n=1}^{N}\mathbf{1}(n \in V_{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \overbrace{\sum_{n=1}^{N}(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}}^{\mathbf{X^{T}Y}_{k, m}} - \sum_{n=1}^{N}\mathbf{1}(n \in V^{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
 
-Notice how the right-hand side consists of summing over all $n=1,..., N$ and then subtracting over $n \in V_{i}$. We can simplify this by instead summing over all $n=1,...,N \notin V_{i}$:
+Notice how the right-hand side consists of summing over all $n=1,..., N$ and then subtracting over $n \in V^{i}$. We can simplify this by instead summing over all $n=1,...,N \notin V^{i}$:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathbf{1}(n \notin V_{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathbf{1}(n \notin V^{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
 
 The right-hand side of the above is the definition of $\mathbf{(X^{\text{train}, i})^{T}(Y^{\text{train}, i}})_{k, m}$ and thus the proof is concluded.
 
