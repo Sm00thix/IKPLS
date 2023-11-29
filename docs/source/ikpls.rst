@@ -5,9 +5,9 @@ Module contents
 ---------------
 
 .. automodule:: ikpls
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. toctree::
-    :maxdepth: 2
+.. toc::
+    :maxdepth: 4
