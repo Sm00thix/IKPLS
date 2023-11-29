@@ -7,17 +7,22 @@ The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator fro
 
 The GPU and TPU implementations are made using Google's JAX [6]_. While allowing CPU, GPU, and TPU execution, automatic differentiation is also supported by JAX. This implies that the JAX implementations can be used together with deep learning approaches as the PLS fit is differentiable.
 
-.. [1] : `Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 11(1), 73-85.
+.. [1] `Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 11(1), 73-85.
 <https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23?>`_
-.. [2] : `Alin, A. (2009). Comparison of PLS algorithms when the number of objects is much larger than the number of variables. Statistical papers, 50, 711-720.
+
+.. [2] `Alin, A. (2009). Comparison of PLS algorithms when the number of objects is much larger than the number of variables. Statistical papers, 50, 711-720.
 <https://link.springer.com/content/pdf/10.1007/s00362-009-0251-7.pdf?>`_
-.. [3] : `Andersson, M. (2009). A comparison of nine PLS1 algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 23(10), 518-529.
+
+.. [3] `Andersson, M. (2009). A comparison of nine PLS1 algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 23(10), 518-529.
 <https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/pdf/10.1002/cem.1248?>`_
-.. [4] : `NumPy.
+
+.. [4] `NumPy.
 <https://numpy.org/>`_
-.. [5] : `scikit-learn.
+
+.. [5] `scikit-learn.
 <https://scikit-learn.org/stable/>`_
-.. [6] : `JAX.
+
+.. [6] `JAX.
 <https://jax.readthedocs.io/en/latest/>`_
 
 Pre-requisites
