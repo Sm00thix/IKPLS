@@ -5,7 +5,8 @@
     :caption: Table of Contents
     :titlesonly:
 
-    ikpls
+    self
+    api
 
 
 
