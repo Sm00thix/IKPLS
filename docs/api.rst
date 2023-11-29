@@ -1,14 +1,10 @@
 API Reference
 -------------
-.. automodule:: ikpls
-    :members:
-    :undoc-members:
-
 .. toctree::
     :maxdepth: 2
 
-    ikpls
-    ikpls.numpy_ikpls
-    ikpls.jax_ikpls_base
-    ikpls.jax_ikpls_alg_1
-    ikpls.jax_ikpls_alg_2
+    source/ikpls
+    source/ikpls.numpy_ikpls
+    source/ikpls.jax_ikpls_base
+    source/ikpls.jax_ikpls_alg_1
+    source/ikpls.jax_ikpls_alg_2
