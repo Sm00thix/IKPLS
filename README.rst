@@ -27,10 +27,9 @@ Installation
 -  | Install the package for Python3 using the following command:
    | ``$ pip3 install ikpls``
 -  |  Now you can import the NumPy and JAX implementations with:
-.. code:: python
-    from ikpls.numpy_ikpls import PLS as NpPLS
-    from ikpls.jax_ikpls_alg_1 import PLS as JAXPLS_Alg_1
-    from ikpls.jax_ikpls_alg_2 import PLS as JAXPLS_Alg_2
+   | ``from ikpls.numpy_ikpls import PLS as NpPLS``
+   | ``from ikpls.jax_ikpls_alg_1 import PLS as JAXPLS_Alg_1``
+   | ``from ikpls.jax_ikpls_alg_2 import PLS as JAXPLS_Alg_2``
 
 
 Quick Start
@@ -71,9 +70,11 @@ Use the ikpls package for PLS modelling
 
 Examples
 ~~~~~~~~
-In `examples<https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will find:
-* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py>`_ of fitting and predicting with the NumPy implementations.
-* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py>`_ of fitting and predicting with the JAX implementations.
-* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py>`_ of cross validating with the NumPy implementations.
-* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_ of cross validating with the JAX implementations.
-* `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_ of computing the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
+In `examples
+<https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will find:
+-  | `Example
+<https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py>`_ of fitting and predicting with the NumPy implementations.
+-  | `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py>`_ of fitting and predicting with the JAX implementations.
+-  | `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py>`_ of cross validating with the NumPy implementations.
+-  | `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_ of cross validating with the JAX implementations.
+-  | `Example<https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_ of computing the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
