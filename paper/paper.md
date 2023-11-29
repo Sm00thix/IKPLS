@@ -131,13 +131,13 @@ $$\mathbf{X^{T}Y}_{k, m} = \sum_{n=1}^{N}(\mathbf{X}^T)_{k, n} \times \mathbf{Y}
 
 Let us consider an arbitrary set of indices for samples in the validation split $V_{i}$ to remove. Each sample index will correspond to a row index $j$ in $\mathbf{X}$, corresponding to column index $j$ in $\mathbf{X}^T$, and correspond to row index $j$ in $\mathbf{Y}$.
 
-Thus, denoting the indicator function as $\mathds{1}$, we can define the update in step 4 at cross-validation iteration $i$ as:
+Thus, denoting the indicator function as $\mathbf{1}$, we can define the update in step 4 at cross-validation iteration $i$ as:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \mathbf{X^{T}Y}_{k, m} - \sum_{n=1}^{N}\mathds{1}(n \in V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \mathbf{X^{T}Y}_{k, m} - \sum_{n=1}^{N}\mathbf{1}(n \in V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
 
 Notice how the right hand side consists of first summing over all $n=1,...,N$ and then subtracting over all $n \in V_{i}$. We can simplify this by instead summing over all $n=1,...,N \notin V_{i}$:
 
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathds{1}(n \notin V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
+$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathbf{1}(n \notin V_{i})(\mathbf{X}^T)_{k, n} \times \mathbf{Y}_{n, m}$$
 
 The right hand side of the above is the definition of $\mathbf{(X^{\text{train},i})^{T}Y^{\text{train},i}}_{k, m}$ and thus the proof is concluded.
 
