@@ -4,7 +4,7 @@ version = "0.1.6"
 description = ""
 authors = ["Sm00thix <oleemail@icloud.com>"]
 license = "Apache-2.0"
-readme = "README.md"
+readme = "README.rst"
 repository = "https://github.com/Sm00thix/IKPLS"
 
 [tool.poetry.dependencies]
