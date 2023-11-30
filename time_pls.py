@@ -1,15 +1,16 @@
 import argparse
+
+from ikpls.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
+from ikpls.jax_ikpls_alg_2 import PLS as JAX_PLS_Alg_2
+from ikpls.numpy_ikpls import PLS as NP_PLS
 from timings.timings import (
-    single_fit_cpu_pls,
-    single_fit_gpu_pls,
+    SK_PLS_All_Components,
     cross_val_cpu_pls,
     cross_val_gpu_pls,
     gen_random_data,
-    SK_PLS_All_Components,
+    single_fit_cpu_pls,
+    single_fit_gpu_pls,
 )
-from ikpls.numpy_ikpls import PLS as NP_PLS
-from ikpls.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
-from ikpls.jax_ikpls_alg_2 import PLS as JAX_PLS_Alg_2
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -110,20 +111,3 @@ if __name__ == "__main__":
     except FileExistsError:
         with open("timings/timings.csv", "a") as f:
             f.write(f"{model},{n_components},{n_splits},{n},{k},{m},{time}\n")
-
-    # Freeze values:
-    # 1. n_components = 30
-    # 2. n_splits = {1, LOOCV} # The overhead of JIT-compilation is already negligible at 1e4 samples.
-    # 3. n = 10000
-    # 4. k = 500
-    # 5. m = {1, 10}
-
-    # Dynamic values:
-    # 1. n_components = {10, 20, 30, 50, 100, 200, 500, 1000}
-    # 1. n = {1e1, 1e2, 1e3, 1e4, 1e5, 1e6}
-    # 3. k = {20, 50, 100, 500, 1000, 5000, 10000}
-
-    # TODO: Save timings to file
-    # Format should be a csv with something like: model, n_components, n_splits, n, m, k, time
-
-    # TODO: Add opportunity to run only the first max_splits number of splits in cross-validation. Running them all to completion with all values will take a long time. Simply setting n_splits to a lower value will not work because the splits will have wrong sizes.

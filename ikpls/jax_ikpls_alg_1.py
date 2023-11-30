@@ -1,22 +1,22 @@
-from ikpls.jax_ikpls_base import PLSBase
-import jax
-from jax.experimental import host_callback
-import jax.numpy as jnp
 from functools import partial
 from typing import Tuple
+
+import jax
+import jax.numpy as jnp
+from jax.experimental import host_callback
+
+from ikpls.jax_ikpls_base import PLSBase
 
 
 class PLS(PLSBase):
     """
-    Description
-    -----------
     Implements partial least-squares regression using Improved Kernel PLS Algorithm #1 by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23.
 
     Parameters
     ----------
-    `reverse_differentiable`: bool, optional (default=False). Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+    reverse_differentiable: bool, optional (default=False). Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
 
-    `verbose` : bool, optional (default=False). If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
+    verbose : bool, optional (default=False). If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
     """
 
     def __init__(
@@ -34,42 +34,40 @@ class PLS(PLSBase):
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
         """
-        Description
-        -----------
         Initialize the matrices and arrays needed for the PLS algorithm. This method is part of the PLS fitting process.
 
         Parameters
         ----------
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        `K` : int
+        K : int
             Number of predictor variables.
 
-        `M` : int
+        M : int
             Number of response variables.
 
-        `N` : int
+        N : int
             Number of samples.
 
         Returns
         -------
-        `B` : Array of shape (A, K, M)
+        B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
-        `W` : Array of shape (A, K)
+        W : Array of shape (A, K)
             PLS weights matrix for X.
 
-        `P` : Array of shape (A, K)
+        P : Array of shape (A, K)
             PLS loadings matrix for X.
 
-        `Q` : Array of shape (A, M)
+        Q : Array of shape (A, M)
             PLS Loadings matrix for Y.
 
-        `R` : Array of shape (A, K)
+        R : Array of shape (A, K)
             PLS weights matrix to compute scores T directly from original X.
 
-        `T` : Array of shape (A, N)
+        T : Array of shape (A, N)
             PLS scores matrix of X.
         """
         if self.verbose:
@@ -81,21 +79,19 @@ class PLS(PLSBase):
     @partial(jax.jit, static_argnums=(0,))
     def _step_1(self, X: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
         """
-        Description
-        -----------
         Perform the first step of Improved Kernel PLS Algorithm #1.
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+        X : Array of shape (N, K)
+            Predictor variables.
 
-        `Y` : Array of shape (N, M)
-            Response variables. The precision should be at least float64 for reliable results.
+        Y : Array of shape (N, M)
+            Response variables.
 
         Returns
         -------
-        `XTY` : Array of shape (K, M)
+        XTY : Array of shape (K, M)
             Intermediate result used in the PLS algorithm.
         """
         if self.verbose:
@@ -105,33 +101,31 @@ class PLS(PLSBase):
     @partial(jax.jit, static_argnums=(0,))
     def _step_4(self, X: jnp.ndarray, XTY: jnp.ndarray, r: jnp.ndarray):
         """
-        Description
-        -----------
         Perform the fourth step of Improved Kernel PLS Algorithm #1.
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+        X : Array of shape (N, K)
+            Predictor variables.
 
-        `XTY` : Array of shape (K, M)
+        XTY : Array of shape (K, M)
             Intermediate result used in the PLS algorithm.
 
-        `r` : Array of shape (K, 1)
+        r : Array of shape (K, 1)
             Intermediate result used in the PLS algorithm.
 
         Returns
         -------
-        `tTt` : float
+        tTt : float
             Intermediate result used in the PLS algorithm.
 
-        `p` : Array of shape (K, 1)
+        p : Array of shape (K, 1)
             Intermediate result used in the PLS algorithm.
 
-        `q` : Array of shape (M, 1)
+        q : Array of shape (M, 1)
             Intermediate result used in the PLS algorithm.
 
-        `t` : Array of shape (N, 1)
+        t : Array of shape (N, 1)
             Intermediate result used in the PLS algorithm.
 
         See Also
@@ -163,63 +157,61 @@ class PLS(PLSBase):
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
         """
-        Description
-        -----------
         Execute the main loop body of Improved Kernel PLS Algorithm #1. This function performs various steps of the PLS algorithm for each component.
 
         Parameters
         ----------
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        `i` : int
+        i : int
             Current component index.
 
-        `X` : Array of shape (N, K)
-            Predictor variables. The precision should be at least float64 for reliable results.
+        X : Array of shape (N, K)
+            Predictor variables.
 
-        `XTY` : Array of shape (K, M)
+        XTY : Array of shape (K, M)
             Intermediate result used in the PLS algorithm.
 
-        `M` : int
+        M : int
             Number of response variables.
 
-        `K` : int
+        K : int
             Number of predictor variables.
 
-        `P` : Array of shape (K, A)
+        P : Array of shape (K, A)
             PLS loadings matrix for X.
 
-        `R` : Array of shape (K, A)
+        R : Array of shape (K, A)
             PLS weights matrix to compute scores T directly from original X.
 
-        `reverse_differentiable` : bool
+        reverse_differentiable : bool
             Whether to use a reverse_differentiable version of the algorithm.
 
         Returns
         -------
-        `XTY` : Array of shape (K, M)
+        XTY : Array of shape (K, M)
             Updated intermediate result used in the PLS algorithm.
 
-        `w` : Array of shape (K, 1)
+        w : Array of shape (K, 1)
             Updated intermediate result used in the PLS algorithm.
 
-        `p` : Array of shape (K, 1)
+        p : Array of shape (K, 1)
             Updated intermediate result used in the PLS algorithm.
 
-        `q` : Array of shape (M, 1)
+        q : Array of shape (M, 1)
             Updated intermediate result used in the PLS algorithm.
 
-        `r` : Array of shape (K, 1)
+        r : Array of shape (K, 1)
             Updated intermediate result used in the PLS algorithm.
 
-        `t` : Array of shape (N, 1)
+        t : Array of shape (N, 1)
             Updated intermediate result used in the PLS algorithm.
 
 
         Warns
         -----
-        `UserWarning`.
+        UserWarning.
             If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
         """
         if self.verbose:
@@ -240,56 +232,54 @@ class PLS(PLSBase):
 
     def fit(self, X: jnp.ndarray, Y: jnp.ndarray, A: int) -> None:
         """
-        Description
-        -----------
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        Assigns
-        -------
-        `self.B` : Array of shape (A, K, M)
+        Attributes
+        ----------
+        B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
-        `self.W` : Array of shape (K, A)
+        W : Array of shape (K, A)
             PLS weights matrix for X.
 
-        `self.P` : Array of shape (K, A)
+        P : Array of shape (K, A)
             PLS loadings matrix for X.
 
-        `self.Q` : Array of shape (M, A)
+        Q : Array of shape (M, A)
             PLS Loadings matrix for Y.
 
-        `self.R` : Array of shape (K, A)
+        R : Array of shape (K, A)
             PLS weights matrix to compute scores T directly from original X.
 
-        `self.T` : Array of shape (N, A)
+        T : Array of shape (N, A)
             PLS scores matrix of X.
 
         Returns
         -------
-        `None`.
+        None.
 
         Warns
         -----
-        `UserWarning`.
+        UserWarning.
             If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
 
         See Also
         --------
-        `stateless_fit` : Performs the same operation but returns the output matrices instead of storing them in the class instance.
+        stateless_fit : Performs the same operation but returns the output matrices instead of storing them in the class instance.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 precision
-        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 precision
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 precision
+        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 precision
         self.B, W, P, Q, R, T = self.stateless_fit(X, Y, A)
         self.W = W.T
         self.P = P.T
@@ -304,40 +294,42 @@ class PLS(PLSBase):
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
         """
+        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components. Returns the internal matrices instead of storing them in the class instance.
+
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
         Returns
         -------
-        `B` : Array of shape (A, K, M)
+        B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
-        `W` : Array of shape (A, K)
+        W : Array of shape (A, K)
             PLS weights matrix for X.
 
-        `P` : Array of shape (A, K)
+        P : Array of shape (A, K)
             PLS loadings matrix for X.
 
-        `Q` : Array of shape (A, M)
+        Q : Array of shape (A, M)
             PLS Loadings matrix for Y.
 
-        `R` : Array of shape (A, K)
+        R : Array of shape (A, K)
             PLS weights matrix to compute scores T directly from original X.
 
-        `T` : Array of shape (A, N)
+        T : Array of shape (A, N)
             PLS scores matrix of X.
 
         Warns
         -----
-        `UserWarning`.
+        UserWarning.
             If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
 
         See Also
@@ -352,8 +344,8 @@ class PLS(PLSBase):
         if self.verbose:
             print(f"stateless_fit for {self.name} will be JIT compiled...")
 
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 precision
-        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 precision
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 precision
+        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 precision
 
         # Get shapes
         N, K = X.shape

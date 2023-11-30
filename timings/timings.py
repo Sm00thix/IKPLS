@@ -1,11 +1,11 @@
-from numpy import ndarray
-from sklearn.cross_decomposition import PLSRegression as SK_PLS
+from timeit import Timer, default_timer
+
+import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
-import jax.numpy as jnp
+from numpy import ndarray
+from sklearn.cross_decomposition import PLSRegression as SK_PLS
 from sklearn.model_selection import KFold, cross_validate
-from timeit import Timer
-from timeit import default_timer
 
 
 class SK_PLS_All_Components(SK_PLS):
@@ -13,7 +13,7 @@ class SK_PLS_All_Components(SK_PLS):
     Description
     -----------
     Subclass of sklearn's PLSRegression that stores regression matrices for all possible components during fitting.
-    
+
     Parameters
     ----------
     `n_components` : int
@@ -22,6 +22,7 @@ class SK_PLS_All_Components(SK_PLS):
     `**kwargs`:
         Additional keyword arguments to pass to the superclass constructor.
     """
+
     def __init__(self, n_components, **kwargs):
         super().__init__(n_components=n_components, **kwargs)
 
@@ -55,11 +56,7 @@ class SK_PLS_All_Components(SK_PLS):
             B[i] = B_at_component_i
         self.B = B
 
-    def predict(
-        self, X: npt.ArrayLike
-    ) -> (
-        ndarray
-    ):
+    def predict(self, X: npt.ArrayLike) -> ndarray:
         """
         Description
         -----------
@@ -116,10 +113,10 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
     ----------
     `estimator` : Estimator object
         PLS estimator with a 'predict' method.
-    
+
     `X` : Array of shape (N, K)
         Predictor variables.
-    
+
     `Y_true` : Array of shape (N, M)
         True response variables.
 
@@ -131,13 +128,11 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
     `metrics`: dict
         Dictionary containing MSE and number of components for each target.
     """
-    
-    # Y_true has shape (N, M)
-    Y_pred = estimator.predict(
-        X, **kwargs
-    )  # Shape (A, N, M)
-    e = Y_true - Y_pred # Shape (A, N, M)
-    se = e**2 # Shape (A, N, M)
+
+    # Y_true has shape (N, M).
+    Y_pred = estimator.predict(X, **kwargs)  # Shape (A, N, M).
+    e = Y_true - Y_pred  # Shape (A, N, M).
+    se = e**2  # Shape (A, N, M).
     mse = np.mean(se, axis=-2)  # Compute the mean over samples. Shape (A, M).
     row_idxs = np.argmin(
         mse, axis=0
@@ -148,12 +143,14 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
     num_components = (
         row_idxs + 1
     )  # Indices are 0-indexed but number of components is 1-indexed.
-    mse_names = [f"lowest_mse_target_{i}" for i in range(lowest_mses.shape[0])] # List of names for the lowest MSE values.
-    num_components_names = [ # List of names for the number of components that achieves the lowest MSE for each target.
+    mse_names = [
+        f"lowest_mse_target_{i}" for i in range(lowest_mses.shape[0])
+    ]  # List of names for the lowest MSE values.
+    num_components_names = [  # List of names for the number of components that achieves the lowest MSE for each target.
         f"num_components_lowest_mse_target_{i}" for i in range(lowest_mses.shape[0])
     ]
-    all_names = mse_names + num_components_names # List of all names.
-    all_values = np.concatenate((lowest_mses, num_components)) # Array of all values.
+    all_names = mse_names + num_components_names  # List of all names.
+    all_values = np.concatenate((lowest_mses, num_components))  # Array of all values.
     return dict(zip(all_names, all_values))
 
 
@@ -174,23 +171,23 @@ def jax_mse_for_each_target(Y_true, Y_pred):
     `all_values` : Array of shape (2*M,)
     """
     # Y_true has shape (N, M)
-    e = Y_true - Y_pred # Shape (A, N, M)
-    se = e**2 # Shape (A, N, M)
+    e = Y_true - Y_pred  # Shape (A, N, M)
+    se = e**2  # Shape (A, N, M)
     mse = jnp.mean(se, axis=-2)  # Compute the mean over samples. Shape (A, M).
-    row_idxs = jnp.argmin( # The number of components that minimizes the MSE for each target. Shape (M,).
+    row_idxs = jnp.argmin(  # The number of components that minimizes the MSE for each target. Shape (M,).
         mse, axis=0
     )
-    lowest_mses = mse[ # The lowest MSE for each target. Shape (M,).
+    lowest_mses = mse[  # The lowest MSE for each target. Shape (M,).
         row_idxs, jnp.arange(mse.shape[1])
     ]  # The lowest MSE for each target.
     num_components = (
         row_idxs + 1
     )  # Indices are 0-indexed but number of components is 1-indexed.
-    all_values = jnp.concatenate((lowest_mses, num_components)) # Array of all values.
+    all_values = jnp.concatenate((lowest_mses, num_components))  # Array of all values.
     return all_values
 
 
-def jax_metric_names(K):
+def jax_metric_names(M):
     """
     Description
     -----------
@@ -198,7 +195,7 @@ def jax_metric_names(K):
 
     Parameters
     ----------
-    `K` : int
+    `M` : int
         Number of targets.
 
     Returns
@@ -206,9 +203,13 @@ def jax_metric_names(K):
     `all_names` : list[str]
         List of metric names.
     """
-    mse_names = [f"lowest_mse_target_{i}" for i in range(K)] # List of names for the lowest MSE values.
-    num_components_names = [f"num_components_lowest_mse_target_{i}" for i in range(K)] # List of names for the number of components that achieves the lowest MSE for each target.
-    all_names = mse_names + num_components_names # List of all names.
+    mse_names = [
+        f"lowest_mse_target_{i}" for i in range(M)
+    ]  # List of names for the lowest MSE values.
+    num_components_names = [
+        f"num_components_lowest_mse_target_{i}" for i in range(M)
+    ]  # List of names for the number of components that achieves the lowest MSE for each target.
+    all_names = mse_names + num_components_names  # List of all names.
     return all_names
 
 

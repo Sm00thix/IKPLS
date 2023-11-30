@@ -1,19 +1,18 @@
+import abc
+import warnings
+from collections.abc import Callable
+from functools import partial
+from typing import Any, Tuple, Union
+
 import jax
 import jax.numpy as jnp
 import jax.numpy.linalg as jla
-from functools import partial
-import abc
-from typing import Tuple, Union, Any
-from collections.abc import Callable
-from tqdm import tqdm
 import numpy as np
-import warnings
+from tqdm import tqdm
 
 
 class PLSBase(abc.ABC):
     """
-    Description
-    -----------
     Implements an abstract class for partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23.
 
     Implementations of concrete classes exist for both Improved Kernel PLS Algorithm #1 and Improved Kernel PLS Algorithm #2.
@@ -39,8 +38,6 @@ class PLSBase(abc.ABC):
 
     def _weight_warning(self, arg, *args):
         """
-        Description
-        -----------
         Display a warning message if the weight is close to zero.
 
         Parameters
@@ -71,8 +68,6 @@ class PLSBase(abc.ABC):
         self, b_last: jnp.ndarray, r: jnp.ndarray, q: jnp.ndarray
     ) -> jnp.ndarray:
         """
-        Description
-        -----------
         Compute the regression coefficients in the PLS algorithm.
 
         Parameters
@@ -104,8 +99,6 @@ class PLSBase(abc.ABC):
         self, A, K, M
     ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         """
-        Description
-        -----------
         Initialize the matrices used in the PLS algorithm.
 
         Parameters
@@ -151,8 +144,6 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _compute_XT(self, X: jnp.ndarray) -> jnp.ndarray:
         """
-        Description
-        -----------
         Compute the transposed predictor variable matrix.
 
         Parameters
@@ -174,8 +165,6 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _compute_initial_XTY(self, XT: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
         """
-        Description
-        -----------
         Compute the initial cross-covariance matrix of the predictor variables and the response variables.
 
         Parameters
@@ -200,8 +189,6 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _compute_XTX(self, XT: jnp.ndarray, X: jnp.ndarray) -> jnp.ndarray:
         """
-        Description
-        -----------
         Compute the product of the transposed predictor variables matrix and the predictor variables matrix.
 
         Parameters
@@ -227,8 +214,6 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _step_1(self):
         """
-        Description
-        -----------
         Abstract method representing the first step in the PLS algorithm. This step should be implemented in concrete PLS classes.
 
         Parameters
@@ -249,8 +234,6 @@ class PLSBase(abc.ABC):
         self, XTY: jnp.ndarray, M: jnp.ndarray, K: jnp.ndarray
     ) -> Tuple[jnp.ndarray, jnp.float64]:
         """
-        Description
-        -----------
         The second step of the PLS algorithm. Computes the next weight vector and the associated norm.
 
         Parameters
@@ -302,8 +285,6 @@ class PLSBase(abc.ABC):
         self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
     ) -> jnp.ndarray:
         """
-        Description
-        -----------
         The third step of the PLS algorithm. Computes the orthogonal weight vectors.
 
         Parameters
@@ -340,8 +321,6 @@ class PLSBase(abc.ABC):
         self, j: int, carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]
     ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         """
-        Description
-        -----------
         The body of the third step of the PLS algorithm. Iteratively computes orthogonal weight vectors.
 
         Parameters
@@ -370,8 +349,6 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _step_4(self):
         """
-        Description
-        -----------
         Abstract method representing the fourth step in the PLS algorithm. This step should be implemented in concrete PLS classes.
 
         Parameters
@@ -399,8 +376,6 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _main_loop_body(self):
         """
-        Description
-        -----------
         Abstract method representing the main loop body in the PLS algorithm. This method should be implemented in concrete PLS classes.
 
         Parameters
@@ -427,6 +402,8 @@ class PLSBase(abc.ABC):
         ],
     ]:
         """
+        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components. Returns the internal matrices instead of storing them in the class instance.
+
         Parameters
         ----------
         `X` : Array of shape (N, K)
@@ -475,8 +452,6 @@ class PLSBase(abc.ABC):
     @abc.abstractmethod
     def fit(self, X: jnp.ndarray, Y: jnp.ndarray, A: int) -> None:
         """
-        Description
-        -----------
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
 
         Parameters
@@ -490,24 +465,24 @@ class PLSBase(abc.ABC):
         `A` : int
             Number of components in the PLS model.
 
-        Assigns
-        -------
-        `self.B` : Array of shape (A, K, M)
+        Attributes
+        ----------
+        B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
-        `self.W` : Array of shape (K, A)
+        W : Array of shape (K, A)
             PLS weights matrix for X.
 
-        `self.P` : Array of shape (K, A)
+        P : Array of shape (K, A)
             PLS loadings matrix for X.
 
-        `self.Q` : Array of shape (M, A)
+        Q : Array of shape (M, A)
             PLS Loadings matrix for Y.
 
-        `self.R` : Array of shape (K, A)
+        R : Array of shape (K, A)
             PLS weights matrix to compute scores T directly from original X.
 
-        `self.T` : Array of shape (N, A)
+        T : Array of shape (N, A)
             PLS scores matrix of X. Only assigned for Improved Kernel PLS Algorithm #1.
 
         Returns
@@ -521,7 +496,7 @@ class PLSBase(abc.ABC):
 
         See Also
         --------
-        `stateless_fit` : Performs the same operation but returns the output matrices instead of storing them in the class instance.
+        stateless_fit : Performs the same operation but returns the output matrices instead of storing them in the class instance.
         """
 
     @partial(jax.jit, static_argnums=(0, 3))
@@ -529,8 +504,6 @@ class PLSBase(abc.ABC):
         self, X: jnp.ndarray, B: jnp.ndarray, n_components: Union[None, int] = None
     ) -> jnp.ndarray:
         """
-        Description
-        -----------
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
 
         Parameters
@@ -551,9 +524,9 @@ class PLSBase(abc.ABC):
 
         See Also
         --------
-        `predict` : Performs the same operation but uses the class instance of `B`.
+        predict : Performs the same operation but uses the class instance of `B`.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 for reliable results
         if self.verbose:
             print(f"stateless_predict for {self.name} will be JIT compiled...")
         if n_components is None:
@@ -565,8 +538,6 @@ class PLSBase(abc.ABC):
         self, X: jnp.ndarray, n_components: Union[None, int] = None
     ) -> jnp.ndarray:
         """
-        Description
-        -----------
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
 
         Parameters
@@ -584,9 +555,9 @@ class PLSBase(abc.ABC):
 
         See Also
         --------
-        `stateless_predict` : Performs the same operation but uses an input `B` instead of the one stored in the class instance.
+        stateless_predict : Performs the same operation but uses an input `B` instead of the one stored in the class instance.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 for reliable results
         if n_components is None:
             return X @ self.B
         else:
@@ -603,8 +574,6 @@ class PLSBase(abc.ABC):
         metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
     ) -> Any:
         """
-        Description
-        -----------
         Calls `B = stateless_fit(X_train, Y_train, A)[0]`. Then Calls `Y_pred = stateless_predict(X_test, B)`. `Y_pred` is an array of shape (A, N, M). Then evaluates and returns the result of `metric_function(Y_test, Y_pred)`.
 
         Parameters
@@ -633,17 +602,25 @@ class PLSBase(abc.ABC):
 
         See Also
         --------
-        `stateless_fit` : Fits on `X_train` and `Y_train` using `A` components. Then returns the internal matrices instead of storing them in the class instance.
+        stateless_fit : Fits on `X_train` and `Y_train` using `A` components. Then returns the internal matrices instead of storing them in the class instance.
 
-        `stateless_predict` : Computes `Y_pred` given predictor variables `X` and regression tensor `B` and optionally `A` components.
+        stateless_predict : Computes `Y_pred` given predictor variables `X` and regression tensor `B` and optionally `A` components.
         """
         if self.verbose:
             print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled...")
 
-        X_train = jnp.asarray(X_train, dtype=jnp.float64) # Ensure float64 for reliable results
-        Y_train = jnp.asarray(Y_train, dtype=jnp.float64) # Ensure float64 for reliable results
-        X_test = jnp.asarray(X_test, dtype=jnp.float64) # Ensure float64 for reliable results
-        Y_test = jnp.asarray(Y_test, dtype=jnp.float64) # Ensure float64 for reliable results
+        X_train = jnp.asarray(
+            X_train, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
+        Y_train = jnp.asarray(
+            Y_train, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
+        X_test = jnp.asarray(
+            X_test, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
+        Y_test = jnp.asarray(
+            Y_test, dtype=jnp.float64
+        )  # Ensure float64 for reliable results
 
         matrices = self.stateless_fit(X_train, Y_train, A)
         B = matrices[0]
@@ -665,8 +642,6 @@ class PLSBase(abc.ABC):
         show_progress=True,
     ) -> dict[str, Any]:
         """
-        Description
-        -----------
         Performs cross-validation for the Partial Least-Squares (PLS) model on given data.
 
         Parameters
@@ -702,11 +677,11 @@ class PLSBase(abc.ABC):
 
         See Also
         --------
-        `_inner_cv` : Performs cross-validation for a single fold and computes evaluation metrics.
+        _inner_cv : Performs cross-validation for a single fold and computes evaluation metrics.
 
-        `_update_metric_value_lists` : Updates lists of metric values for each metric and fold.
+        _update_metric_value_lists : Updates lists of metric values for each metric and fold.
 
-        `_finalize_metric_values` : Organizes and finalizes the metric values into a dictionary for the specified metric names.
+        _finalize_metric_values : Organizes and finalizes the metric values into a dictionary for the specified metric names.
 
         stateless_fit_predict_eval : Fits the PLS model, makes predictions, and evaluates metrics for a given fold.
 
@@ -714,8 +689,8 @@ class PLSBase(abc.ABC):
         -----
         This method is used to perform cross-validation on the PLS model with different data splits and evaluate its performance using user-defined metrics.
         """
-        X = jnp.asarray(X, dtype=jnp.float64) # Ensure float64 for reliable results
-        Y = jnp.asarray(Y, dtype=jnp.float64) # Ensure float64 for reliable results
+        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 for reliable results
+        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 for reliable results
         cv_splits = jnp.asarray(cv_splits, dtype=jnp.int64)
         metric_value_lists = [[] for _ in metric_names]
         unique_splits = jnp.unique(cv_splits)
@@ -745,8 +720,6 @@ class PLSBase(abc.ABC):
         metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
     ):
         """
-        Description
-        -----------
         Performs cross-validation for a single fold of the data and computes evaluation metrics.
 
         Parameters
@@ -767,7 +740,7 @@ class PLSBase(abc.ABC):
             Number of components in the PLS model.
 
         `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
-            A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val.
+            A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
 
         `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
@@ -804,8 +777,6 @@ class PLSBase(abc.ABC):
         metric_values: Any,
     ):
         """
-        Description
-        -----------
         Updates lists of metric values for each metric and fold during cross-validation.
 
         Parameters
@@ -836,8 +807,6 @@ class PLSBase(abc.ABC):
         self, metrics_results: list[list[Any]], metric_names: list[str]
     ):
         """
-        Description
-        -----------
         Organizes and finalizes the metric values into a dictionary for the specified metric names.
 
         Parameters

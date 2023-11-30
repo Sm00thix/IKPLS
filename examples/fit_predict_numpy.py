@@ -1,5 +1,6 @@
-from ikpls.numpy_ikpls import PLS
 import numpy as np
+
+from ikpls.numpy_ikpls import PLS
 
 if __name__ == "__main__":
     N = 100  # Number of samples.

@@ -164,3 +164,6 @@ cython_debug/
 #.idea/
 
 !.github/*
+
+docs/html/
+docs/_build/
