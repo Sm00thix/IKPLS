@@ -51,6 +51,7 @@ autodoc_default_options = {
     'members': True,
     'undoc-members': True,
     'show-inheritance': True,
+    'private-members': True,
 }
 
 def maybe_skip_member(app, what, name, obj, skip, options):
