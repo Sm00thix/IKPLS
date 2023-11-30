@@ -52,3 +52,11 @@ autodoc_default_options = {
     'undoc-members': True,
     'show-inheritance': True,
 }
+
+def maybe_skip_member(app, what, name, obj, skip, options):
+    if name in ['set_fit_request', 'set_predict_request',]:
+        return True
+    return skip
+
+def setup(app):
+    app.connect('autodoc-skip-member', maybe_skip_member)
