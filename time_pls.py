@@ -100,7 +100,7 @@ if __name__ == "__main__":
                 f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets. Using {n_jobs} concurrent workers."
             )
             time = cross_val_cpu_pls(
-                pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=10
+                pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1
             )
         print(f"Time: {time}")
 
