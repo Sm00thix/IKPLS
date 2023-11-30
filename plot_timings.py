@@ -69,6 +69,7 @@ def plot_timings(
         sorted_indices = np.argsort(x)
         x = x[sorted_indices]
         t = t[sorted_indices]
+        inferred = inferred[sorted_indices]
         curve = ax.loglog(x, t, "-", label=name)
         color = curve[0].get_color()
         for point_x, point_t, point_inferred in zip(x, t, inferred):

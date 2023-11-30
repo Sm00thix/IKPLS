@@ -5,14 +5,14 @@ Improved Kernel Partial Least Squares (IKPLS)
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: PyPI Version
 .. image:: https://img.shields.io/pypi/l/ikpls.svg
-    :target: https://pypi.python.org/pypi/ikpls/
-    :alt: License
+   :target: https://pypi.python.org/pypi/ikpls/
+   :alt: License
 .. image:: https://readthedocs.org/projects/ikpls/badge/?version=latest
-    :target: https://ikpls.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+   :target: https://ikpls.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
 .. image:: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml/badge.svg
-    :target: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
-    :alt: Build Status
+   :target: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
+   :alt: Build Status
 
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS has been shown to be both fast [2]_ and numerically stable [3]_.
 The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate` .
@@ -95,12 +95,12 @@ Examples
 
 In `examples <https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will find:
 
-- `Example <https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py>`_ of fitting and predicting with the NumPy implementations.
+- `Fit and Predict with NumPy. <https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py>`_
 
-- `Example <https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py>`_ of fitting and predicting with the JAX implementations.
+- `Fit and Predict with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py>`_
 
-- `Example <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py>`_ of cross-validating with the NumPy implementations.
+- `Cross-validate with NumPy. <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py>`_
 
-- `Example <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_ of cross-validating with the JAX implementations.
+- `Cross-validate with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_
 
-- `Example <https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_ of computing the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting.
+- `Compute the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_
