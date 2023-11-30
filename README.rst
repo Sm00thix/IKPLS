@@ -11,7 +11,7 @@ Improved Kernel Partial Least Squares (IKPLS)
     :target: https://ikpls.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 .. image:: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml/badge.svg
-    :target: https://https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
+    :target: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
     :alt: Build Status
 
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS has been shown to be both fast [2]_ and numerically stable [3]_.
