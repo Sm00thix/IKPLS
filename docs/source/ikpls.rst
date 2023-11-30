@@ -1,5 +1,5 @@
 ikpls module
-==================
+---------------
 Module contents
 ---------------
 .. toctree::
