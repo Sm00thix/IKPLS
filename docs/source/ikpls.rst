@@ -3,7 +3,6 @@ ikpls module
 Module contents
 ---------------
 .. toctree::
-    :maxdepth: 2
 
     numpy_ikpls
     jax_ikpls_alg_1
