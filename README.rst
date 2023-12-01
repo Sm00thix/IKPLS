@@ -15,7 +15,7 @@ Improved Kernel Partial Least Squares (IKPLS)
    :alt: Build Status
 
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS has been shown to be both fast [2]_ and numerically stable [3]_.
-The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate` .
+The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>`_.
 The GPU and TPU implementations are made using Google's JAX [6]_. While allowing CPU, GPU, and TPU execution, automatic differentiation is also supported by JAX. This implies that the JAX implementations can be used together with deep learning approaches as the PLS fit is differentiable.
 
 The documentation is available at https://ikpls.readthedocs.io/en/latest/, and examples can be found at https://github.com/Sm00thix/IKPLS/tree/main/examples.
