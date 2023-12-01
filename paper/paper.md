@@ -101,6 +101,8 @@ Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while
 
 # Possible algorithmic improvement for cross-validation
 
+\newtheorem{proposition}[theorem]{Proposition}
+
 \def\X{\mathbf{X}}
 \def\XT{\mathbf{X}^\mathbf{T}}
 \def\Y{\mathbf{Y}}
@@ -143,7 +145,7 @@ A cross-validation split is the selection of two subsets of $R$ into training in
     \item For each split $s \in \{1, \ldots, S\}$ determine training indices $T_s$ and validation indices $V_s$, such that $T \cap V = \emptyset$ and $T \cup V = R$.
     \item Compute $\XT_{V_s}\X_{V_s}$, subtract from $\XT\X$ pre-computed in step 1 to obtain $\XT_{T_s}\X_{T_s}$.
     \item Compute $\XT_{V_s}\Y_{V_s}$, subtract from $\XT\Y$ pre-computed in step 1 to obtain $\XT_{T_s}\Y_{T_s}$.
-    \item Fit PLS using $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ computed in steps 3 and 4, and evaluate validation samples $\X_{V_s}$ against $\Y_{T_s}$, storing results for split $s$.
+    \item Fit PLS using $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ computed in steps 3 and 4, and evaluate validation samples $\X_{V_s}$ against $\Y_{V_s}$, storing results for split $s$.
 \end{enumerate}
 
 Correctness is the property that the PLS fitted in step 5 is identical to the PLS fitted had we computed the matrix products $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ explicitly. Due to the selection in step 2, it follows from Proposition \ref{proof:xtx} and Proposition \ref{proof:xty} that steps 3 and 4 give the equivalent matrices, hence correctness of our algorithm follows.
