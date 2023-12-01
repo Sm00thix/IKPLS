@@ -101,57 +101,60 @@ Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while
 
 # Possible algorithmic improvement for cross-validation
 
-Cross-validating PLS algorithms have an inherent redundant structure. Each cross-validation iteration involves operations on subsets of $\mathbf{X^{T}X}$ (Algorithm #2) and $\mathbf{X^{T}Y}$ that typically have a significant overlap with subsets from other iterations. Here, we provide some insight into how to avoid redundant operations, yielding a dramatic speedup in cross-validation. These insights are inspired by related insights from [@stefansson2019orders] and [@liland2020much]. They show how to achieve a similar speedup for feature selection with algorithms using $\mathbf{X^{T}X}$ and cross-validation with algorithms using $\mathbf{XX^{T}}$, respectively.
+\def\X{\mathbf{X}}
+\def\XT{\mathbf{X}^\mathbf{T}}
+\def\Y{\mathbf{Y}}
 
-We propose an algorithmic improvement that consists of combining the training and validation data to compute the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ only once in the beginning and then subtract outer vector products from these during each cross-validation iteration, avoiding recomputation of the total matrix products.
+Let $R = \{1, \ldots, N\}$ denote the rows (samples) in $\X$ ($\Y$). For a set of indices $R' \subseteq R$ denote by $\X_{R'}$ ($\Y_{R'}$) the submatrix of $\X$ ($\Y$) containing each row in $R'$. Below, transposition occurs after obtaining the submatrix and we omit parentheses for brevity.
 
-Using IKPLS Algorithm 2 (for Algorithm 1, ignore any terms related to $\mathbf{X^{T}X}$), the improved algorithm for cross-validation is defined by the following pseudo-code where $\mathbf{A}_n$ denotes the $n$'th row in $\mathbf{A}$:
+\begin{proposition}
+    If $T$ and $V$ are sets of indices such that $T \cap V = \emptyset$ and $T \cup V = R$, then $\XT_{T}\X_{T} = \XT\X - \XT_{V}\X_{V}$.
 
-1. Compute $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$. Set cross-validation split $i=0$
+    \begin{proof}
+        We show the equivalent statement $\XT_{T}\X_{T} + \XT_{V}\X_{V} = \XT\X$. Recall that each of $\XT\X$, $\XT_{T}\X_{T}$ and $\XT_{V}\X_{V}$ are $K \times K$ matrices, and consider any entry $c_{ij}$ for $i \in \{1, \ldots, K\}$ and $j \in \{1, \ldots, K\}$ given by, 
+        \[
+        c_{ij} = \sum_{n \in R} a_{in} b_{nj}
+        \]
+        with $a_{in}$ denoting entry $(i,n)$ in $\XT$, and $b_{nj}$ entry $(n,j)$ in $\X$. Similarly we have 
+        \[
+            c_{ij}^{T} = \sum_{n \in T} a_{in} b_{nj}\ \ \text{ and } \ \ c_{ij}^{V} = \sum_{n \in V} a_{in} b_{nj}
+        \]
+        for $\XT_{T}\X_{T}$ respectively $\XT_{V}\X_{V}$. By assumption of $T \cap V = \emptyset$ and $T \cup V = R$ so with commutativity of addition we have
+        \[
+            c_{ij}^{T} + c_{ij}^{V} = \sum_{n \in T} a_{in} b_{nj} + \sum_{n \in V} a_{in} b_{nj} = \sum_{n \in T \cup V} a_{in} b_{nj} = \sum_{n \in R} a_{in} b_{nj} = c_{ij}
+        \]
+        showing that addition of $\XT_{T}\X_{T}$ and $\XT_{V}\X_{V}$ gives $\XT\X$.
+    \end{proof}
+    \label{proof:xtx}
+\end{proposition}
 
-2. Let $V^{i}$ denote the set of validation indices for cross-validation split $i$, i.e., the indices in $\mathbf{X}$ and $\mathbf{Y}$ that that should be used for validation instead of training.
+\begin{proposition}
+If $T$ and $V$ are sets of indices such that $T \cap V = \emptyset$ and $T \cup V = R$, then $\XT_{T}\Y_{T} = \XT\Y - \XT_{V}\Y_{V}$.
+    \begin{proof}
+        As proof of Proposition \ref{proof:xtx} with $j \in \{1, \ldots M\}$.
+    \end{proof}
+\label{proof:xty}
+\end{proposition}
 
-3. Copy $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ into $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$.
+A cross-validation split is the selection of two subsets of $R$ into training indices $T$ and validation indices $V$. The following algorithm implements cross-validation for $S$ splits, without the need to recompute the full $\XT_{T}\X_{T}$ product for each split.
 
-4. We must remove from $\mathbf{(X^{T}X)^{\text{train}, i}}$ and $\mathbf{(X^{T}Y)^{\text{train}, i}}$ the contribution of all samples, $\mathbf{X}_{n}$ and $\mathbf{Y}_{n}$ for $n \in V^{i}$ as these samples belong to the validation set of the current cross-validation split.
-   This removal can be done with the following operations  
-   for $n$ in $V^{i}$:  
-   &nbsp;&nbsp;$\mathbf{(X^{T}X)^{\text{train},i}}$ = $\mathbf{(X^{T}X)^{\text{train},i}}$ - $\mathbf{X}_{n}^{T}\mathbf{X}_{n}$  
-   &nbsp;&nbsp;$\mathbf{(X^{T}Y)^{\text{train},i}}$ = $\mathbf{(X^{T}Y)^{\text{train},i}}$ - $\mathbf{X}_{n}^{T}\mathbf{Y}_{n}$
+\begin{enumerate}
+    \item Compute $\XT\X$ and $\XT\Y$.
+    \item For each split $s \in \{1, \ldots, S\}$ determine training indices $T_s$ and validation indices $V_s$, such that $T \cap V = \emptyset$ and $T \cup V = R$.
+    \item Compute $\XT_{V_s}\X_{V_s}$, subtract from $\XT\X$ pre-computed in step 1 to obtain $\XT_{T_s}\X_{T_s}$.
+    \item Compute $\XT_{V_s}\Y_{V_s}$, subtract from $\XT\Y$ pre-computed in step 1 to obtain $\XT_{T_s}\Y_{T_s}$.
+    \item Fit PLS using $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ computed in steps 3 and 4, and evaluate validation samples $\X_{V_s}$ against $\Y_{T_s}$, storing results for split $s$.
+\end{enumerate}
 
-5. Fit PLS with $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$ which now only contains samples with an index not in $V^{i}$.
+Correctness is the property that the PLS fitted in step 5 is identical to the PLS fitted had we computed the matrix products $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ explicitly. Due to the selection in step 2, it follows from Proposition \ref{proof:xtx} and Proposition \ref{proof:xty} that steps 3 and 4 give the equivalent matrices, hence correctness of our algorithm follows.
 
-6. Evaluate the calibrated PLS model on the validation data as per usual:  
-   for $n$ in $V^{i}$:  
-    &nbsp;&nbsp;predict on the validation samples $\mathbf{X}_{n}$ and evaluate the predictions against validation  
-    &nbsp;&nbsp;targets $\mathbf{Y}_{n}$
+For each split our algorithm computes $|V_s| \cdot K^2 + |V_s| \cdot K \cdot M = |V_s| \cdot K (K + M)$ multiplications. The alternative algorithm computes $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ explicitly for each split $s$, meaning $|T_s| \cdot K^2 + |T_s| \cdot K \cdot M = |T_s| \cdot K (K+M)$ multiplications. Assuming $|T_s|$ and $|V_s|$ don't vary across splits (splits are equally sized), the ratio of multiplications of the alternative to steps 3 and 4 in our algorithm is,
 
-7. Delete $\mathbf{(X^{T}X)^{\text{train},i}}$ and $\mathbf{(X^{T}Y)^{\text{train},i}}$ to free memory.
+\begin{align*}
+    \frac{S \cdot |T_s| \cdot K (K+M)}{S \cdot |V_s| \cdot K (K + M)} = \frac{|T_s|}{|V_s|}
+\end{align*}
 
-8. Terminate if there are no more cross-validation splits. Otherwise, increment the split counter: $i = i + 1$ and go to step 2.
-
-This algorithm avoids recomputing the full $\mathbf{X^{T}X}^{\text{train},i}$ and $\mathbf{X^{T}Y}^{\text{train},i}$ for each cross-validation iteration, which would require $N^{\text{train},i} \times K^2$ and $N^{\text{train},i} \times K \times M$ multiplications per cross-validation split, respectively. Instead, we compute in each cross-validation iteration $\mathbf{X}_{n}^{T}\mathbf{X}_{n}$ and $\mathbf{X}_{n}^{T}\mathbf{Y}_{n}$, requiring only $K^2$ and $K \times M$ for each $n \in V^{i}$. Thus, the latter approach is faster for any cross-validation split $i$ if $N^{\text{train}, i} > |V^{i}|$; this is the case when performing cross-validation, where the size of the training split is larger than that of the validation split, which is usually the case. The achieved speedup is proportional to the number of cross-validation splits. In the most extreme case of leave-one-out cross-validation, $|V^{i}|=1$ for all cross-validation splits $i$, and a speedup of order $N$ is achieved for each matrix-product and for every cross-validation split.  
-
-The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\mathbf{X}$ to affect the full $\mathbf{X^{T}X}$ and $\mathbf{X^{T}Y}$ and a single row in $\mathbf{Y}$ to affect the full $\mathbf{X^{T}Y}$. These effects must be considered in step 4 of the proposed algorithm to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
-
-\textbf{Proof of correctness:}
-We wish to prove that after step 4, $\mathbf{(X^{T}Y)^{\text{train}, i}} = \mathbf{(X^{\text{train}, i})^{T}(Y^{\text{train}, i}})$ where the latter is the matrix that could be fully computed directly using training $\mathbf{X^T}$ and training $\mathbf{Y}$ for cross-validation iteration $i$: $\mathbf{(X^{\text{train}, i})^T}$ and $(\mathbf{Y^{\text{train}, i}})$. The proof for $\mathbf{(X^{T}X)^{\text{train},i}} = \mathbf{(X^{\text{train},i})^{T}(X^{\text{train},i}})$ is identical.
-
-Consider $\mathbf{X^{T}Y}$ as it looks before step 4. That is, it contains both training and validation data. Now, consider an arbitrary entry (row, column) = $(k, m)$ in $\mathbf{X^{T}Y}$. It is computed as:
-
-$$\mathbf{X^{T}Y}_{k, m} = \sum_{n=1}^{N}(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
-
-Let us consider an arbitrary set of indices for samples in the validation split $V^{i}$ to remove. Each sample index will correspond to a row index $n$ in $\mathbf{X}$, corresponding to column index $n$ in $\mathbf{X^{T}}$, and correspond to row index $n$ in $\mathbf{Y}$.
-
-Thus, denoting the indicator function as $\mathbf{1}$, we can define the update in step 4 at cross-validation iteration $i$ as:
-
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \overbrace{\sum_{n=1}^{N}(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}}^{\mathbf{X^{T}Y}_{k, m}} - \sum_{n=1}^{N}\mathbf{1}(n \in V^{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
-
-Notice how the right-hand side consists of summing over all $n=1,..., N$ and then subtracting over $n \in V^{i}$. We can simplify this by instead summing over all $n=1,...,N \notin V^{i}$:
-
-$$\mathbf{(X^{T}Y)^{\text{train},i}}_{k, m} = \sum_{n=1}^{N}\mathbf{1}(n \notin V^{i})(\mathbf{X^T})_{k, n} \times \mathbf{Y}_{n, m}$$
-
-The right-hand side of the above is the definition of $\mathbf{(X^{\text{train}, i})^{T}(Y^{\text{train}, i}})_{k, m}$ and thus the proof is concluded.
+In the extreme case of $|V_s| = 1$, the alternative performs a factor of $N-1$ more multiplications than our algorithm for cross-validation. When $|V_s| < |T_S|$ (the typical case for cross-validation) our algorithm computes fewer multiplications than the alternative in steps 2 to 5. Observe that step 1 in our algorithm computes $N \cdot K (K + M)$ multiplications, irrespective of number of splits and sizes, which the alternative does not need.
 
 # Acknowledgements
 
