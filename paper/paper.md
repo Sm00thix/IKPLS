@@ -100,7 +100,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while Algorithm #2 starts by computing $\mathbf{X^{T}}\mathbf{X}$ of shape $(K, K)$. After this initial step, the algorithms are almost identical. Thus, intuitively, if $K < N$, Algorithm #2 requires less computation after this initial step.
 
 # Possible algorithmic improvement for cross-validation
-\usepackage{amsthm}
+\newenvironment{proof}[1][\proofname]{\par\noindent\textit{#1.} }{\hfill$\square$\par}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}[theorem]{Proposition}
@@ -109,7 +109,7 @@ Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while
 \def\XT{\mathbf{X}^\mathbf{T}}
 \def\Y{\mathbf{Y}}
 
-Let $R = \{1, \ldots, N\}$ denote the rows (samples) in $\X$ ($\Y$). For a set of indices $R' \subseteq R$ denote by $\X_{R'}$ ($\Y_{R'}$) the submatrix of $\X$ ($\Y$) containing each row in $R'$. Below, transposition occurs after obtaining the submatrix and we omit parentheses for brevity.
+Let $R = \{1, \ldots, N\}$ denote the rows (samples) in $\X$ ($\Y$). For a set of indices $R' \subseteq R$ denote by $\X_{R'}$ ($\Y_{R'}$) the submatrix of $\X$ ($\Y$) containing each row in $R'$. Below, transposition occurs after obtaining the submatrix, and we omit parentheses for brevity.
 
 \begin{proposition}
     If $T$ and $V$ are sets of indices such that $T \cap V = \emptyset$ and $T \cup V = R$, then $\XT_{T}\X_{T} = \XT\X - \XT_{V}\X_{V}$.
@@ -119,7 +119,7 @@ Let $R = \{1, \ldots, N\}$ denote the rows (samples) in $\X$ ($\Y$). For a set o
         \[
         c_{ij} = \sum_{n \in R} a_{in} b_{nj}
         \]
-        with $a_{in}$ denoting entry $(i,n)$ in $\XT$, and $b_{nj}$ entry $(n,j)$ in $\X$. Similarly we have 
+        with $a_{in}$ denoting entry $(i,n)$ in $\XT$, and $b_{nj}$ entry $(n,j)$ in $\X$. Similarly, we have 
         \[
             c_{ij}^{T} = \sum_{n \in T} a_{in} b_{nj}\ \ \text{ and } \ \ c_{ij}^{V} = \sum_{n \in V} a_{in} b_{nj}
         \]
@@ -140,7 +140,7 @@ If $T$ and $V$ are sets of indices such that $T \cap V = \emptyset$ and $T \cup 
 \label{proof:xty}
 \end{proposition}
 
-A cross-validation split is the selection of two subsets of $R$ into training indices $T$ and validation indices $V$. The following algorithm implements cross-validation for $S$ splits, without the need to recompute the full $\XT_{T}\X_{T}$ product for each split.
+A cross-validation split is the selection of two subsets of $R$ into training indices $T$ and validation indices $V$. The following algorithm implements cross-validation for $S$ splits without recomputing the full $\XT_{T}\X_{T}$ product for each split.
 
 \begin{enumerate}
     \item Compute $\XT\X$ and $\XT\Y$.
@@ -150,7 +150,7 @@ A cross-validation split is the selection of two subsets of $R$ into training in
     \item Fit PLS using $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ computed in steps 3 and 4, and evaluate validation samples $\X_{V_s}$ against $\Y_{V_s}$, storing results for split $s$.
 \end{enumerate}
 
-Correctness is the property that the PLS fitted in step 5 is identical to the PLS fitted had we computed the matrix products $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ explicitly. Due to the selection in step 2, it follows from Proposition \ref{proof:xtx} and Proposition \ref{proof:xty} that steps 3 and 4 give the equivalent matrices, hence correctness of our algorithm follows.
+Correctness is the property that the PLS fitted in step 5 is identical to the PLS fitted had we computed the matrix products $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ explicitly. Due to the selection in step 2, it follows from Proposition \ref{proof:xtx} and Proposition \ref{proof:xty} that steps 3 and 4 give the equivalent matrices; hence, the correctness of our algorithm follows.
 
 For each split our algorithm computes $|V_s| \cdot K^2 + |V_s| \cdot K \cdot M = |V_s| \cdot K (K + M)$ multiplications. The alternative algorithm computes $\XT_{T_s}\X_{T_s}$ and $\XT_{T_s}\Y_{T_s}$ explicitly for each split $s$, meaning $|T_s| \cdot K^2 + |T_s| \cdot K \cdot M = |T_s| \cdot K (K+M)$ multiplications. Assuming $|T_s|$ and $|V_s|$ don't vary across splits (splits are equally sized), the ratio of multiplications of the alternative to steps 3 and 4 in our algorithm is,
 
@@ -158,8 +158,10 @@ For each split our algorithm computes $|V_s| \cdot K^2 + |V_s| \cdot K \cdot M =
     \frac{S \cdot |T_s| \cdot K (K+M)}{S \cdot |V_s| \cdot K (K + M)} = \frac{|T_s|}{|V_s|}
 \end{align*}
 
-In the extreme case of $|V_s| = 1$, the alternative performs a factor of $N-1$ more multiplications than our algorithm for cross-validation. When $|V_s| < |T_S|$ (the typical case for cross-validation) our algorithm computes fewer multiplications than the alternative in steps 2 to 5. Observe that step 1 in our algorithm computes $N \cdot K (K + M)$ multiplications, irrespective of number of splits and sizes, which the alternative does not need.
+In the extreme case of $|V_s| = 1$, the alternative performs a factor of $N-1$ more multiplications than our algorithm for cross-validation. When $|V_s| < |T_S|$ (the typical case for cross-validation), our algorithm computes fewer multiplications than the alternative in steps 2 to 5. Observe that step 1 in our algorithm computes $N \cdot K (K + M)$ multiplications, irrespective of the number of splits and sizes, which the alternative does not need.
 
+
+The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\X$ to affect the full $\XT\X$ and $\XT\Y$ and a single row in $\Y$ to affect the full $\XT\Y$. If such preprocessing is applied, the proposed algorithm must consider these effects in steps 3 and 4 to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
 # Acknowledgements
 
 This work is part of an industrial Ph.D. project receiving funding from FOSS Analytical A/S and The Innovation Fund Denmark. Grant Number: 1044-00108B.
