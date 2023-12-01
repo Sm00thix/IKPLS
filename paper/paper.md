@@ -102,8 +102,7 @@ Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while
 # Possible algorithmic improvement for cross-validation
 \newenvironment{proof}[1][\proofname]{\par\noindent\textit{#1.} }{\hfill$\square$\par}
 
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{proposition}{Proposition}
 
 \def\X{\mathbf{X}}
 \def\XT{\mathbf{X}^\mathbf{T}}
