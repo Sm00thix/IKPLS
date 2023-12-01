@@ -100,7 +100,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while Algorithm #2 starts by computing $\mathbf{X^{T}}\mathbf{X}$ of shape $(K, K)$. After this initial step, the algorithms are almost identical. Thus, intuitively, if $K < N$, Algorithm #2 requires less computation after this initial step.
 
 # Possible algorithmic improvement for cross-validation
-
+\newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}[theorem]{Proposition}
 
 \def\X{\mathbf{X}}
