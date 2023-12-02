@@ -161,6 +161,7 @@ In the extreme case of $|V_s| = 1$, the alternative performs a factor of $N-1$ m
 
 
 The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on multiple samples (such as feature centering and scaling) allow a single row in $\X$ to affect the full $\XT\X$ and $\XT\Y$ and a single row in $\Y$ to affect the full $\XT\Y$. If such preprocessing is applied, the proposed algorithm must consider these effects in steps 3 and 4 to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
+
 # Acknowledgements
 
 This work is part of an industrial Ph.D. project receiving funding from FOSS Analytical A/S and The Innovation Fund Denmark. Grant Number: 1044-00108B.

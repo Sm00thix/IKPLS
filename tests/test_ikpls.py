@@ -40,7 +40,7 @@ class TestClass:
 
         Parameters
         ----------
-        `values` : list[str]
+        values : list[str]
             List of column names to extract target values from the CSV data.
 
         Returns
@@ -64,13 +64,13 @@ class TestClass:
 
         Parameters
         ----------
-        `X` : NDArray[float]
+        X : NDArray[float]
             Input data (spectra).
 
-        `Y` : NDArray[float]
+        Y : NDArray[float]
             Target values.
 
-        `n_components` : int
+        n_components : int
             Number of PLS components.
 
         Returns
@@ -139,18 +139,18 @@ class TestClass:
 
         Parameters
         ----------
-        `M` : NDArray[float]
+        M : NDArray[float]
             Matrix to check for orthogonality.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking orthogonality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking orthogonality.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -181,39 +181,39 @@ class TestClass:
 
         Parameters
         ----------
-        `sk_B` : NDArray[float]
+        sk_B : NDArray[float]
             Sklearn PLS regression matrix.
 
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking equality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking equality.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -280,42 +280,42 @@ class TestClass:
 
         Parameters
         ----------
-        `sk_B` : NDArray[float]
+        sk_B : NDArray[float]
             Sklearn PLS regression matrix.
 
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `X` : NDArray[float]
+        X : NDArray[float]
             Input data (spectra) for making predictions.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking equality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking equality.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -418,36 +418,36 @@ class TestClass:
 
         Parameters
         ----------
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking equality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking equality.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -508,30 +508,30 @@ class TestClass:
 
         Parameters
         ----------
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `X` : ndarray
+        X : ndarray
             Original input matrix.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for comparing matrix values.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for comparing matrix values.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -605,25 +605,25 @@ class TestClass:
 
         Parameters
         ----------
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
@@ -800,7 +800,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         Y = self.load_Y(["Protein"])
@@ -886,7 +886,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         Y = self.load_Y(
@@ -985,7 +985,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         X = X[..., :10]
@@ -1086,7 +1086,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         X = X[..., :9]
@@ -1190,7 +1190,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         from sklearn.datasets import load_linnerud
 
@@ -1398,7 +1398,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         from sklearn.datasets import load_linnerud
 
@@ -1672,14 +1672,14 @@ class TestClass:
 
         Parameters
         ----------
-        `X` : numpy.ndarray
+        X : numpy.ndarray
             The predictor variables.
-        `Y` : numpy.ndarray
+        Y : numpy.ndarray
             The target variables.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -1831,33 +1831,33 @@ class TestClass:
         and verifies the correctness of gradient values and numerical stability.
 
         Parameters:
-        `X` : numpy.ndarray:
+        X : numpy.ndarray:
             The input predictor variables.
 
-        `Y` : numpy.ndarray
+        Y : numpy.ndarray
             The target variables.
 
-        `num_components` : int
+        num_components : int
             The number of PLS components.
 
-        `filter_size` (int):
+        filter_size (int):
             The size of the convolution filter.
 
-        `val_atol` : float
+        val_atol : float
             Absolute tolerance for value comparisons.
 
-        `val_rtol` : float
+        val_rtol : float
             Relative tolerance for value comparisons.
 
-        `grad_atol` : float
+        grad_atol : float
             Absolute tolerance for gradient comparisons.
 
-        `grad_rtol` : float
+        grad_rtol : float
             Relative tolerance for gradient comparisons.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -2145,21 +2145,21 @@ class TestClass:
         of components for each target variable and each split.
 
         Parameters:
-        `X` : numpy.ndarray
+        X : numpy.ndarray
             The input predictor variables.
-        `Y` : numpy.ndarray
+        Y : numpy.ndarray
             The target variables.
-        `splits` : numpy.ndarray
+        splits : numpy.ndarray
             Split indices for cross-validation.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for value comparisons.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for value comparisons.
 
         Returns:
-        `None`
+        None
 
         Raises
         ------
