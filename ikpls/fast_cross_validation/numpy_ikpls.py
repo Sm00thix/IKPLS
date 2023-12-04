@@ -94,6 +94,13 @@ class PLS():
         # Extract training XTY
         validation_X = self.X[validation_indices]
         validation_Y = self.Y[validation_indices]
+        if self.mean_centering:
+            validation_size = np.sum(validation_indices)
+            training_size = self.N - validation_size
+            size_ratio = self.N / training_size
+            training_X_mean = size_ratio * self.X_mean - np.sum(validation_X, axis=0, keepdims=True) / training_size
+            training_Y_mean = size_ratio * self.Y_mean - np.sum(validation_Y, axis=0, keepdims=True) / training_size
+
         training_XTY = self.XTY - validation_X.T @ validation_Y
 
         if self.algorithm == 1:
@@ -217,7 +224,7 @@ class PLS():
         return metric_function(self.Y[validation_indices], Y_pred)
 
     def cross_validate(
-        self, X, Y, A, cv_splits, metric_function, n_jobs=-1, verbose=10
+        self, X, Y, A, cv_splits, metric_function, mean_centering=True, n_jobs=-1, verbose=10,
     ):
         """
         Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with `n_components` components evaluating results with `metric_function`.
@@ -238,6 +245,9 @@ class PLS():
 
         metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        
+        mean_centering : bool, optional default=True
+            Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
 
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use all available cores.
@@ -254,8 +264,9 @@ class PLS():
         self.X = np.asarray(X, dtype=self.dtype)
         self.Y = np.asarray(Y, dtype=self.dtype)
         self.A = A
-        self.N, self.K = X.shape
-        self.M = Y.shape[1]
+        self.mean_centering = mean_centering
+        self.N, self.K = self.X.shape
+        self.M = self.Y.shape[1]
 
         if n_jobs == -1:
             n_jobs = joblib.cpu_count()
@@ -265,6 +276,12 @@ class PLS():
             f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A} components on {len(unique_splits)} unique splits using {n_jobs} parallel processes."
         )
 
+        if self.mean_centering:
+            self.X_mean = self.X.mean(axis=0, keepdims=True)
+            self.Y_mean = self.Y.mean(axis=0, keepdims=True)
+            self.X = self.X - self.X_mean
+            self.Y = self.Y - self.Y_mean
+            print("Done!")
         if verbose > 0:
             print("Computing total XTY...")
         self.XTY = self.X.T @ self.Y

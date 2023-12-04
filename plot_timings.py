@@ -12,7 +12,7 @@ def remove_rows_where_all_values_except_time_are_same(df):
 
 
 def get_name_x_t_dict(df, x_name, constants_dict, single_fit_or_loocv):
-    model_names = ["sk", "np1", "np2", "jax1", "jax2"]
+    model_names = ["sk", "np1", "np2", "fastnp1", "fastnp2", "jax1", "jax2"]
     for name, value in constants_dict.items():
         df = df[df[name] == value]
     name_x_t_dict = {}
@@ -39,6 +39,10 @@ def get_name_x_t_dict(df, x_name, constants_dict, single_fit_or_loocv):
             model_name = "JAX IKPLS #1 (GPU)"
         elif model_name == "jax2":
             model_name = "JAX IKPLS #2 (GPU)"
+        elif model_name == "fastnp1":
+            model_name = "NumPy IKPLS #1 (fast cross-validation)"
+        elif model_name == "fastnp2":
+            model_name = "NumPy IKPLS #2 (fast cross-validation)"
         name_x_t_dict[model_name] = {"x": x, "t": t, "inferred": inferred}
     return name_x_t_dict
 
@@ -62,6 +66,8 @@ def plot_timings(
     ]
     min_t = np.inf
     max_t = -np.inf
+    np1_color = None
+    np2_color = None
     for name, x_t_dict in name_x_t_dict.items():
         x = x_t_dict["x"]
         t = x_t_dict["t"]
@@ -70,8 +76,23 @@ def plot_timings(
         x = x[sorted_indices]
         t = t[sorted_indices]
         inferred = inferred[sorted_indices]
-        curve = ax.loglog(x, t, "-", label=name)
+        if "fast" in name:
+            linestyle = "--"
+        else:
+            linestyle = "-"
+        if np1_color is not None and "NumPy IKPLS #1" in name:
+            color = np1_color
+            curve = ax.loglog(x, t, linestyle, color=color, label=name)
+        elif np2_color is not None and "NumPy IKPLS #2" in name:
+            color = np2_color
+            curve = ax.loglog(x, t, linestyle, color=color, label=name)
+        else:
+            curve = ax.loglog(x, t, linestyle, label=name)
         color = curve[0].get_color()
+        if "NumPy IKPLS #1" in name and np1_color is None:
+            np1_color = color
+        elif "NumPy IKPLS #2" in name and np2_color is None:
+            np2_color = color
         for point_x, point_t, point_inferred in zip(x, t, inferred):
             if np.isnan(point_inferred):
                 ax.loglog(point_x, point_t, "o", color=color)
@@ -269,7 +290,13 @@ if __name__ == "__main__":
     # axs[3, 0].set_xlabel("$N$")
     # axs[3, 1].set_xlabel("$K$")
     # axs[3, 2].set_xlabel("$A$")
-    handles, labels = axs[0, 0].get_legend_handles_labels()
+    handles, labels = axs[3, 0].get_legend_handles_labels()
+    sk_handle = handles[0]
+    sk_label = labels[0]
+    handles[:2] = handles[1:3]
+    labels[:2] = labels[1:3]
+    handles[2] = sk_handle
+    labels[2] = sk_label
 
     rect1 = patches.Rectangle(
         (0.04, 0.47),
@@ -334,7 +361,7 @@ if __name__ == "__main__":
         loc="upper center",
         fancybox=True,
         shadow=True,
-        ncol=len(labels),
+        ncol=len(labels) // 2,
         prop={"size": 9},
         bbox_to_anchor=(0.5, 0.95),
         bbox_transform=plt.gcf().transFigure,
