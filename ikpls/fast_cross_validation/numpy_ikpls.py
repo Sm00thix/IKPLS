@@ -8,7 +8,7 @@ import numpy.typing as npt
 from joblib import Parallel, delayed
 
 
-class PLS():
+class PLS:
     """
     Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
@@ -95,12 +95,28 @@ class PLS():
         validation_X = self.X[validation_indices]
         validation_Y = self.Y[validation_indices]
         training_XTY = self.XTY - validation_X.T @ validation_Y
+        if self.center:
+            training_N = np.sum(~validation_indices)
+            validation_N = np.sum(validation_indices)
+            training_X_mean = (
+                self.X_mean
+                - (validation_N / self.N) * np.mean(validation_X, axis=0, keepdims=True)
+            ) * (self.N / training_N)
+            training_Y_mean = (
+                self.Y_mean
+                - (validation_N / self.N) * np.mean(validation_Y, axis=0, keepdims=True)
+            ) * (self.N / training_N)
+            training_XTY = training_XTY - training_N * (training_X_mean.T @ training_Y_mean)
 
         if self.algorithm == 1:
             training_X = self.X[~validation_indices]
+            if self.center:
+                training_X = training_X - training_X_mean
         else:
             # Used for algorithm #2
             training_XTX = self.XTX - validation_X.T @ validation_X
+            if self.center:
+                training_XTX = training_XTX - training_N * (training_X_mean.T @ training_X_mean)
 
         for i in range(self.A):
             # Step 2
@@ -217,7 +233,7 @@ class PLS():
         return metric_function(self.Y[validation_indices], Y_pred)
 
     def cross_validate(
-        self, X, Y, A, cv_splits, metric_function, n_jobs=-1, verbose=10
+        self, X, Y, A, cv_splits, metric_function, center=False, n_jobs=-1, verbose=10
     ):
         """
         Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with `n_components` components evaluating results with `metric_function`.
@@ -239,6 +255,9 @@ class PLS():
         metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
+        center : bool, optional default=False
+            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will significantly increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
+
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use all available cores.
 
@@ -254,6 +273,11 @@ class PLS():
         self.X = np.asarray(X, dtype=self.dtype)
         self.Y = np.asarray(Y, dtype=self.dtype)
         self.A = A
+        self.center = center
+        if self.center:
+            # We can compute these once for the entire dataset and subtract the validation parts during cross-validation.
+            self.X_mean = np.mean(self.X, axis=0, keepdims=True)
+            self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
         self.N, self.K = X.shape
         self.M = Y.shape[1]
 
