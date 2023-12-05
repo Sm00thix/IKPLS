@@ -15,13 +15,6 @@ from ikpls.numpy_ikpls import PLS as NpPLS
 
 from . import load_data
 
-# This function needs to be top-level for it to be pickled.
-def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
-    e = Y_true - Y_pred
-    se = e**2
-    mse = np.mean(se, axis=-2)
-    rmse = np.sqrt(mse)
-    return rmse
 
 class TestClass:
     csv = load_data.load_csv()
@@ -2323,6 +2316,16 @@ class TestClass:
             np_pls_alg_1_rmses[i] = val_rmses_alg_1
             np_pls_alg_2_rmses[i] = val_rmses_alg_2
 
+        # Calibrate FastCV NumPy PLS
+        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
+        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
+        fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
+            X, Y, n_components, splits, rmse_per_component, center=True
+        )
+        fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
+            X, Y, n_components, splits, rmse_per_component, center=True
+        )
+
         # Calibrate JAX PLS
         jax_pls_alg_1_results = jax_pls_alg_1.cv(
             X,
@@ -2375,6 +2378,20 @@ class TestClass:
             [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
             for i in range(Y.shape[1])
         ]
+        fast_cv_np_pls_alg_1_best_num_components = [
+            [
+                np.argmin(fast_cv_np_pls_alg_1_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_num_components = [
+            [
+                np.argmin(fast_cv_np_pls_alg_2_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
         jax_pls_alg_1_best_num_components = [
             [
                 np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
@@ -2406,6 +2423,8 @@ class TestClass:
 
         assert sk_best_num_components == np_pls_alg_1_best_num_components
         assert sk_best_num_components == np_pls_alg_2_best_num_components
+        assert sk_best_num_components == fast_cv_np_pls_alg_1_best_num_components
+        assert sk_best_num_components == fast_cv_np_pls_alg_2_best_num_components
         assert sk_best_num_components == jax_pls_alg_1_best_num_components
         assert sk_best_num_components == jax_pls_alg_2_best_num_components
         assert sk_best_num_components == diff_jax_pls_alg_1_best_num_components
@@ -2422,6 +2441,20 @@ class TestClass:
         ]
         np_pls_alg_2_best_rmses = [
             [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_1_best_rmses = [
+            [
+                np.amin(fast_cv_np_pls_alg_1_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_rmses = [
+            [
+                np.amin(fast_cv_np_pls_alg_2_results[split][..., i])
+                for split in unique_splits
+            ]
             for i in range(Y.shape[1])
         ]
         jax_pls_alg_1_best_rmses = [
@@ -2455,6 +2488,12 @@ class TestClass:
 
         assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(
+            fast_cv_np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            fast_cv_np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
         assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(
@@ -2612,6 +2651,13 @@ class TestClass:
 
         n_components = X.shape[1]
 
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
+            e = Y_true - Y_pred
+            se = e**2
+            mse = np.mean(se, axis=-2)
+            rmse = np.sqrt(mse)
+            return rmse
+
         def cv_splitter(splits: npt.NDArray):
             uniq_splits = np.unique(splits)
             for split in uniq_splits:
@@ -2659,10 +2705,14 @@ class TestClass:
             val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
             np_pls_alg_1_rmses[i] = val_rmses_alg_1
             np_pls_alg_2_rmses[i] = val_rmses_alg_2
-        
+
         # Compute RMSE on the validation predictions using the fast cross-validation algorithm
-        fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(X, Y, n_components, splits.flatten(), rmse_per_component, n_jobs=-1)
-        fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(X, Y, n_components, splits.flatten(), rmse_per_component, n_jobs=-1)
+        fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
+            X, Y, n_components, splits.flatten(), rmse_per_component, n_jobs=-1
+        )
+        fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
+            X, Y, n_components, splits.flatten(), rmse_per_component, n_jobs=-1
+        )
 
         # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
         unique_splits = np.unique(splits).astype(int)
@@ -2690,8 +2740,12 @@ class TestClass:
         ]
 
         assert np_pls_alg_1_best_num_components == np_pls_alg_2_best_num_components
-        assert np_pls_alg_1_best_num_components == fast_cv_np_pls_alg_1_best_num_components
-        assert np_pls_alg_2_best_num_components == fast_cv_np_pls_alg_2_best_num_components
+        assert (
+            np_pls_alg_1_best_num_components == fast_cv_np_pls_alg_1_best_num_components
+        )
+        assert (
+            np_pls_alg_2_best_num_components == fast_cv_np_pls_alg_2_best_num_components
+        )
 
         # Check that the RMSE achieved is similar
         np_pls_alg_1_best_rmses = [
@@ -2717,10 +2771,22 @@ class TestClass:
             for i in range(Y.shape[1])
         ]
 
-        assert_allclose(np_pls_alg_1_best_rmses, np_pls_alg_2_best_rmses, atol=atol, rtol=rtol)
-        assert_allclose(np_pls_alg_1_best_rmses, fast_cv_np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
-        assert_allclose(np_pls_alg_2_best_rmses, fast_cv_np_pls_alg_2_best_rmses, atol=atol, rtol=rtol)
-    
+        assert_allclose(
+            np_pls_alg_1_best_rmses, np_pls_alg_2_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            np_pls_alg_1_best_rmses,
+            fast_cv_np_pls_alg_1_best_rmses,
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np_pls_alg_2_best_rmses,
+            fast_cv_np_pls_alg_2_best_rmses,
+            atol=atol,
+            rtol=rtol,
+        )
+
     def test_fast_cross_val_pls_1(self):
         """
         Description
@@ -2736,7 +2802,7 @@ class TestClass:
         splits = self.load_Y(["split"])
         assert Y.shape[1] == 1
         self.check_fast_cross_val_pls(X, Y, splits, atol=0, rtol=1e-8)
-    
+
     def test_fast_cross_val_pls_2_m_less_k(self):
         """
         Description
@@ -2766,7 +2832,7 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_fast_cross_val_pls(X, Y, splits, atol=0, rtol=1e-7)
-    
+
     def test_fast_cross_val_pls_2_m_eq_k(self):
         """
         Description
@@ -2797,7 +2863,7 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_fast_cross_val_pls(X, Y, splits, atol=0, rtol=1e-8)
-    
+
     def test_fast_cross_val_pls_2_m_greater_k(self):
         """
         Description
@@ -2828,7 +2894,7 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_fast_cross_val_pls(X, Y, splits, atol=0, rtol=1e-8)
-    
+
     def test_fast_cross_val_pls_1_loocv(self):
         """
         Description
@@ -2847,7 +2913,7 @@ class TestClass:
         splits = np.arange(X.shape[0])
         assert Y.shape[1] == 1
         self.check_fast_cross_val_pls(X, Y, splits, atol=1e-6, rtol=1e-8)
-    
+
     def test_fast_cross_val_pls_2_m_less_k_loocv(self):
         """
         Description
@@ -2880,7 +2946,7 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_fast_cross_val_pls(X, Y, splits, atol=2e-6, rtol=1e-8)
-    
+
     def test_fast_cross_val_pls_2_m_eq_k_loocv(self):
         """
         Description
@@ -2915,7 +2981,7 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_fast_cross_val_pls(X, Y, splits, atol=1e-7, rtol=1e-8)
-    
+
     def test_fast_cross_val_pls_2_m_greater_k_loocv(self):
         """
         Description
