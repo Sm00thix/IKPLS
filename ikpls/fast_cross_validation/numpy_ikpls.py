@@ -252,10 +252,10 @@ class PLS:
 
         B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
-
+        
         training_X_mean : Array of shape (1, K)
             Mean row of training X. If self.center is False, then this is an array of zeros.
-
+        
         training_Y_mean : Array of shape (1, M)
             Mean row of training Y. If self.center is False, then this is an array of zeros.
 
@@ -267,9 +267,8 @@ class PLS:
         Y_pred : Array of shape (N_pred, M) or (A, N_pred, M)
             If `n_components` is an int, then an array of shape (N_pred, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
         """
-        if self.center:
-            # Undo the global centering
-            predictor_variables = self.X[indices] + self.X_mean
+        # Undo the potential global centering
+        predictor_variables = self.X[indices] + self.X_mean
         # Apply the potential training set centering
         predictor_variables = predictor_variables - training_X_mean
         if n_components is None:
@@ -299,9 +298,7 @@ class PLS:
         B = matrices[0]
         training_X_mean = matrices[-2]
         training_Y_mean = matrices[-1]
-        Y_pred = self._stateless_predict(
-            validation_indices, B, training_X_mean, training_Y_mean
-        )
+        Y_pred = self._stateless_predict(validation_indices, B, training_X_mean, training_Y_mean)
         return metric_function(
             self.Y[validation_indices] + self.Y_mean, Y_pred
         )  # TODO: Fix this as well
@@ -368,6 +365,9 @@ class PLS:
             self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
             self.X = self.X - self.X_mean
             self.Y = self.Y - self.Y_mean
+        else:
+            self.X_mean = np.zeros((1, self.K))
+            self.Y_mean = np.zeros((1, self.M))
         if verbose > 0:
             print("Computing total XTY...")
         self.XTY = self.X.T @ self.Y
