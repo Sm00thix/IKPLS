@@ -94,6 +94,13 @@ class PLS:
         # Extract training XTY
         validation_X = self.X[validation_indices]
         validation_Y = self.Y[validation_indices]
+        if self.mean_centering:
+            validation_size = np.sum(validation_indices)
+            training_size = self.N - validation_size
+            size_ratio = self.N / training_size
+            training_X_mean = size_ratio * self.X_mean - np.sum(validation_X, axis=0, keepdims=True) / training_size
+            training_Y_mean = size_ratio * self.Y_mean - np.sum(validation_Y, axis=0, keepdims=True) / training_size
+
         training_XTY = self.XTY - validation_X.T @ validation_Y
         if self.center:
             training_N = np.sum(~validation_indices)
@@ -254,6 +261,9 @@ class PLS:
 
         metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        
+        mean_centering : bool, optional default=True
+            Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
 
         center : bool, optional default=False
             Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will significantly increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
@@ -289,6 +299,12 @@ class PLS:
             f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A} components on {len(unique_splits)} unique splits using {n_jobs} parallel processes."
         )
 
+        if self.mean_centering:
+            self.X_mean = self.X.mean(axis=0, keepdims=True)
+            self.Y_mean = self.Y.mean(axis=0, keepdims=True)
+            self.X = self.X - self.X_mean
+            self.Y = self.Y - self.Y_mean
+            print("Done!")
         if verbose > 0:
             print("Computing total XTY...")
         self.XTY = self.X.T @ self.Y
