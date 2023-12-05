@@ -2320,10 +2320,10 @@ class TestClass:
         fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
         fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
         fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
-            X, Y, n_components, splits, rmse_per_component, center=True
+            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
         )
         fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
-            X, Y, n_components, splits, rmse_per_component, center=True
+            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
         )
 
         # Calibrate JAX PLS
