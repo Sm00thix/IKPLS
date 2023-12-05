@@ -301,7 +301,7 @@ class PLS:
         Y_pred = self._stateless_predict(validation_indices, B, training_X_mean, training_Y_mean)
         return metric_function(
             self.Y[validation_indices] + self.Y_mean, Y_pred
-        )  # TODO: Fix this as well
+        )
 
     def cross_validate(
         self, X, Y, A, cv_splits, metric_function, center=False, n_jobs=-1, verbose=10
