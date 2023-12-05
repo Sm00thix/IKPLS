@@ -39,8 +39,25 @@ class PLS:
         self,
         validation_indices: npt.ArrayLike,
     ) -> Union[
-        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
-        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+        tuple[
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+        ],
+        tuple[
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+            np.ndarray,
+        ],
     ]:
         """
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
@@ -69,6 +86,12 @@ class PLS:
 
         T : Array of shape (A, N)
             PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
+
+        training_X_mean : Array of shape (1, K)
+            Mean row of training X. Only returned if `center` is True.
+
+        training_Y_mean : Array of shape (1, M)
+            Mean row of training Y. Only returned if `center` is True.
 
         Warns
         -----
@@ -203,15 +226,20 @@ class PLS:
 
             # Compute regression coefficients
             B[i] = B[i - 1] + r @ q.T
+        if not self.center:
+            training_X_mean = np.zeros((1, self.K))
+            training_Y_mean = np.zeros((1, self.M))
         if self.algorithm == 1:
-            return B, W, P, Q, R, T
+            return B, W, P, Q, R, T, training_X_mean, training_Y_mean
         else:
-            return B, W, P, Q, R
+            return B, W, P, Q, R, training_X_mean, training_Y_mean
 
     def _stateless_predict(
         self,
         indices: npt.ArrayLike,
         B: npt.ArrayLike,
+        training_X_mean: npt.ArrayLike,
+        training_Y_mean: npt.ArrayLike,
         n_components: Union[None, int] = None,
     ) -> npt.NDArray[np.float_]:
         """
@@ -225,6 +253,12 @@ class PLS:
         B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
+        training_X_mean : Array of shape (1, K)
+            Mean row of training X. If self.center is False, then this is an array of zeros.
+
+        training_Y_mean : Array of shape (1, M)
+            Mean row of training Y. If self.center is False, then this is an array of zeros.
+
         n_components : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
 
@@ -233,9 +267,17 @@ class PLS:
         Y_pred : Array of shape (N_pred, M) or (A, N_pred, M)
             If `n_components` is an int, then an array of shape (N_pred, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
         """
+        if self.center:
+            # Undo the global centering
+            predictor_variables = self.X[indices] + self.X_mean
+        # Apply the potential training set centering
+        predictor_variables = predictor_variables - training_X_mean
         if n_components is None:
-            return self.X[indices] @ B
-        return self.X[indices] @ B[n_components - 1]
+            Y_pred = predictor_variables @ B
+        else:
+            Y_pred = predictor_variables @ B[n_components - 1]
+        # Add the potential training set bias
+        return Y_pred + training_Y_mean
 
     def _stateless_fit_predict_eval(self, validation_indices, metric_function):
         """
@@ -253,9 +295,16 @@ class PLS:
         metric : Any
             The result of evaluating `metric_function` on the validation set.
         """
-        B = self._stateless_fit(validation_indices)[0]
-        Y_pred = self._stateless_predict(validation_indices, B)
-        return metric_function(self.Y[validation_indices], Y_pred)
+        matrices = self._stateless_fit(validation_indices)
+        B = matrices[0]
+        training_X_mean = matrices[-2]
+        training_Y_mean = matrices[-1]
+        Y_pred = self._stateless_predict(
+            validation_indices, B, training_X_mean, training_Y_mean
+        )
+        return metric_function(
+            self.Y[validation_indices] + self.Y_mean, Y_pred
+        )  # TODO: Fix this as well
 
     def cross_validate(
         self, X, Y, A, cv_splits, metric_function, center=False, n_jobs=-1, verbose=10
@@ -302,10 +351,6 @@ class PLS:
         self.Y = np.asarray(Y, dtype=self.dtype)
         self.A = A
         self.center = center
-        if self.center:
-            # We can compute these once for the entire dataset and subtract the validation parts during cross-validation.
-            self.X_mean = np.mean(self.X, axis=0, keepdims=True)
-            self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
         self.N, self.K = X.shape
         self.M = Y.shape[1]
 
@@ -318,11 +363,11 @@ class PLS:
         )
 
         if self.center:
-            self.X_mean = self.X.mean(axis=0, keepdims=True)
-            self.Y_mean = self.Y.mean(axis=0, keepdims=True)
+            # We can compute these once for the entire dataset and subtract the validation parts during cross-validation.
+            self.X_mean = np.mean(self.X, axis=0, keepdims=True)
+            self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
             self.X = self.X - self.X_mean
             self.Y = self.Y - self.Y_mean
-            print("Done!")
         if verbose > 0:
             print("Computing total XTY...")
         self.XTY = self.X.T @ self.Y
