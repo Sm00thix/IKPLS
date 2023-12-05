@@ -16,7 +16,6 @@ authors:
     orcid: 0000-0001-9784-7504
     affiliation: "1"
   -name : Martin Holm Jensen
-    orcid: 
     affliation: "1"
   - name: Birthe Møller Jespersen
     orcid: 0000-0002-8695-1450
