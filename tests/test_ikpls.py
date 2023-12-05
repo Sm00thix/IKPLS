@@ -2131,485 +2131,485 @@ class TestClass:
     #         grad_rtol=1e-5,
     #     )
 
-    # def check_cross_val_pls(
-    #     self,
-    #     X: npt.NDArray,
-    #     Y: npt.NDArray,
-    #     splits: npt.NDArray,
-    #     atol: float,
-    #     rtol: float,
-    # ) -> None:
-    #     """
-    #     Description
-    #     -----------
-    #     This method tests the ability to perform cross-validation to obtain the root mean square error (RMSE) and the best number
-    #     of components for each target variable and each split.
+    def check_cross_val_pls(
+        self,
+        X: npt.NDArray,
+        Y: npt.NDArray,
+        splits: npt.NDArray,
+        atol: float,
+        rtol: float,
+    ) -> None:
+        """
+        Description
+        -----------
+        This method tests the ability to perform cross-validation to obtain the root mean square error (RMSE) and the best number
+        of components for each target variable and each split.
 
-    #     Parameters:
-    #     X : numpy.ndarray
-    #         The input predictor variables.
-    #     Y : numpy.ndarray
-    #         The target variables.
-    #     splits : numpy.ndarray
-    #         Split indices for cross-validation.
+        Parameters:
+        X : numpy.ndarray
+            The input predictor variables.
+        Y : numpy.ndarray
+            The target variables.
+        splits : numpy.ndarray
+            Split indices for cross-validation.
 
-    #     atol : float
-    #         Absolute tolerance for value comparisons.
+        atol : float
+            Absolute tolerance for value comparisons.
 
-    #     rtol : float
-    #         Relative tolerance for value comparisons.
+        rtol : float
+            Relative tolerance for value comparisons.
 
-    #     Returns:
-    #     None
+        Returns:
+        None
 
-    #     Raises
-    #     ------
-    #     AssertionError
-    #         If the best number of components found by cross validation with is not exactly equal across each different PLS implementation.
+        Raises
+        ------
+        AssertionError
+            If the best number of components found by cross validation with is not exactly equal across each different PLS implementation.
 
-    #         If the output RMSEs for the best number of components are not equal down to the specified tolerance across each different PLS implementation.
-    #     """
-    #     from sklearn.model_selection import cross_validate
+            If the output RMSEs for the best number of components are not equal down to the specified tolerance across each different PLS implementation.
+        """
+        from sklearn.model_selection import cross_validate
 
-    #     def cross_val_preprocessing(
-    #         X_train: jnp.ndarray,
-    #         Y_train: jnp.ndarray,
-    #         X_val: jnp.ndarray,
-    #         Y_val: jnp.ndarray,
-    #     ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    #         x_mean = X_train.mean(axis=0, keepdims=True)
-    #         X_train -= x_mean
-    #         X_val -= x_mean
-    #         y_mean = Y_train.mean(axis=0, keepdims=True)
-    #         Y_train -= y_mean
-    #         Y_val -= y_mean
-    #         return X_train, Y_train, X_val, Y_val
+        def cross_val_preprocessing(
+            X_train: jnp.ndarray,
+            Y_train: jnp.ndarray,
+            X_val: jnp.ndarray,
+            Y_val: jnp.ndarray,
+        ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+            x_mean = X_train.mean(axis=0, keepdims=True)
+            X_train -= x_mean
+            X_val -= x_mean
+            y_mean = Y_train.mean(axis=0, keepdims=True)
+            Y_train -= y_mean
+            Y_val -= y_mean
+            return X_train, Y_train, X_val, Y_val
 
-    #     n_components = X.shape[1]
+        n_components = X.shape[1]
 
-    #     sk_pls = SkPLS(n_components=n_components, scale=False)
-    #     jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
-    #     jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
-    #     diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
-    #     diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
+        sk_pls = SkPLS(n_components=n_components, scale=False)
+        jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
+        jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
+        diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
+        diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
-    #     def cv_splitter(splits: npt.NDArray):
-    #         uniq_splits = np.unique(splits)
-    #         for split in uniq_splits:
-    #             train_idxs = np.nonzero(splits != split)[0]
-    #             val_idxs = np.nonzero(splits == split)[0]
-    #             yield train_idxs, val_idxs
+        def cv_splitter(splits: npt.NDArray):
+            uniq_splits = np.unique(splits)
+            for split in uniq_splits:
+                train_idxs = np.nonzero(splits != split)[0]
+                val_idxs = np.nonzero(splits == split)[0]
+                yield train_idxs, val_idxs
 
-    #     def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
-    #         e = Y_true - Y_pred
-    #         se = e**2
-    #         mse = np.mean(se, axis=-2)
-    #         rmse = np.sqrt(mse)
-    #         return rmse
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
+            e = Y_true - Y_pred
+            se = e**2
+            mse = np.mean(se, axis=-2)
+            rmse = np.sqrt(mse)
+            return rmse
 
-    #     def jax_rmse_per_component(
-    #         Y_true: jnp.ndarray, Y_pred: jnp.ndarray
-    #     ) -> jnp.ndarray:
-    #         e = Y_true - Y_pred
-    #         se = e**2
-    #         mse = jnp.mean(se, axis=-2)
-    #         rmse = jnp.sqrt(mse)
-    #         return rmse
+        def jax_rmse_per_component(
+            Y_true: jnp.ndarray, Y_pred: jnp.ndarray
+        ) -> jnp.ndarray:
+            e = Y_true - Y_pred
+            se = e**2
+            mse = jnp.mean(se, axis=-2)
+            rmse = jnp.sqrt(mse)
+            return rmse
 
-    #     jnp_splits = jnp.array(splits)
+        jnp_splits = jnp.array(splits)
 
-    #     # Calibrate SkPLS
-    #     sk_results = cross_validate(
-    #         sk_pls, X, Y, cv=cv_splitter(splits), return_estimator=True, n_jobs=-1
-    #     )
-    #     sk_models = sk_results["estimator"]
-    #     # Extract regression matrices for SkPLS for all possible number of components and make a prediction with the regression matrices at all possible number of components.
-    #     sk_Bs = np.empty((len(sk_models), n_components, X.shape[1], Y.shape[1]))
-    #     sk_preds = np.empty((len(sk_models), n_components, X.shape[0], Y.shape[1]))
-    #     for i, sk_model in enumerate(sk_models):
-    #         for j in range(sk_Bs.shape[1]):
-    #             sk_B_at_component_j = np.dot(
-    #                 sk_model.x_rotations_[..., : j + 1],
-    #                 sk_model.y_loadings_[..., : j + 1].T,
-    #             )
-    #             sk_Bs[i, j] = sk_B_at_component_j
-    #         sk_pred = (X - sk_models[i]._x_mean) / sk_models[i]._x_std @ sk_Bs[
-    #             i
-    #         ] + sk_models[i].intercept_
-    #         sk_preds[i] = sk_pred
-    #         assert_allclose(
-    #             sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-13
-    #         )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
+        # Calibrate SkPLS
+        sk_results = cross_validate(
+            sk_pls, X, Y, cv=cv_splitter(splits), return_estimator=True, n_jobs=-1
+        )
+        sk_models = sk_results["estimator"]
+        # Extract regression matrices for SkPLS for all possible number of components and make a prediction with the regression matrices at all possible number of components.
+        sk_Bs = np.empty((len(sk_models), n_components, X.shape[1], Y.shape[1]))
+        sk_preds = np.empty((len(sk_models), n_components, X.shape[0], Y.shape[1]))
+        for i, sk_model in enumerate(sk_models):
+            for j in range(sk_Bs.shape[1]):
+                sk_B_at_component_j = np.dot(
+                    sk_model.x_rotations_[..., : j + 1],
+                    sk_model.y_loadings_[..., : j + 1].T,
+                )
+                sk_Bs[i, j] = sk_B_at_component_j
+            sk_pred = (X - sk_models[i]._x_mean) / sk_models[i]._x_std @ sk_Bs[
+                i
+            ] + sk_models[i].intercept_
+            sk_preds[i] = sk_pred
+            assert_allclose(
+                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-13
+            )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
 
-    #     # Compute RMSE on the validation predictions
-    #     sk_pls_rmses = np.empty((len(sk_models), n_components, Y.shape[1]))
-    #     for i in range(len(sk_models)):
-    #         val_idxs = val_idxs = np.nonzero(splits == i)[0]
-    #         Y_true = Y[val_idxs]
-    #         Y_pred = sk_preds[i, :, val_idxs, ...].swapaxes(0, 1)
-    #         val_rmses = rmse_per_component(Y_true, Y_pred)
-    #         sk_pls_rmses[i] = val_rmses
+        # Compute RMSE on the validation predictions
+        sk_pls_rmses = np.empty((len(sk_models), n_components, Y.shape[1]))
+        for i in range(len(sk_models)):
+            val_idxs = val_idxs = np.nonzero(splits == i)[0]
+            Y_true = Y[val_idxs]
+            Y_pred = sk_preds[i, :, val_idxs, ...].swapaxes(0, 1)
+            val_rmses = rmse_per_component(Y_true, Y_pred)
+            sk_pls_rmses[i] = val_rmses
 
-    #     # Calibrate NumPy PLS
-    #     # Since SkLearn's cross_validate does not allow for a preprocessing function to be executed on each split, we have to get a bit creative.
-    #     # This is because SkLearn's PLS implementation always mean centers X and Y based on the training data and uses these mean values in its predictions.
-    #     # We subclass the original implementation and modify it to mimic the SkLearn implementation's behavior so that we can accurately compare results.
-    #     class NpPLSWithPreprocessing(NpPLS):
-    #         def __init__(
-    #             self, algorithm: int = 1, dtype: np.float_ = np.float64
-    #         ) -> None:
-    #             super().__init__(algorithm, dtype)
+        # Calibrate NumPy PLS
+        # Since SkLearn's cross_validate does not allow for a preprocessing function to be executed on each split, we have to get a bit creative.
+        # This is because SkLearn's PLS implementation always mean centers X and Y based on the training data and uses these mean values in its predictions.
+        # We subclass the original implementation and modify it to mimic the SkLearn implementation's behavior so that we can accurately compare results.
+        class NpPLSWithPreprocessing(NpPLS):
+            def __init__(
+                self, algorithm: int = 1, dtype: np.float_ = np.float64
+            ) -> None:
+                super().__init__(algorithm, dtype)
 
-    #         def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
-    #             self.X_mean = np.mean(X, axis=0)
-    #             self.Y_mean = np.mean(Y, axis=0)
-    #             X -= self.X_mean
-    #             Y -= self.Y_mean
-    #             return super().fit(X, Y, A)
+            def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
+                self.X_mean = np.mean(X, axis=0)
+                self.Y_mean = np.mean(Y, axis=0)
+                X -= self.X_mean
+                Y -= self.Y_mean
+                return super().fit(X, Y, A)
 
-    #         def predict(
-    #             self, X: npt.ArrayLike, A: Union[None, int] = None
-    #         ) -> npt.NDArray[np.float_]:
-    #             return super().predict(X - self.X_mean, A) + self.Y_mean
+            def predict(
+                self, X: npt.ArrayLike, A: Union[None, int] = None
+            ) -> npt.NDArray[np.float_]:
+                return super().predict(X - self.X_mean, A) + self.Y_mean
 
-    #     np_pls_alg_1 = NpPLSWithPreprocessing(algorithm=1)
-    #     np_pls_alg_2 = NpPLSWithPreprocessing(algorithm=2)
+        np_pls_alg_1 = NpPLSWithPreprocessing(algorithm=1)
+        np_pls_alg_2 = NpPLSWithPreprocessing(algorithm=2)
 
-    #     fit_params = {"A": n_components}
-    #     np_pls_alg_1_results = cross_validate(
-    #         np_pls_alg_1,
-    #         X,
-    #         Y,
-    #         cv=cv_splitter(splits),
-    #         scoring=lambda *args, **kwargs: 0,
-    #         fit_params=fit_params,
-    #         return_estimator=True,
-    #         n_jobs=-1,
-    #     )
-    #     np_pls_alg_1_models = np_pls_alg_1_results["estimator"]
-    #     np_pls_alg_2_results = cross_validate(
-    #         np_pls_alg_2,
-    #         X,
-    #         Y,
-    #         cv=cv_splitter(splits),
-    #         scoring=lambda *args, **kwargs: 0,
-    #         fit_params=fit_params,
-    #         return_estimator=True,
-    #         n_jobs=-1,
-    #     )
-    #     np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
+        fit_params = {"A": n_components}
+        np_pls_alg_1_results = cross_validate(
+            np_pls_alg_1,
+            X,
+            Y,
+            cv=cv_splitter(splits),
+            scoring=lambda *args, **kwargs: 0,
+            fit_params=fit_params,
+            return_estimator=True,
+            n_jobs=-1,
+        )
+        np_pls_alg_1_models = np_pls_alg_1_results["estimator"]
+        np_pls_alg_2_results = cross_validate(
+            np_pls_alg_2,
+            X,
+            Y,
+            cv=cv_splitter(splits),
+            scoring=lambda *args, **kwargs: 0,
+            fit_params=fit_params,
+            return_estimator=True,
+            n_jobs=-1,
+        )
+        np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
 
-    #     # Compute RMSE on the validation predictions
-    #     np_pls_alg_1_rmses = np.empty(
-    #         (len(np_pls_alg_1_models), n_components, Y.shape[1])
-    #     )
-    #     np_pls_alg_2_rmses = np.empty(
-    #         (len(np_pls_alg_2_models), n_components, Y.shape[1])
-    #     )
-    #     for i in range(len(np_pls_alg_1_models)):
-    #         val_idxs = val_idxs = np.nonzero(splits == i)[0]
-    #         Y_true = Y[val_idxs]
-    #         Y_pred_alg_1 = np_pls_alg_1_models[i].predict(X[val_idxs])
-    #         Y_pred_alg_2 = np_pls_alg_2_models[i].predict(X[val_idxs])
-    #         val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
-    #         val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
-    #         np_pls_alg_1_rmses[i] = val_rmses_alg_1
-    #         np_pls_alg_2_rmses[i] = val_rmses_alg_2
+        # Compute RMSE on the validation predictions
+        np_pls_alg_1_rmses = np.empty(
+            (len(np_pls_alg_1_models), n_components, Y.shape[1])
+        )
+        np_pls_alg_2_rmses = np.empty(
+            (len(np_pls_alg_2_models), n_components, Y.shape[1])
+        )
+        for i in range(len(np_pls_alg_1_models)):
+            val_idxs = val_idxs = np.nonzero(splits == i)[0]
+            Y_true = Y[val_idxs]
+            Y_pred_alg_1 = np_pls_alg_1_models[i].predict(X[val_idxs])
+            Y_pred_alg_2 = np_pls_alg_2_models[i].predict(X[val_idxs])
+            val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
+            val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
+            np_pls_alg_1_rmses[i] = val_rmses_alg_1
+            np_pls_alg_2_rmses[i] = val_rmses_alg_2
 
-    #     # Calibrate FastCV NumPy PLS
-    #     fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
-    #     fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
-    #     fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
-    #         X, Y, n_components, splits.flatten(), rmse_per_component, center=True
-    #     )
-    #     fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
-    #         X, Y, n_components, splits.flatten(), rmse_per_component, center=True
-    #     )
+        # Calibrate FastCV NumPy PLS
+        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
+        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
+        fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
+            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
+        )
+        fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
+            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
+        )
 
-    #     # Calibrate JAX PLS
-    #     jax_pls_alg_1_results = jax_pls_alg_1.cv(
-    #         X,
-    #         Y,
-    #         n_components,
-    #         jnp_splits,
-    #         cross_val_preprocessing,
-    #         jax_rmse_per_component,
-    #         ["RMSE"],
-    #     )
-    #     diff_jax_pls_alg_1_results = diff_jax_pls_alg_1.cv(
-    #         X,
-    #         Y,
-    #         n_components,
-    #         jnp_splits,
-    #         cross_val_preprocessing,
-    #         jax_rmse_per_component,
-    #         ["RMSE"],
-    #     )
-    #     jax_pls_alg_2_results = jax_pls_alg_2.cv(
-    #         X,
-    #         Y,
-    #         n_components,
-    #         jnp_splits,
-    #         cross_val_preprocessing,
-    #         jax_rmse_per_component,
-    #         ["RMSE"],
-    #     )
-    #     diff_jax_pls_alg_2_results = diff_jax_pls_alg_2.cv(
-    #         X,
-    #         Y,
-    #         n_components,
-    #         jnp_splits,
-    #         cross_val_preprocessing,
-    #         jax_rmse_per_component,
-    #         ["RMSE"],
-    #     )
+        # Calibrate JAX PLS
+        jax_pls_alg_1_results = jax_pls_alg_1.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
+        diff_jax_pls_alg_1_results = diff_jax_pls_alg_1.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
+        jax_pls_alg_2_results = jax_pls_alg_2.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
+        diff_jax_pls_alg_2_results = diff_jax_pls_alg_2.cv(
+            X,
+            Y,
+            n_components,
+            jnp_splits,
+            cross_val_preprocessing,
+            jax_rmse_per_component,
+            ["RMSE"],
+        )
 
-    #     # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
-    #     unique_splits = np.unique(splits).astype(int)
-    #     sk_best_num_components = [
-    #         [np.argmin(sk_pls_rmses[split][..., i]) for split in unique_splits]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     np_pls_alg_1_best_num_components = [
-    #         [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     np_pls_alg_2_best_num_components = [
-    #         [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     fast_cv_np_pls_alg_1_best_num_components = [
-    #         [
-    #             np.argmin(fast_cv_np_pls_alg_1_results[split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     fast_cv_np_pls_alg_2_best_num_components = [
-    #         [
-    #             np.argmin(fast_cv_np_pls_alg_2_results[split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     jax_pls_alg_1_best_num_components = [
-    #         [
-    #             np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     jax_pls_alg_2_best_num_components = [
-    #         [
-    #             np.argmin(jax_pls_alg_2_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     diff_jax_pls_alg_1_best_num_components = [
-    #         [
-    #             np.argmin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     diff_jax_pls_alg_2_best_num_components = [
-    #         [
-    #             np.argmin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
+        # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
+        unique_splits = np.unique(splits).astype(int)
+        sk_best_num_components = [
+            [np.argmin(sk_pls_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_1_best_num_components = [
+            [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_2_best_num_components = [
+            [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_1_best_num_components = [
+            [
+                np.argmin(fast_cv_np_pls_alg_1_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_num_components = [
+            [
+                np.argmin(fast_cv_np_pls_alg_2_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_1_best_num_components = [
+            [
+                np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_2_best_num_components = [
+            [
+                np.argmin(jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        diff_jax_pls_alg_1_best_num_components = [
+            [
+                np.argmin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        diff_jax_pls_alg_2_best_num_components = [
+            [
+                np.argmin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
 
-    #     assert sk_best_num_components == np_pls_alg_1_best_num_components
-    #     assert sk_best_num_components == np_pls_alg_2_best_num_components
-    #     assert sk_best_num_components == fast_cv_np_pls_alg_1_best_num_components
-    #     assert sk_best_num_components == fast_cv_np_pls_alg_2_best_num_components
-    #     assert sk_best_num_components == jax_pls_alg_1_best_num_components
-    #     assert sk_best_num_components == jax_pls_alg_2_best_num_components
-    #     assert sk_best_num_components == diff_jax_pls_alg_1_best_num_components
-    #     assert sk_best_num_components == diff_jax_pls_alg_2_best_num_components
+        assert sk_best_num_components == np_pls_alg_1_best_num_components
+        assert sk_best_num_components == np_pls_alg_2_best_num_components
+        assert sk_best_num_components == fast_cv_np_pls_alg_1_best_num_components
+        assert sk_best_num_components == fast_cv_np_pls_alg_2_best_num_components
+        assert sk_best_num_components == jax_pls_alg_1_best_num_components
+        assert sk_best_num_components == jax_pls_alg_2_best_num_components
+        assert sk_best_num_components == diff_jax_pls_alg_1_best_num_components
+        assert sk_best_num_components == diff_jax_pls_alg_2_best_num_components
 
-    #     # Check that the RMSE achieved is similar
-    #     sk_best_rmses = [
-    #         [np.amin(sk_pls_rmses[split][..., i]) for split in unique_splits]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     np_pls_alg_1_best_rmses = [
-    #         [np.amin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     np_pls_alg_2_best_rmses = [
-    #         [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     fast_cv_np_pls_alg_1_best_rmses = [
-    #         [
-    #             np.amin(fast_cv_np_pls_alg_1_results[split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     fast_cv_np_pls_alg_2_best_rmses = [
-    #         [
-    #             np.amin(fast_cv_np_pls_alg_2_results[split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     jax_pls_alg_1_best_rmses = [
-    #         [
-    #             np.amin(jax_pls_alg_1_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     jax_pls_alg_2_best_rmses = [
-    #         [
-    #             np.amin(jax_pls_alg_2_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     diff_jax_pls_alg_1_best_rmses = [
-    #         [
-    #             np.amin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
-    #     diff_jax_pls_alg_2_best_rmses = [
-    #         [
-    #             np.amin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
-    #             for split in unique_splits
-    #         ]
-    #         for i in range(Y.shape[1])
-    #     ]
+        # Check that the RMSE achieved is similar
+        sk_best_rmses = [
+            [np.amin(sk_pls_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_1_best_rmses = [
+            [np.amin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_2_best_rmses = [
+            [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_1_best_rmses = [
+            [
+                np.amin(fast_cv_np_pls_alg_1_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_rmses = [
+            [
+                np.amin(fast_cv_np_pls_alg_2_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_1_best_rmses = [
+            [
+                np.amin(jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        jax_pls_alg_2_best_rmses = [
+            [
+                np.amin(jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        diff_jax_pls_alg_1_best_rmses = [
+            [
+                np.amin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        diff_jax_pls_alg_2_best_rmses = [
+            [
+                np.amin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
 
-    #     assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
-    #     assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
-    #     assert_allclose(
-    #         fast_cv_np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
-    #     )
-    #     assert_allclose(
-    #         fast_cv_np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
-    #     )
-    #     assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
-    #     assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
-    #     assert_allclose(
-    #         diff_jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
-    #     )
-    #     assert_allclose(
-    #         diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
-    #     )
+        assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(
+            fast_cv_np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            fast_cv_np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(
+            diff_jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
 
-    # def test_cross_val_pls_1(self):
-    #     """
-    #     Description
-    #     -----------
-    #     This test loads input predictor variables, a single target variable, and split indices for cross-validation. It then calls
-    #     the 'check_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+    def test_cross_val_pls_1(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, a single target variable, and split indices for cross-validation. It then calls
+        the 'check_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
 
-    #     Returns:
-    #     None
-    #     """
-    #     X = self.load_X()
-    #     Y = self.load_Y(["Protein"])
-    #     splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
-    #     assert Y.shape[1] == 1
-    #     self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(["Protein"])
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        assert Y.shape[1] == 1
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
-    # def test_cross_val_pls_2_m_less_k(self):
-    #     """
-    #     Description
-    #     -----------
-    #     This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
-    #     cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+    def test_cross_val_pls_2_m_less_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
+        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
 
-    #     Returns:
-    #     None
-    #     """
-    #     X = self.load_X()
-    #     Y = self.load_Y(
-    #         [
-    #             "Rye_Midsummer",
-    #             "Wheat_H1",
-    #             "Wheat_H3",
-    #             "Wheat_H4",
-    #             "Wheat_H5",
-    #             "Wheat_Halland",
-    #             "Wheat_Oland",
-    #             "Wheat_Spelt",
-    #             "Moisture",
-    #             "Protein",
-    #         ]
-    #     )
-    #     splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
-    #     assert Y.shape[1] > 1
-    #     assert Y.shape[1] < X.shape[1]
-    #     self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        assert Y.shape[1] > 1
+        assert Y.shape[1] < X.shape[1]
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
 
-    # def test_cross_val_pls_2_m_eq_k(self):
-    #     """
-    #     Description
-    #     -----------
-    #     This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
-    #     cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+    def test_cross_val_pls_2_m_eq_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
+        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
 
-    #     Returns:
-    #     None
-    #     """
-    #     X = self.load_X()
-    #     Y = self.load_Y(
-    #         [
-    #             "Rye_Midsummer",
-    #             "Wheat_H1",
-    #             "Wheat_H3",
-    #             "Wheat_H4",
-    #             "Wheat_H5",
-    #             "Wheat_Halland",
-    #             "Wheat_Oland",
-    #             "Wheat_Spelt",
-    #             "Moisture",
-    #             "Protein",
-    #         ]
-    #     )
-    #     splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
-    #     X = X[..., :10]
-    #     assert Y.shape[1] > 1
-    #     assert Y.shape[1] == X.shape[1]
-    #     self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        X = X[..., :10]
+        assert Y.shape[1] > 1
+        assert Y.shape[1] == X.shape[1]
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
-    # def test_cross_val_pls_2_m_greater_k(self):
-    #     """
-    #     Description
-    #     -----------
-    #     This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
-    #     cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+    def test_cross_val_pls_2_m_greater_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
+        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
 
-    #     Returns:
-    #     None
-    #     """
-    #     X = self.load_X()
-    #     Y = self.load_Y(
-    #         [
-    #             "Rye_Midsummer",
-    #             "Wheat_H1",
-    #             "Wheat_H3",
-    #             "Wheat_H4",
-    #             "Wheat_H5",
-    #             "Wheat_Halland",
-    #             "Wheat_Oland",
-    #             "Wheat_Spelt",
-    #             "Moisture",
-    #             "Protein",
-    #         ]
-    #     )
-    #     splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
-    #     X = X[..., :9]
-    #     assert Y.shape[1] > 1
-    #     assert Y.shape[1] > X.shape[1]
-    #     self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        X = X[..., :9]
+        assert Y.shape[1] > 1
+        assert Y.shape[1] > X.shape[1]
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
 
     def check_fast_cross_val_pls(self, X, Y, splits, center, atol, rtol):
         """
