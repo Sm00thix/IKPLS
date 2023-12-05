@@ -94,7 +94,7 @@ class PLS:
         # Extract training XTY
         validation_X = self.X[validation_indices]
         validation_Y = self.Y[validation_indices]
-        if self.mean_centering:
+        if self.center:
             validation_size = np.sum(validation_indices)
             training_size = self.N - validation_size
             size_ratio = self.N / training_size
@@ -299,7 +299,7 @@ class PLS:
             f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A} components on {len(unique_splits)} unique splits using {n_jobs} parallel processes."
         )
 
-        if self.mean_centering:
+        if self.center:
             self.X_mean = self.X.mean(axis=0, keepdims=True)
             self.Y_mean = self.Y.mean(axis=0, keepdims=True)
             self.X = self.X - self.X_mean
