@@ -99,28 +99,27 @@ class PLS:
             training_size = self.N - validation_size
             N_total_over_N_train = self.N / training_size
             N_val_over_N_train = validation_size / training_size
-            #training_X_mean = (self.X_mean - validation_size / self.N * np.mean(X[validation_indices], axis=0, keepdims=True)) * self.N / training_size
-            #training_X_mean = (self.N / training_size * self.X_mean - validation_size / training_size * np.mean(X[validation_indices], axis=0, keepdims=True))
-            # (X_R_mean_row - X_V.shape[0] / N * np.mean(X_V, axis=0, keepdims=True)) * X_R.shape[0] / X_T.shape[0]
-            training_X_mean = (N_total_over_N_train * self.X_mean - N_val_over_N_train * (self.X_mean + np.mean(validation_X, axis=0, keepdims=True)))# * (self.N / training_size)
-            training_Y_mean = (N_total_over_N_train * self.Y_mean - N_val_over_N_train * (self.Y_mean + np.mean(validation_Y, axis=0, keepdims=True)))# * (self.N / training_size)
-            # training_X_mean = N_total_over_N_train * self.X_mean - N_val_over_N_train * np.mean(X[validation_indices], axis=0, keepdims=True)
-            # training_Y_mean = N_total_over_N_train * self.Y_mean - N_val_over_N_train * np.mean(Y[validation_indices], axis=0, keepdims=True)
-
-        # training_XTY = self.XTY - validation_X.T @ validation_Y
+            training_X_mean = (
+                N_total_over_N_train * self.X_mean
+                - N_val_over_N_train
+                * (self.X_mean + np.mean(validation_X, axis=0, keepdims=True))
+            )
+            training_Y_mean = (
+                N_total_over_N_train * self.Y_mean
+                - N_val_over_N_train
+                * (self.Y_mean + np.mean(validation_Y, axis=0, keepdims=True))
+            )
         if self.center:
-            # training_X_mean = (
-            #     self.X_mean
-            #     - (validation_N / self.N) * np.mean(validation_X, axis=0, keepdims=True)
-            # ) * (self.N / training_N)
-            # training_Y_mean = (
-            #     self.Y_mean
-            #     - (validation_N / self.N) * np.mean(validation_Y, axis=0, keepdims=True)
-            # ) * (self.N / training_N)
             # Subtract the validation set's contribution (which is centered based on the entire dataset)
-            training_XTY = self.XTY - (validation_X + self.X_mean).T @ (validation_Y + self.Y_mean)
+            training_XTY = self.XTY - (validation_X + self.X_mean).T @ (
+                validation_Y + self.Y_mean
+            )
             # Remove the dataset-wide centering and add the training set centering
-            training_XTY = training_XTY + self.N * (self.X_mean.T @ self.Y_mean) - training_size * (training_X_mean.T @ training_Y_mean) # 
+            training_XTY = (
+                training_XTY
+                + self.N * (self.X_mean.T @ self.Y_mean)
+                - training_size * (training_X_mean.T @ training_Y_mean)
+            )  #
         else:
             training_XTY = self.XTY - validation_X.T @ validation_Y
         if self.algorithm == 1:
@@ -130,12 +129,17 @@ class PLS:
                 training_X = training_X + self.X_mean - training_X_mean
         else:
             # Used for algorithm #2
-            # training_XTX = self.XTX - validation_X.T @ validation_X
             if self.center:
                 # Subtract the validation set's contribution (which is centered based on the entire dataset)
-                training_XTX = self.XTX - (validation_X + self.X_mean).T @ (validation_X + self.X_mean)
+                training_XTX = self.XTX - (validation_X + self.X_mean).T @ (
+                    validation_X + self.X_mean
+                )
                 # Remove the dataset-wide centering and add the training set centering
-                training_XTX = training_XTX + self.N * (self.X_mean.T @ self.X_mean) - training_size * (training_X_mean.T @ training_X_mean)
+                training_XTX = (
+                    training_XTX
+                    + self.N * (self.X_mean.T @ self.X_mean)
+                    - training_size * (training_X_mean.T @ training_X_mean)
+                )
             else:
                 training_XTX = self.XTX - validation_X.T @ validation_X
 
@@ -275,7 +279,7 @@ class PLS:
 
         metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
-        
+
         mean_centering : bool, optional default=True
             Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
 
@@ -340,19 +344,3 @@ class PLS:
         )
 
         return metrics
-
-if __name__ == '__main__':
-    N = 6
-    K = 3
-    M = 2
-    np.random.seed(21)
-    X = np.random.rand(N, K)
-    Y = np.random.rand(N, M)
-    A = 3
-    cv_splits = np.array([0, 0, 1, 1, 2, 2])
-    cv_splits = np.arange(N)
-    metric_function = lambda Y_true, Y_pred: np.mean(np.abs(Y_true - Y_pred))
-    pls = PLS(algorithm=1)
-    metrics = pls.cross_validate(X, Y, A, cv_splits, metric_function, center=True, n_jobs=1)
-    print(metrics)
-    pass
