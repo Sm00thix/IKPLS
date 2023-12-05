@@ -67,7 +67,7 @@ The authors provide [examples](https://github.com/Sm00thix/IKPLS/blob/main/examp
 
 A Python class implementing both IKPLS algorithms using NumPy is available in `ikpls`. The class subclasses [`BaseEstimator`](https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html) from scikit-learn, allowing the IKPLS class to be used in combination with e.g., scikit-learn's [`cross_validate`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html) for a simple interface to parallel cross-validation with user-defined metric functions.
 
-Additionally, a Python class implementing both IKPLS algorithms for fast cross-validation \autoref{sec:cross_val} is available in `ikpls`. This class does not subclass any other class, instead relying on its own parallel cross-validation scheme which is both fast and memory efficient.
+Additionally, a Python class implementing both IKPLS algorithms for fast cross-validation \ref{sec:cross_val} is available in `ikpls`. This class does not subclass any other class, instead relying on its own parallel cross-validation scheme which is both fast and memory efficient.
 
 ## JAX
 
