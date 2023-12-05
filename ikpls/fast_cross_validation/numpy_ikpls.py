@@ -330,7 +330,7 @@ class PLS:
             Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
 
         center : bool, optional default=False
-            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will significantly increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
+            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
 
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use all available cores.

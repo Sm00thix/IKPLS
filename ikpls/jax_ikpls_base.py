@@ -19,11 +19,11 @@ class PLSBase(abc.ABC):
 
     Parameters
     ----------
-    `reverse_differentiable`: bool, optional (default=False). Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+    reverse_differentiable: bool, optional (default=False). Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
 
-    `name` : str, optional (default=\"Improved Kernel PLS Algorithm\"). Assigns a name to the instance of the class.
+    name : str, optional (default=\"Improved Kernel PLS Algorithm\"). Assigns a name to the instance of the class.
 
-    `verbose` : bool, optional (default=False). If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
+    verbose : bool, optional (default=False). If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
     """
 
     def __init__(
@@ -42,10 +42,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `arg` : tuple
+        arg : tuple
             A tuple containing the component index and the weight norm.
 
-        `*args` : Any
+        *args : Any
             Placeholder for unused arguments.
 
         Warns
@@ -72,13 +72,13 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `b_last` : Array of shape (K, M)
+        b_last : Array of shape (K, M)
             The previous regression coefficient matrix.
 
-        `r` : Array of shape (K, 1)
+        r : Array of shape (K, 1)
             The orthogonal weight vector for the current component.
 
-        `q` : Array of shape (M, 1)
+        q : Array of shape (M, 1)
             The loadings vector for the response variables.
 
         Returns
@@ -103,13 +103,13 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        `K` : int
+        K : int
             Number of predictor variables.
 
-        `M` : int
+        M : int
             Number of response variables.
 
         Returns
@@ -148,7 +148,7 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables matrix.
 
         Returns
@@ -169,10 +169,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `XT` : Array of shape (K, N)
+        XT : Array of shape (K, N)
             Transposed predictor variables matrix.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables matrix.
 
         Returns
@@ -193,10 +193,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `XT` : Array of shape (K, N)
+        XT : Array of shape (K, N)
             Transposed predictor variables matrix.
 
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables matrix.
 
         Returns
@@ -218,7 +218,7 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `None`
+        None
 
         Returns
         -------
@@ -238,13 +238,13 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `XTY` : Array of shape (K, M)
+        XTY : Array of shape (K, M)
             The cross-covariance matrix of the predictor variables and the response variables.
 
-        `M` : int
+        M : int
             Number of response variables.
 
-        `K` : int
+        K : int
             Number of predictor variables.
 
         Returns
@@ -289,16 +289,16 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `i` : int
+        i : int
             The current component number in the PLS algorithm.
 
-        `w` : Array of shape (K, 1)
+        w : Array of shape (K, 1)
             The current weight vector.
 
-        `P` : Array of shape (A, K)
+        P : Array of shape (A, K)
             The loadings matrix for the predictor variables.
 
-        `R` : Array of shape (A, K)
+        R : Array of shape (A, K)
             The weights matrix to compute scores `T` directly from the original predictor variables.
 
         Returns
@@ -325,10 +325,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `j` : int
+        j : int
             The current iteration index.
 
-        `carry` : Tuple of arrays
+        carry : Tuple of arrays
             A tuple containing weight vectors and matrices used in the PLS algorithm.
 
         Returns
@@ -354,7 +354,7 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `None`
+        None
 
         Returns
         -------
@@ -381,7 +381,7 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `None`
+        None
 
         Returns
         -------
@@ -407,13 +407,13 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
         Returns
@@ -457,13 +457,13 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
         Attributes
@@ -509,13 +509,13 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `B` : Array of shape (A, K, M)
+        B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
-        `n_components` : int or None, optional
+        n_components : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
 
         Returns
@@ -543,10 +543,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `n_components` : int or None, optional
+        n_components : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
 
         Returns
@@ -579,22 +579,22 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X_train` : Array of shape (N_train, K)
+        X_train : Array of shape (N_train, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y_train` : Array of shape (N_train, M)
+        Y_train : Array of shape (N_train, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        `X_test` : Array of shape (N_test, K)
+        X_test : Array of shape (N_test, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y_test` : Array of shape (N_test, M)
+        Y_test : Array of shape (N_test, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `metric_function` : Callable receiving arrays `Y_test` of shape (N, M) and `Y_pred` (A, N, M) and returns Any
+        metric_function : Callable receiving arrays `Y_test` of shape (N, M) and `Y_pred` (A, N, M) and returns Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         Returns
@@ -647,28 +647,28 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        `cv_splits` : Array of shape (N,)
+        cv_splits : Array of shape (N,)
             An array defining cross-validation splits. Each unique value in `cv_splits` corresponds to a different fold.
 
-        `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
+        preprocessing_function : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
             A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
 
-        `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
+        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
-        `metric_names` : list of str
+        metric_names : list of str
             A list of names for the metrics used for evaluation.
 
-        `show_progress` : bool, optional (default=True)
+        show_progress : bool, optional (default=True)
             If True, displays a progress bar for the cross-validation.
 
         Returns
@@ -725,25 +725,25 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `X` : Array of shape (N, K)
+        X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        `Y` : Array of shape (N, M)
+        Y : Array of shape (N, M)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
-        `train_idxs` : Array of shape (N_train,)
+        train_idxs : Array of shape (N_train,)
             Indices of data points in the training set.
 
-        `val_idxs` : Array of shape (N_val,)
+        val_idxs : Array of shape (N_val,)
             Indices of data points in the validation set.
 
-        `A` : int
+        A : int
             Number of components in the PLS model.
 
-        `preprocessing_function` : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
+        preprocessing_function : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
             A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
 
-        `metric_function` : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
+        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         Returns
@@ -782,10 +782,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `metric_value_lists` : list of list of Any
+        metric_value_lists : list of list of Any
             Lists of metric values for each metric and fold.
 
-        `metric_values` : list of Any
+        metric_values : list of Any
             Metric values for a single fold.
 
         Returns
@@ -812,10 +812,10 @@ class PLSBase(abc.ABC):
 
         Parameters
         ----------
-        `metrics_results` : list of list of Any
+        metrics_results : list of list of Any
             Lists of metric values for each metric and fold.
 
-        `metric_names` : list of str
+        metric_names : list of str
             A list of names for the metrics used for evaluation.
 
         Returns

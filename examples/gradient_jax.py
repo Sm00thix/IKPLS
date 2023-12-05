@@ -59,7 +59,7 @@ if __name__ == "__main__":
     M = 10
     A = 20
 
-    # Generate random data. Using float64 is important for numerical stability.
+    # Generate random data.
     jnp_X = jnp.array(np.random.uniform(size=(N, K)), dtype=jnp.float64)
     jnp_Y = jnp.array(np.random.uniform(size=(N, M)), dtype=jnp.float64)
 

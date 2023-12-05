@@ -73,8 +73,8 @@ if __name__ == "__main__":
     splits = np.random.randint(
         0, 5, size=N
     )  # Randomly assign each sample to one of 5 splits.
+    number_of_splits = np.unique(splits).shape[0]
 
-    # Using float64 is important for numerical stability.
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
@@ -95,11 +95,11 @@ if __name__ == "__main__":
 
     lowest_val_mses = np.array(
         [np_pls_alg_1_results[f"test_lowest_mse_target_{i}"] for i in range(M)]
-    )  # Shape (M, splits) = (10, 5). Lowest MSE for each target for each split.
+    )  # Shape (M, splits) = (10, number_of_splits). Lowest MSE for each target for each split.
 
     best_num_components = np.array(
         [
             np_pls_alg_1_results[f"test_num_components_lowest_mse_target_{i}"]
             for i in range(M)
         ]
-    )  # Shape (M, splits) = (10, 5). Number of components that achieves the lowest MSE for each target for each split.
+    )  # Shape (M, splits) = (10, number_of_splits). Number of components that achieves the lowest MSE for each target for each split.
