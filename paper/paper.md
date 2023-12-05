@@ -61,11 +61,13 @@ This section covers the implementation of the algorithms. Improved Kernel PLS [@
 
 The implementations introduced in this work have been tested for equivalency against NIPALS from scikit-learn using a dataset of NIR (near-infrared) spectra from [@dreier2022hyperspectral] and tests from scikit-learn's own PLS test-suite.
 
-The authors provide [example](https://github.com/Sm00thix/IKPLS/blob/main/examples/) for all the core functionality, including use-cases for fitting, predicting, cross-validating with custom metrics and custom preprocessing on CPU and GPU, and propagating gradients through the PLS fitting subsequent prediction.
+The authors provide [examples](https://github.com/Sm00thix/IKPLS/blob/main/examples/) for all the core functionality, including use-cases for fitting, predicting, cross-validating with custom metrics and custom preprocessing on CPU and GPU, and propagating gradients through the PLS fitting subsequent prediction.
 
 ## NumPy
 
-A Python class implementing both IKPLS algorithms using NumPy is available in `ikpls` as `ikpls.numpy_ikpls.PLS`. Pass in `algorithm=1` or `algorithm=2` in the constructor to choose between algorithms. The class subclasses [`BaseEstimator`](https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html) from scikit-learn, allowing the IKPLS class to be used in combination with e.g., scikit-learn's [`cross_validate`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html) for a simple interface to parallel cross-validation with user-defined metric functions.
+A Python class implementing both IKPLS algorithms using NumPy is available in `ikpls`. The class subclasses [`BaseEstimator`](https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html) from scikit-learn, allowing the IKPLS class to be used in combination with e.g., scikit-learn's [`cross_validate`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html) for a simple interface to parallel cross-validation with user-defined metric functions.
+
+Additionally, a Python class implementing both IKPLS algorithms for fast cross-validation \autoref{tab:hardware} is available in `ikpls`. This class does not subclass any other class, instead relying on its own parallel cross-validation scheme which is both fast and memory efficient.
 
 ## JAX
 
@@ -101,7 +103,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 
 Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while Algorithm #2 starts by computing $\mathbf{X^{T}}\mathbf{X}$ of shape $(K, K)$. After this initial step, the algorithms are almost identical. Thus, intuitively, if $K < N$, Algorithm #2 requires less computation after this initial step.
 
-# Algorithmic improvement for cross-validation
+# Algorithmic improvement for cross-validation\label{sec:cross_val}
 \newenvironment{proof}[1][\proofname]{\par\noindent\textit{#1.} }{\hfill$\square$\par}
 
 \newtheorem{proposition}{Proposition}
