@@ -15,7 +15,7 @@ authors:
   - name: Erik Schou Dreier
     orcid: 0000-0001-9784-7504
     affiliation: "1"
-  -name : Martin Holm Jensen
+  - name : Martin Holm Jensen
     affliation: "1"
   - name: Birthe Møller Jespersen
     orcid: 0000-0002-8695-1450
@@ -43,7 +43,7 @@ The `ikpls` software package introduces fast and versatile implementations of th
 
 `ikpls` offers NumPy-based CPU and JAX-based CPU/GPU/TPU implementations. The JAX implementations are also differentiable, allowing seamless integration with deep learning techniques. This versatility enables users to handle diverse data shapes and sizes efficiently.
 
-Benchmarks demonstrate the superior performance of `ikpls` compared to scikit-learn's NIPALS across various scenarios, emphasizing the importance of choosing the proper implementation for specific data characteristics. Additionally, this article addresses the redundant structure in cross-validation, proposing an algorithmic improvement for substantial speedup without recomputing total matrix products.
+Benchmarks demonstrate the superior performance of `ikpls` compared to scikit-learn's NIPALS across various scenarios, emphasizing the importance of choosing the proper implementation for specific data characteristics. Additionally, the software addresses the redundant structure in cross-validation, proposing an algorithmic improvement for substantial speedup without recomputing total matrix products.
 
 In conclusion, `ikpls` empowers researchers and practitioners in chemometrics and related fields with efficient, scalable, and end-to-end differentiable tools for PLS modeling, facilitating optimal component selection and preprocessing decisions.
 
@@ -77,7 +77,7 @@ Fitting a PLS model consists exclusively of matrix and vector operations. Theref
 
 # Benchmarks
 
-This section compares the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and variable number of components, $A$. Additionally, the comparisons are made using a single fit and leave-one-out cross-validation. To estimate the execution time in a realistic scenario, the mean squared error and the number of components that minimize this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross-validation is computed. While some sources on the internet claim that JAX is faster than NumPy on CPU, we did not find that to be the case for our scenarios. Therefore, we exclusively test the JAX implementations on GPU. When cross-validating with the NumPy CPU implementations and scikit-learn's NIPALS, we use 32 parallel jobs corresponding to one for each available thread on the CPU that we used. We use only eight parallel jobs when performing cross-validating with 1 million samples due to memory constraints. In practice, however, we had 100% CPU utilization using eight jobs for such a large dataset due to the parallel nature of NumPy operations.
+This section compares the execution times of the `ikpls` implementations with scikit-learn's NIPALS implementation. The comparisons are made with varying shapes for $\mathbf{X}$ and $\mathbf{Y}$ and variable number of components, $A$. Additionally, the comparisons are made using a single fit and leave-one-out cross-validation. To estimate the execution time in a realistic scenario, the mean squared error and the number of components that minimize this error are computed during cross-validation and returned hereafter for subsequent analysis by the user. The execution times reported for the JAX implementations include the time spent compiling the instructions and sending the input data to the GPU on which the cross-validation is computed. While some sources on the internet claim that JAX is faster than NumPy on CPU, we did not find that to be the case for our scenarios. Therefore, we exclusively test the JAX implementations on GPU. When cross-validating with the NumPy CPU implementations and scikit-learn's NIPALS, we use 32 parallel jobs corresponding to one for each available thread on the CPU that we used. For the fast cross-validation algorithm, which is also memory efficient, we use 32 parallel jobs for all experiments. For the other CPU experiments, we use only eight parallel jobs when performing cross-validation with 1 million samples due to memory consumption increased by scikit-learn's cross_validate. In practice, however, we had 100% CPU utilization using eight jobs for such a large dataset due to the parallel nature of NumPy operations.
 
 The benchmarks use randomly generated data. The random seed is fixed to give all implementations the same random data. The default parameters for the benchmarks are $N=10,000$, $K=500$, and $A=30$. We benchmark using a single target variable $M=1$ and multiple target variables with $M=10$. PLS with $M=1$ is commonly referred to as PLS1 and PLS2 with $M>1$
 
@@ -97,11 +97,11 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 | GPU         | NVIDIA GeForce RTX3090 Ti |
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
 
-![Timings. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
+![Timings. The first two rows are PLS1. The last two rows are PLS2. The first and third rows are single-fit. The second and fourth rows are leave-one-out cross-validation, computing the mean squared error and best number of components for each validation split. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
 Algorithm #1 uses the input matrix $\mathbf{X}$ of shape $(N, K)$ directly while Algorithm #2 starts by computing $\mathbf{X^{T}}\mathbf{X}$ of shape $(K, K)$. After this initial step, the algorithms are almost identical. Thus, intuitively, if $K < N$, Algorithm #2 requires less computation after this initial step.
 
-# Possible algorithmic improvement for cross-validation
+# Algorithmic improvement for cross-validation
 \newenvironment{proof}[1][\proofname]{\par\noindent\textit{#1.} }{\hfill$\square$\par}
 
 \newtheorem{proposition}{Proposition}
@@ -162,7 +162,7 @@ For each split our algorithm computes $|V_s| \cdot K^2 + |V_s| \cdot K \cdot M =
 In the extreme case of $|V_s| = 1$, the alternative performs a factor of $N-1$ more multiplications than our algorithm for cross-validation. When $|V_s| < |T_S|$ (the typical case for cross-validation), our algorithm computes fewer multiplications than the alternative in steps 2 to 5. Observe that step 1 in our algorithm computes $N \cdot K (K + M)$ multiplications, irrespective of the number of splits and sizes, which the alternative does not need.
 
 
-The caveat with this algorithm, and the reason for not having implemented it in the `ikpls` package, is that preprocessing methods dependent on statistics from multiple samples (such as feature centering and scaling) allow a single row in $\X$ to affect the full $\XT\X$ and $\XT\Y$ and a single row in $\Y$ to affect the full $\XT\Y$. If such preprocessing is applied, the proposed algorithm must consider the effects on the sample statistics in steps 3 and 4 to avoid data leakage between training and validation splits. The authors believe there is no easy way to consider this in the general case but welcome any future contributions addressing this issue.
+The caveat with this algorithm is that preprocessing methods dependent on statistics from multiple samples (such as feature centering and scaling) allow a single row in $\X$ to affect the full $\XT\X$ and $\XT\Y$ and a single row in $\Y$ to affect the full $\XT\Y$. If such preprocessing is applied, the proposed algorithm must consider the effects on the sample statistics in steps 3 and 4 to avoid data leakage between training and validation splits. `ikpls` has solved this issue for feature centering, which is a widespread preprocessing method for PLS. However, the authors believe there is no easy way to consider such preprocessing in the general case but welcome any future contributions addressing this issue.
 
 # Acknowledgements
 
