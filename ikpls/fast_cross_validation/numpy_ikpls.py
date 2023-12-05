@@ -88,10 +88,10 @@ class PLS:
             PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
 
         training_X_mean : Array of shape (1, K)
-            Mean row of training X. Only returned if `center` is True.
+            Mean row of training X. Will be an array of zeros if `self.center` is False.
 
         training_Y_mean : Array of shape (1, M)
-            Mean row of training Y. Only returned if `center` is True.
+            Mean row of training Y. Will be an array of zeros if `self.center` is False.
 
         Warns
         -----

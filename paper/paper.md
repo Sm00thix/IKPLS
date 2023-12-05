@@ -1,5 +1,5 @@
 ---
-title: 'Improved Kernel Partial Least Squares for Python: Fast CPU and GPU Implementations with NumPy and JAX'
+title: 'Fast Cross-Validation Algorithm with Improved Kernel Partial Least Squares for Python: Fast CPU and GPU Implementations with NumPy and JAX'
 tags:
   - Python
   - PLS
@@ -15,6 +15,9 @@ authors:
   - name: Erik Schou Dreier
     orcid: 0000-0001-9784-7504
     affiliation: "1"
+  -name : Martin Holm Jensen
+    orcid: 
+    affliation: "1"
   - name: Birthe Møller Jespersen
     orcid: 0000-0002-8695-1450
     affiliation: "4"
