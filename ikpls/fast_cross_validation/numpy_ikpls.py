@@ -10,7 +10,7 @@ from joblib import Parallel, delayed
 
 class PLS:
     """
-    Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+    Implements fast cross-validation with partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
     Parameters
     ----------
@@ -88,10 +88,10 @@ class PLS:
             PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
 
         training_X_mean : Array of shape (1, K)
-            Mean row of training X. Only returned if `center` is True.
+            Mean row of training X. Will be an array of zeros if `self.center` is False.
 
         training_Y_mean : Array of shape (1, M)
-            Mean row of training Y. Only returned if `center` is True.
+            Mean row of training Y. Will be an array of zeros if `self.center` is False.
 
         Warns
         -----
@@ -330,7 +330,7 @@ class PLS:
             Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
 
         center : bool, optional default=False
-            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will significantly increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
+            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
 
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use all available cores.
