@@ -16,6 +16,7 @@ authors:
     orcid: 0000-0001-9784-7504
     affiliation: "1"
   - name : Martin Holm Jensen
+    orcid: 0009-0002-4478-1534
     affliation: "1"
   - name: Birthe Møller Jespersen
     orcid: 0000-0002-8695-1450
@@ -99,7 +100,7 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 | GPU         | NVIDIA GeForce RTX3090 Ti |
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
 
-![Timings. The first two rows are PLS1. The last two rows are PLS2. The first and third rows are single-fit. The second and fourth rows are leave-one-out cross-validation, computing the mean squared error and best number of components for each validation split. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
+![Timings. We vary $N$, $K$, and $A$ in the first, second, and third columns, respectively. The first two rows are PLS1. The last two rows are PLS2. The first and third rows are single-fit. The second and fourth rows are leave-one-out cross-validation, computing the mean squared error and best number of components for each validation split. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
 Algorithm #1 uses the input matrix $\mathbf{X}$ of dimension $(N, K)$ directly while Algorithm #2 starts by computing $\mathbf{X^{T}}\mathbf{X}$ of dimension $(K, K)$. After this initial step, the algorithms are almost identical. Thus, intuitively, if $K < N$, Algorithm #2 requires less computation after this initial step.
 
