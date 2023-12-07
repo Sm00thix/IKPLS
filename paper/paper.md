@@ -92,13 +92,13 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 
 : Hardware used in the execution time experiments. \label{tab:hardware}
 
-| Component   | Name                      |
-|-------------|---------------------------|
-| Motherboard | ASUS PRO WS X570-ACE      |
-| CPU         | AMD Ryzen 9 5950X         |
-| CPU Cooler  | NZXT Kraken X73           |
-| GPU         | NVIDIA GeForce RTX3090 Ti |
-| RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
+| Component   | Name                                 |
+|-------------|--------------------------------------|
+| Motherboard | ASUS PRO WS X570-ACE                 |
+| CPU         | AMD Ryzen 9 5950X                    |
+| CPU Cooler  | NZXT Kraken X73                      |
+| GPU         | NVIDIA GeForce RTX3090 Ti, CUDA 11.8 |
+| RAM         | 4x32GB, DDR4, 3.2GHz, C16            |
 
 ![Results of our timing experiments. We vary $N$, $K$, and $A$ in the first, second, and third columns. The first two rows are PLS1. The last two rows are PLS2. The first and third rows are single-fit. The second and fourth rows are leave-one-out cross-validation, computing the mean squared error and best number of components for each validation split. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
