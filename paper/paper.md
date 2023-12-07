@@ -100,9 +100,17 @@ All the experiments are executed on the hardware shown in \autoref{tab:hardware}
 | GPU         | NVIDIA GeForce RTX3090 Ti |
 | RAM         | 4x32GB, DDR4, 3.2GHz, C16 |
 
-![Timings. We vary $N$, $K$, and $A$ in the first, second, and third columns, respectively. The first two rows are PLS1. The last two rows are PLS2. The first and third rows are single-fit. The second and fourth rows are leave-one-out cross-validation, computing the mean squared error and best number of components for each validation split. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
+![Results of our timing experiments. We vary $N$, $K$, and $A$ in the first, second, and third columns. The first two rows are PLS1. The last two rows are PLS2. The first and third rows are single-fit. The second and fourth rows are leave-one-out cross-validation, computing the mean squared error and best number of components for each validation split. A circle indicates that the experiment was run until the end, and the time reported is exact. A square means that the experiment was run until the time per iteration had stabilized and used to forecast the time usage if the experiment was run to completion.\label{fig:timings}](timings.png)
 
-Algorithm #1 uses the input matrix $\mathbf{X}$ of dimension $(N, K)$ directly while Algorithm #2 starts by computing $\mathbf{X^{T}}\mathbf{X}$ of dimension $(K, K)$. After this initial step, the algorithms are almost identical. Thus, intuitively, if $K < N$, Algorithm #2 requires less computation after this initial step.
+Based on the results in \autoref{fig:timings}, we will give general guidelines for choosing an algorithm. The choice of CPU versus GPU may vary depending on the specific hardware a user has available.
+
+If the user needs only to perform a single fit (i.e., no cross-validation), the user should opt for either of the CPU IKPLS implementations. In this case, if $N \gg K$, choose IKPLS #2 over IKPLS #1. The user should consider using a GPU only if $N > 10^6$ or $K > 10^4$. While the GPU generally scales better than the CPU with increasing $N$ and $K$, it scales worse with increasing $A$. Even for a single fit, the implementations of IKPLS are typically one to two orders of magnitude faster than scikit-learn's NIPALS.
+
+In the case of having to perform cross-validation, the user should also always choose one of the implementations of IKPLS. In the most extreme case in our experiments, the CPU implementation of IKPLS #2 using fast cross-validation is a staggering six orders of magnitude (1 million) times faster than scikit-learn's NIPALS. However, even in more typical scenarios, the best choice of the IKPLS algorithm and implementation is typically several orders of magnitude faster than scikit-learn's NIPALS.
+
+In the case of cross-validation, if the validation split size is larger than the training split size, the user should opt for IKPLS #2 using fast cross-validation unless $K > 3 \times 10^3$ in which case the user should opt for IKPLS #1 on the GPU. If $N < 10^5$ and $N < K$, the user should opt for IKPLS #1 on the CPU, and if the validation splits are smaller than the training splits, fast cross-validation should be used.
+
+The user should consider another algorithm only when applying preprocessing techniques incompatible with fast cross-validation (described in the next section). The CPU implementation of IKPLS #2 is a suitable choice unless $N > 10^4$ or $K > 3 \times 10^3$, in which case GPU IKPLS #1 is the fastest.
 
 # Algorithmic improvement for cross-validation
 \newenvironment{proof}[1][\proofname]{\par\noindent\textit{#1.} }{\hfill$\square$\par}
