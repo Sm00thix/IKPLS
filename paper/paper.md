@@ -46,7 +46,11 @@ The `ikpls` software package introduces fast and versatile implementations of bo
 
 Benchmarks demonstrate the superior performance of `ikpls` compared to scikit-learn's NIPALS across various scenarios, emphasizing the importance of choosing the proper implementation for specific data characteristics. Additionally, the software addresses the redundant structure in cross-validation, proposing an algorithmic improvement for substantial speedup without recomputing total matrix products.
 
-In conclusion, `ikpls` empowers researchers and practitioners in chemometrics and related fields with efficient, scalable, and end-to-end differentiable tools for PLS modeling, facilitating optimal component selection and preprocessing decisions.
+In conclusion, `ikpls` empowers researchers and practitioners in chemometrics and related fields with efficient, scalable, and end-to-end differentiable tools for PLS modeling, facilitating optimal component selection and preprocessing decisions by offering implementations of
+
+1. both variants of IKPLS for CPUs;
+2. both variants of IKPLS for GPUs, both of which are end-to-end differentiable, allowing integration with deep learning models;
+3. a new algorithm for cross-validation that yields a substantial speedup if the training set is larger than the validation set.
 
 # Statement of need
 
