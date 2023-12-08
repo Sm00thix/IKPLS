@@ -53,7 +53,6 @@ if __name__ == "__main__":
     A = 20  # Number of latent variables (PLS components).
     splits = np.arange(100) % 5  # Randomly assign each sample to one of 5 splits.
 
-    # Using float64 is important for numerical stability.
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 

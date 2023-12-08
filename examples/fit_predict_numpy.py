@@ -12,7 +12,7 @@ if __name__ == "__main__":
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
-    # The other PLS algorithms and implementations have the same interface for fit() and predict().
+    # The other PLS algorithms and implementations, except for NpPLS_FastCV, have the same interface for fit() and predict().
     np_ikpls_alg_1 = PLS(algorithm=1)
     np_ikpls_alg_1.fit(X, Y, A)
 

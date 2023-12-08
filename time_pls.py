@@ -3,9 +3,11 @@ import argparse
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
 from ikpls.jax_ikpls_alg_2 import PLS as JAX_PLS_Alg_2
 from ikpls.numpy_ikpls import PLS as NP_PLS
+from ikpls.fast_cross_validation.numpy_ikpls import PLS as NP_PLS_FCV
 from timings.timings import (
     SK_PLS_All_Components,
     cross_val_cpu_pls,
+    fast_cross_val_cpu_pls,
     cross_val_gpu_pls,
     gen_random_data,
     single_fit_cpu_pls,
@@ -85,9 +87,15 @@ if __name__ == "__main__":
             pls = NP_PLS(algorithm=2)
             fit_params = {"A": n_components}
             name = "NumPy Improved Kernel PLS Algorithm #2"
+        elif model == "fastnp1":
+            pls = NP_PLS_FCV(algorithm=1)
+            name = "NumPy Improved Kernel PLS Algorithm #1 (fast cross-validation)"
+        elif model == "fastnp2":
+            pls = NP_PLS_FCV(algorithm=2)
+            name = "NumPy Improved Kernel PLS Algorithm #2 (fast cross-validation)"
         else:
             raise ValueError(
-                f"Unknown model: {model}. Must be one of 'sk', 'np1', 'np2', 'jax1', 'jax2', 'diffjax1', 'diffjax2'."
+                f"Unknown model: {model}. Must be one of 'sk', 'np1', 'np2', 'fastnp1', 'fastnp2', 'jax1', 'jax2', 'diffjax1', 'diffjax2'."
             )
 
         if n_splits == 1:
@@ -99,9 +107,14 @@ if __name__ == "__main__":
             print(
                 f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets. Using {n_jobs} concurrent workers."
             )
-            time = cross_val_cpu_pls(
-                pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1
-            )
+            if model.startswith("fast"):
+                time = fast_cross_val_cpu_pls(
+                    pls, X, Y, n_components, n_splits=n_splits, n_jobs=n_jobs, verbose=1
+                )
+            else:
+                time = cross_val_cpu_pls(
+                    pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1
+                )
         print(f"Time: {time}")
 
     try:

@@ -8,6 +8,7 @@ from jax import numpy as jnp
 from numpy.testing import assert_allclose
 from sklearn.cross_decomposition import PLSRegression as SkPLS
 
+from ikpls.fast_cross_validation.numpy_ikpls import PLS as FastCVPLS
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_Alg_1
 from ikpls.jax_ikpls_alg_2 import PLS as JAX_Alg_2
 from ikpls.numpy_ikpls import PLS as NpPLS
@@ -40,7 +41,7 @@ class TestClass:
 
         Parameters
         ----------
-        `values` : list[str]
+        values : list[str]
             List of column names to extract target values from the CSV data.
 
         Returns
@@ -64,13 +65,13 @@ class TestClass:
 
         Parameters
         ----------
-        `X` : NDArray[float]
+        X : NDArray[float]
             Input data (spectra).
 
-        `Y` : NDArray[float]
+        Y : NDArray[float]
             Target values.
 
-        `n_components` : int
+        n_components : int
             Number of PLS components.
 
         Returns
@@ -139,18 +140,18 @@ class TestClass:
 
         Parameters
         ----------
-        `M` : NDArray[float]
+        M : NDArray[float]
             Matrix to check for orthogonality.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking orthogonality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking orthogonality.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -181,39 +182,39 @@ class TestClass:
 
         Parameters
         ----------
-        `sk_B` : NDArray[float]
+        sk_B : NDArray[float]
             Sklearn PLS regression matrix.
 
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking equality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking equality.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -280,42 +281,42 @@ class TestClass:
 
         Parameters
         ----------
-        `sk_B` : NDArray[float]
+        sk_B : NDArray[float]
             Sklearn PLS regression matrix.
 
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `X` : NDArray[float]
+        X : NDArray[float]
             Input data (spectra) for making predictions.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking equality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking equality.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -418,36 +419,36 @@ class TestClass:
 
         Parameters
         ----------
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for checking equality.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for checking equality.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -508,30 +509,30 @@ class TestClass:
 
         Parameters
         ----------
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `X` : ndarray
+        X : ndarray
             Original input matrix.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for comparing matrix values.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for comparing matrix values.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -605,25 +606,25 @@ class TestClass:
 
         Parameters
         ----------
-        `np_pls_alg_1`
+        np_pls_alg_1
             Numpy-based PLS model using algorithm 1.
 
-        `np_pls_alg_2`
+        np_pls_alg_2
             Numpy-based PLS model using algorithm 2.
 
-        `jax_pls_alg_1`
+        jax_pls_alg_1
             JAX-based PLS model using algorithm 1.
 
-        `jax_pls_alg_2`
+        jax_pls_alg_2
             JAX-based PLS model using algorithm 2.
 
-        `diff_jax_pls_alg_1`
+        diff_jax_pls_alg_1
             JAX-based PLS model using algorithm 1 with reverse differentiation.
 
-        `diff_jax_pls_alg_2`
+        diff_jax_pls_alg_2
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
-        `n_good_components` : int, optional
+        n_good_components : int, optional
             Number of components to check, or -1 to use all possible number of components.
 
         Returns
@@ -800,7 +801,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         Y = self.load_Y(["Protein"])
@@ -886,7 +887,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         Y = self.load_Y(
@@ -985,7 +986,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         X = X[..., :10]
@@ -1086,7 +1087,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         X = self.load_X()
         X = X[..., :9]
@@ -1190,7 +1191,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         from sklearn.datasets import load_linnerud
 
@@ -1398,7 +1399,7 @@ class TestClass:
 
         Returns
         -------
-        `None`
+        None
         """
         from sklearn.datasets import load_linnerud
 
@@ -1672,14 +1673,14 @@ class TestClass:
 
         Parameters
         ----------
-        `X` : numpy.ndarray
+        X : numpy.ndarray
             The predictor variables.
-        `Y` : numpy.ndarray
+        Y : numpy.ndarray
             The target variables.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -1831,33 +1832,33 @@ class TestClass:
         and verifies the correctness of gradient values and numerical stability.
 
         Parameters:
-        `X` : numpy.ndarray:
+        X : numpy.ndarray:
             The input predictor variables.
 
-        `Y` : numpy.ndarray
+        Y : numpy.ndarray
             The target variables.
 
-        `num_components` : int
+        num_components : int
             The number of PLS components.
 
-        `filter_size` (int):
+        filter_size (int):
             The size of the convolution filter.
 
-        `val_atol` : float
+        val_atol : float
             Absolute tolerance for value comparisons.
 
-        `val_rtol` : float
+        val_rtol : float
             Relative tolerance for value comparisons.
 
-        `grad_atol` : float
+        grad_atol : float
             Absolute tolerance for gradient comparisons.
 
-        `grad_rtol` : float
+        grad_rtol : float
             Relative tolerance for gradient comparisons.
 
         Returns
         -------
-        `None`
+        None
 
         Raises
         ------
@@ -2145,21 +2146,21 @@ class TestClass:
         of components for each target variable and each split.
 
         Parameters:
-        `X` : numpy.ndarray
+        X : numpy.ndarray
             The input predictor variables.
-        `Y` : numpy.ndarray
+        Y : numpy.ndarray
             The target variables.
-        `splits` : numpy.ndarray
+        splits : numpy.ndarray
             Split indices for cross-validation.
 
-        `atol` : float
+        atol : float
             Absolute tolerance for value comparisons.
 
-        `rtol` : float
+        rtol : float
             Relative tolerance for value comparisons.
 
         Returns:
-        `None`
+        None
 
         Raises
         ------
@@ -2315,6 +2316,16 @@ class TestClass:
             np_pls_alg_1_rmses[i] = val_rmses_alg_1
             np_pls_alg_2_rmses[i] = val_rmses_alg_2
 
+        # Calibrate FastCV NumPy PLS
+        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
+        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
+        fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
+            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
+        )
+        fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
+            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
+        )
+
         # Calibrate JAX PLS
         jax_pls_alg_1_results = jax_pls_alg_1.cv(
             X,
@@ -2367,6 +2378,20 @@ class TestClass:
             [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
             for i in range(Y.shape[1])
         ]
+        fast_cv_np_pls_alg_1_best_num_components = [
+            [
+                np.argmin(fast_cv_np_pls_alg_1_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_num_components = [
+            [
+                np.argmin(fast_cv_np_pls_alg_2_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
         jax_pls_alg_1_best_num_components = [
             [
                 np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
@@ -2398,6 +2423,8 @@ class TestClass:
 
         assert sk_best_num_components == np_pls_alg_1_best_num_components
         assert sk_best_num_components == np_pls_alg_2_best_num_components
+        assert sk_best_num_components == fast_cv_np_pls_alg_1_best_num_components
+        assert sk_best_num_components == fast_cv_np_pls_alg_2_best_num_components
         assert sk_best_num_components == jax_pls_alg_1_best_num_components
         assert sk_best_num_components == jax_pls_alg_2_best_num_components
         assert sk_best_num_components == diff_jax_pls_alg_1_best_num_components
@@ -2414,6 +2441,20 @@ class TestClass:
         ]
         np_pls_alg_2_best_rmses = [
             [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_1_best_rmses = [
+            [
+                np.amin(fast_cv_np_pls_alg_1_results[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_rmses = [
+            [
+                np.amin(fast_cv_np_pls_alg_2_results[split][..., i])
+                for split in unique_splits
+            ]
             for i in range(Y.shape[1])
         ]
         jax_pls_alg_1_best_rmses = [
@@ -2447,6 +2488,12 @@ class TestClass:
 
         assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
+        assert_allclose(
+            fast_cv_np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            fast_cv_np_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
+        )
         assert_allclose(jax_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
         assert_allclose(
@@ -2563,3 +2610,438 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
+
+    def check_fast_cross_val_pls(self, X, Y, splits, center, atol, rtol):
+        """
+        Description
+        -----------
+        This method tests the ability to perform cross-validation to obtain the root mean square error (RMSE) and the best number
+        of components for each target variable and each split. It tests the fast cross-validation algorithm against the ordinary cross-validation algorithm.
+
+        Parameters:
+        X : numpy.ndarray
+            The input predictor variables.
+        Y : numpy.ndarray
+            The target variables.
+        splits : numpy.ndarray
+            Split indices for cross-validation.
+
+        atol : float
+            Absolute tolerance for value comparisons.
+
+        rtol : float
+            Relative tolerance for value comparisons.
+
+        Returns:
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the best number of components found by cross validation with is not exactly equal across each different PLS implementation.
+
+            If the output RMSEs for the best number of components are not equal down to the specified tolerance across each different PLS implementation.
+        """
+        from sklearn.model_selection import cross_validate
+
+        class NpPLSWithPreprocessing(NpPLS):
+            def __init__(
+                self, algorithm: int = 1, dtype: np.float_ = np.float64
+            ) -> None:
+                super().__init__(algorithm, dtype)
+
+            def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
+                self.X_mean = np.mean(X, axis=0)
+                self.Y_mean = np.mean(Y, axis=0)
+                X -= self.X_mean
+                Y -= self.Y_mean
+                return super().fit(X, Y, A)
+
+            def predict(
+                self, X: npt.ArrayLike, A: Union[None, int] = None
+            ) -> npt.NDArray[np.float_]:
+                return super().predict(X - self.X_mean, A) + self.Y_mean
+
+        if center:
+            np_pls_alg_1 = NpPLSWithPreprocessing(algorithm=1)
+            np_pls_alg_2 = NpPLSWithPreprocessing(algorithm=2)
+        else:
+            np_pls_alg_1 = NpPLS(algorithm=1)
+            np_pls_alg_2 = NpPLS(algorithm=2)
+        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
+        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
+
+        n_components = X.shape[1]
+
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
+            e = Y_true - Y_pred
+            se = e**2
+            mse = np.mean(se, axis=-2)
+            rmse = np.sqrt(mse)
+            return rmse
+
+        def cv_splitter(splits: npt.NDArray):
+            uniq_splits = np.unique(splits)
+            for split in uniq_splits:
+                train_idxs = np.nonzero(splits != split)[0]
+                val_idxs = np.nonzero(splits == split)[0]
+                yield train_idxs, val_idxs
+
+        fit_params = {"A": n_components}
+        np_pls_alg_1_results = cross_validate(
+            np_pls_alg_1,
+            X,
+            Y,
+            cv=cv_splitter(splits),
+            scoring=lambda *args, **kwargs: 0,
+            fit_params=fit_params,
+            return_estimator=True,
+            n_jobs=-1,
+        )
+        np_pls_alg_1_models = np_pls_alg_1_results["estimator"]
+        np_pls_alg_2_results = cross_validate(
+            np_pls_alg_2,
+            X,
+            Y,
+            cv=cv_splitter(splits),
+            scoring=lambda *args, **kwargs: 0,
+            fit_params=fit_params,
+            return_estimator=True,
+            n_jobs=-1,
+        )
+        np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
+
+        # Compute RMSE on the validation predictions
+        np_pls_alg_1_rmses = np.empty(
+            (len(np_pls_alg_1_models), n_components, Y.shape[1])
+        )
+        np_pls_alg_2_rmses = np.empty(
+            (len(np_pls_alg_2_models), n_components, Y.shape[1])
+        )
+        for i in range(len(np_pls_alg_1_models)):
+            val_idxs = val_idxs = np.nonzero(splits == i)[0]
+            Y_true = Y[val_idxs]
+            Y_pred_alg_1 = np_pls_alg_1_models[i].predict(X[val_idxs])
+            Y_pred_alg_2 = np_pls_alg_2_models[i].predict(X[val_idxs])
+            val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
+            val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
+            np_pls_alg_1_rmses[i] = val_rmses_alg_1
+            np_pls_alg_2_rmses[i] = val_rmses_alg_2
+
+        # Compute RMSE on the validation predictions using the fast cross-validation algorithm
+        fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
+            X=X, Y=Y, A=n_components, cv_splits=splits.flatten(), metric_function=rmse_per_component, center=center, n_jobs=-1
+        )
+        fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
+            X=X, Y=Y, A=n_components, cv_splits=splits.flatten(), metric_function=rmse_per_component, center=center, n_jobs=-1
+        )
+
+        # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
+        unique_splits = np.unique(splits).astype(int)
+        np_pls_alg_1_best_num_components = [
+            [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_2_best_num_components = [
+            [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_1_best_num_components = [
+            [
+                np.argmin(np.array(fast_cv_np_pls_alg_1_results)[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_num_components = [
+            [
+                np.argmin(np.array(fast_cv_np_pls_alg_2_results)[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+
+        assert np_pls_alg_1_best_num_components == np_pls_alg_2_best_num_components
+        assert (
+            np_pls_alg_1_best_num_components == fast_cv_np_pls_alg_1_best_num_components
+        )
+        assert (
+            np_pls_alg_2_best_num_components == fast_cv_np_pls_alg_2_best_num_components
+        )
+
+        # Check that the RMSE achieved is similar
+        np_pls_alg_1_best_rmses = [
+            [np.amin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        np_pls_alg_2_best_rmses = [
+            [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_1_best_rmses = [
+            [
+                np.amin(np.array(fast_cv_np_pls_alg_1_results)[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+        fast_cv_np_pls_alg_2_best_rmses = [
+            [
+                np.amin(np.array(fast_cv_np_pls_alg_2_results)[split][..., i])
+                for split in unique_splits
+            ]
+            for i in range(Y.shape[1])
+        ]
+
+        assert_allclose(
+            np_pls_alg_1_best_rmses, np_pls_alg_2_best_rmses, atol=atol, rtol=rtol
+        )
+        assert_allclose(
+            np_pls_alg_1_best_rmses,
+            fast_cv_np_pls_alg_1_best_rmses,
+            atol=atol,
+            rtol=rtol,
+        )
+        assert_allclose(
+            np_pls_alg_2_best_rmses,
+            fast_cv_np_pls_alg_2_best_rmses,
+            atol=atol,
+            rtol=rtol,
+        )
+
+    def test_fast_cross_val_pls_1(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, a single target variable, and split indices for cross-validation. It then calls
+        the 'check_fast_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(["Protein"])
+        splits = self.load_Y(["split"])
+        assert Y.shape[1] == 1
+        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-8)
+
+    def test_fast_cross_val_pls_2_m_less_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
+        cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])
+        assert Y.shape[1] > 1
+        assert Y.shape[1] < X.shape[1]
+        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-7)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-7)
+
+    def test_fast_cross_val_pls_2_m_eq_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
+        cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])
+        X = X[..., :10]
+        assert Y.shape[1] > 1
+        assert Y.shape[1] == X.shape[1]
+        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-8)
+
+    def test_fast_cross_val_pls_2_m_greater_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
+        cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"])
+        X = X[..., :9]
+        assert Y.shape[1] > 1
+        assert Y.shape[1] > X.shape[1]
+        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-8)
+
+    def test_fast_cross_val_pls_1_loocv(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables and a single target variable. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls
+        the 'check_fast_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(["Protein"])
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50]
+        splits = np.arange(X.shape[0])
+        assert Y.shape[1] == 1
+        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=1e-6, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-6, rtol=1e-8)
+
+    def test_fast_cross_val_pls_2_m_less_k_loocv(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
+        cross-validation. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50]
+        splits = np.arange(X.shape[0])
+        assert Y.shape[1] > 1
+        assert Y.shape[1] < X.shape[1]
+        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=2e-6, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=2e-6, rtol=1e-8)
+
+    def test_fast_cross_val_pls_2_m_eq_k_loocv(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
+        cross-validation. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        # Decrease the amount of samples in the interest of time.
+        uniq_Y, uniq_indices = np.unique(Y[..., -1], return_index=True)
+        X = X[::50]
+        Y = Y[::50]
+        X = X[..., :10]
+        splits = np.arange(X.shape[0])
+        assert Y.shape[1] > 1
+        assert Y.shape[1] == X.shape[1]
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-7, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e7, rtol=1e-8)
+
+    def test_fast_cross_val_pls_2_m_greater_k_loocv(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
+        cross-validation. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50]
+        X = X[..., :9]
+        splits = np.arange(X.shape[0])
+        assert Y.shape[1] > 1
+        assert Y.shape[1] > X.shape[1]
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-7, rtol=1e-8)
+        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-7, rtol=1e-8)

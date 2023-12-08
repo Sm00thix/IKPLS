@@ -15,7 +15,7 @@ Improved Kernel Partial Least Squares (IKPLS)
    :alt: Build Status
 
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS has been shown to be both fast [2]_ and numerically stable [3]_.
-The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate` .
+The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>`_.
 The GPU and TPU implementations are made using Google's JAX [6]_. While allowing CPU, GPU, and TPU execution, automatic differentiation is also supported by JAX. This implies that the JAX implementations can be used together with deep learning approaches as the PLS fit is differentiable.
 
 The documentation is available at https://ikpls.readthedocs.io/en/latest/, and examples can be found at https://github.com/Sm00thix/IKPLS/tree/main/examples.
@@ -33,6 +33,16 @@ The documentation is available at https://ikpls.readthedocs.io/en/latest/, and e
 .. _NumPy: https://numpy.org/
 .. _scikit-learn: https://scikit-learn.org/stable/
 .. _JAX: https://jax.readthedocs.io/en/latest/
+
+Extremely Fast Cross-Validation
+-------------------------------
+In addition to the aforementioned implementations, this package contains a novel, fast cross-validation implementations of both IKPLS algorithms.
+The fast cross-validation algorithm benefits both IKPLS Algorithms but especially Algorithm #2.
+The fast cross-validation algorithm is mathematically equivalent with the classical cross-validation algorithm,
+but it is much faster if the training split size is larger than the validation split size.
+The fast cross-validation algorithm is correct for any preprocessing that is not dependent on dataset statistics.
+An exception to this rule is the built-in support for (column-wise) centering of the X and Y input matrices.
+This centering can be enabled by setting the center parameter to True.
 
 Pre-requisites
 --------------
@@ -52,6 +62,7 @@ Installation
    | ``from ikpls.numpy_ikpls import PLS as NpPLS``
    | ``from ikpls.jax_ikpls_alg_1 import PLS as JAXPLS_Alg_1``
    | ``from ikpls.jax_ikpls_alg_2 import PLS as JAXPLS_Alg_2``
+   | ``from ikpls.fast_cross_validation.numpy_ikpls import PLS as NpPLS_FastCV``
 
 
 Quick Start
@@ -70,11 +81,10 @@ Use the ikpls package for PLS modelling
     M = 10  # Number of targets.
     A = 20  # Number of latent variables (PLS components).
 
-    # Using float64 is important for numerical stability.
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
-    # The other PLS algorithms and implementations have the same interface for fit() and predict().
+    # The other PLS algorithms and implementations, except for NpPLS_FastCV, have the same interface for fit() and predict().
     np_ikpls_alg_1 = PLS(algorithm=1)
     np_ikpls_alg_1.fit(X, Y, A)
 
@@ -100,6 +110,8 @@ In `examples <https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will f
 - `Fit and Predict with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py>`_
 
 - `Cross-validate with NumPy. <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py>`_
+
+- `Cross-validate with NumPy and fast cross-validation. <https://github.com/Sm00thix/IKPLS/tree/main/examples/fast_cross_val_numpy.py>`_
 
 - `Cross-validate with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_
 
