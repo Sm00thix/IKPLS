@@ -124,47 +124,33 @@ class PLS:
             N_val_over_N_train = validation_size / training_size
             training_X_mean = (
                 N_total_over_N_train * self.X_mean
-                - N_val_over_N_train
-                * (self.X_mean + np.mean(validation_X, axis=0, keepdims=True))
+                - N_val_over_N_train * np.mean(validation_X, axis=0, keepdims=True)
             )
             training_Y_mean = (
                 N_total_over_N_train * self.Y_mean
-                - N_val_over_N_train
-                * (self.Y_mean + np.mean(validation_Y, axis=0, keepdims=True))
+                - N_val_over_N_train * np.mean(validation_Y, axis=0, keepdims=True)
             )
+        # Subtract the validation set's contribution
+        training_XTY = self.XTY - validation_X.T @ validation_Y
         if self.center:
-            # Subtract the validation set's contribution (which is centered based on the entire dataset)
-            training_XTY = self.XTY - (validation_X + self.X_mean).T @ (
-                validation_Y + self.Y_mean
+            # Apply the training set centering
+            training_XTY = training_XTY - training_size * (
+                training_X_mean.T @ training_Y_mean
             )
-            # Remove the dataset-wide centering and add the training set centering
-            training_XTY = (
-                training_XTY
-                + self.N * (self.X_mean.T @ self.Y_mean)
-                - training_size * (training_X_mean.T @ training_Y_mean)
-            )  #
-        else:
-            training_XTY = self.XTY - validation_X.T @ validation_Y
         if self.algorithm == 1:
             training_X = self.X[~validation_indices]
             if self.center:
-                # Remove the dataset-wide centering and add the training set centering
-                training_X = training_X + self.X_mean - training_X_mean
+                # Apply the training set centering
+                training_X = training_X - training_X_mean
         else:
             # Used for algorithm #2
+            # Subtract the validation set's contribution
+            training_XTX = self.XTX - validation_X.T @ validation_X
             if self.center:
-                # Subtract the validation set's contribution (which is centered based on the entire dataset)
-                training_XTX = self.XTX - (validation_X + self.X_mean).T @ (
-                    validation_X + self.X_mean
+                # Apply the training set centering
+                training_XTX = training_XTX - training_size * (
+                    training_X_mean.T @ training_X_mean
                 )
-                # Remove the dataset-wide centering and add the training set centering
-                training_XTX = (
-                    training_XTX
-                    + self.N * (self.X_mean.T @ self.X_mean)
-                    - training_size * (training_X_mean.T @ training_X_mean)
-                )
-            else:
-                training_XTX = self.XTX - validation_X.T @ validation_X
 
         for i in range(self.A):
             # Step 2
@@ -252,10 +238,10 @@ class PLS:
 
         B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
-        
+
         training_X_mean : Array of shape (1, K)
             Mean row of training X. If self.center is False, then this is an array of zeros.
-        
+
         training_Y_mean : Array of shape (1, M)
             Mean row of training Y. If self.center is False, then this is an array of zeros.
 
@@ -267,8 +253,8 @@ class PLS:
         Y_pred : Array of shape (N_pred, M) or (A, N_pred, M)
             If `n_components` is an int, then an array of shape (N_pred, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
         """
-        # Undo the potential global centering
-        predictor_variables = self.X[indices] + self.X_mean
+
+        predictor_variables = self.X[indices]
         # Apply the potential training set centering
         predictor_variables = predictor_variables - training_X_mean
         if n_components is None:
@@ -298,10 +284,10 @@ class PLS:
         B = matrices[0]
         training_X_mean = matrices[-2]
         training_Y_mean = matrices[-1]
-        Y_pred = self._stateless_predict(validation_indices, B, training_X_mean, training_Y_mean)
-        return metric_function(
-            self.Y[validation_indices] + self.Y_mean, Y_pred
+        Y_pred = self._stateless_predict(
+            validation_indices, B, training_X_mean, training_Y_mean
         )
+        return metric_function(self.Y[validation_indices], Y_pred)
 
     def cross_validate(
         self, X, Y, A, cv_splits, metric_function, center=False, n_jobs=-1, verbose=10
@@ -333,7 +319,7 @@ class PLS:
             Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
 
         n_jobs : int, optional default=-1
-            Number of parallel jobs to use. A value of -1 will use all available cores.
+            Number of parallel jobs to use. A value of -1 will use the minimum of all available cores and the number of unique values in `cv_splits`.
 
         verbose : int, optional default=10
             Controls verbosity of parallel jobs.
@@ -350,11 +336,11 @@ class PLS:
         self.center = center
         self.N, self.K = X.shape
         self.M = Y.shape[1]
+        unique_splits = np.unique(cv_splits)
 
         if n_jobs == -1:
-            n_jobs = joblib.cpu_count()
+            n_jobs = min(joblib.cpu_count(), unique_splits.size)
 
-        unique_splits = np.unique(cv_splits)
         print(
             f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A} components on {len(unique_splits)} unique splits using {n_jobs} parallel processes."
         )
@@ -363,11 +349,6 @@ class PLS:
             # We can compute these once for the entire dataset and subtract the validation parts during cross-validation.
             self.X_mean = np.mean(self.X, axis=0, keepdims=True)
             self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
-            self.X = self.X - self.X_mean
-            self.Y = self.Y - self.Y_mean
-        else:
-            self.X_mean = np.zeros((1, self.K))
-            self.Y_mean = np.zeros((1, self.M))
         if verbose > 0:
             print("Computing total XTY...")
         self.XTY = self.X.T @ self.Y
