@@ -153,6 +153,7 @@ def mse_for_each_target(estimator, X, Y_true, **kwargs):
     all_values = np.concatenate((lowest_mses, num_components))  # Array of all values.
     return dict(zip(all_names, all_values))
 
+
 def mse_for_each_target_fast_cv(Y_true, Y_pred):
     """
     Description
@@ -195,6 +196,7 @@ def mse_for_each_target_fast_cv(Y_true, Y_pred):
     all_names = mse_names + num_components_names  # List of all names.
     all_values = np.concatenate((lowest_mses, num_components))  # Array of all values.
     return dict(zip(all_names, all_values))
+
 
 def jax_mse_for_each_target(Y_true, Y_pred):
     """
@@ -291,6 +293,7 @@ def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
     )
     return t.timeit(number=1)
 
+
 def fast_cross_val_cpu_pls(pls, X, Y, A, n_splits, n_jobs, verbose):
     """
     Description
@@ -335,6 +338,7 @@ def fast_cross_val_cpu_pls(pls, X, Y, A, n_splits, n_jobs, verbose):
         globals=locals() | globals(),
     )
     return t.timeit(number=1)
+
 
 def single_fit_cpu_pls(pls, X, Y, fit_params=None):
     """

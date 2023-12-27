@@ -2611,7 +2611,7 @@ class TestClass:
         assert Y.shape[1] > X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
 
-    def check_fast_cross_val_pls(self, X, Y, splits, center, atol, rtol):
+    def check_fast_cross_val_pls(self, X, Y, splits, center, scale, atol, rtol):
         """
         Description
         -----------
@@ -2625,6 +2625,12 @@ class TestClass:
             The target variables.
         splits : numpy.ndarray
             Split indices for cross-validation.
+
+        center : bool
+            Whether or not to center the data before performing PLS.
+
+        scale : bool
+            Whether or not to scale the data before performing PLS.
 
         atol : float
             Absolute tolerance for value comparisons.
@@ -2646,28 +2652,49 @@ class TestClass:
 
         class NpPLSWithPreprocessing(NpPLS):
             def __init__(
-                self, algorithm: int = 1, dtype: np.float_ = np.float64
+                self,
+                center,
+                scale,
+                algorithm: int = 1,
+                dtype: np.float_ = np.float64,
             ) -> None:
                 super().__init__(algorithm, dtype)
+                self.center = center
+                self.scale = scale
 
             def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
-                self.X_mean = np.mean(X, axis=0)
-                self.Y_mean = np.mean(Y, axis=0)
-                X -= self.X_mean
-                Y -= self.Y_mean
+                if self.center:
+                    self.X_mean = np.mean(X, axis=0)
+                    X -= self.X_mean
+                    self.Y_mean = np.mean(Y, axis=0)
+                    Y -= self.Y_mean
+                    if self.scale:
+                        self.X_std = np.std(X, axis=0, ddof=1, keepdims=True)
+                        self.X_std[self.X_std == 0] = 1
+                        X /= self.X_std
+                        self.Y_std = np.std(Y, axis=0, ddof=1, keepdims=True)
+                        self.Y_std[self.Y_std == 0] = 1
+                        Y /= self.Y_std
+                    else:
+                        self.X_std = np.ones((1, X.shape[1]))
+                        self.Y_std = np.ones((1, Y.shape[1]))
+                else:
+                    self.X_mean = np.zeros((1, X.shape[1]))
+                    self.X_std = np.ones((1, X.shape[1]))
+                    self.Y_mean = np.zeros((1, Y.shape[1]))
+                    self.Y_std = np.ones((1, Y.shape[1]))
                 return super().fit(X, Y, A)
 
             def predict(
                 self, X: npt.ArrayLike, A: Union[None, int] = None
             ) -> npt.NDArray[np.float_]:
-                return super().predict(X - self.X_mean, A) + self.Y_mean
+                return (
+                    super().predict((X - self.X_mean) / self.X_std, A) * self.Y_std
+                    + self.Y_mean
+                )
 
-        if center:
-            np_pls_alg_1 = NpPLSWithPreprocessing(algorithm=1)
-            np_pls_alg_2 = NpPLSWithPreprocessing(algorithm=2)
-        else:
-            np_pls_alg_1 = NpPLS(algorithm=1)
-            np_pls_alg_2 = NpPLS(algorithm=2)
+        np_pls_alg_1 = NpPLSWithPreprocessing(center=center, scale=scale, algorithm=1)
+        np_pls_alg_2 = NpPLSWithPreprocessing(center=center, scale=scale, algorithm=2)
         fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
         fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
 
@@ -2730,10 +2757,24 @@ class TestClass:
 
         # Compute RMSE on the validation predictions using the fast cross-validation algorithm
         fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
-            X=X, Y=Y, A=n_components, cv_splits=splits.flatten(), metric_function=rmse_per_component, center=center, n_jobs=-1
+            X=X,
+            Y=Y,
+            A=n_components,
+            cv_splits=splits.flatten(),
+            metric_function=rmse_per_component,
+            center=center,
+            scale=scale,
+            n_jobs=-1,
         )
         fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
-            X=X, Y=Y, A=n_components, cv_splits=splits.flatten(), metric_function=rmse_per_component, center=center, n_jobs=-1
+            X=X,
+            Y=Y,
+            A=n_components,
+            cv_splits=splits.flatten(),
+            metric_function=rmse_per_component,
+            center=center,
+            scale=scale,
+            n_jobs=-1,
         )
 
         # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
@@ -2823,8 +2864,15 @@ class TestClass:
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])
         assert Y.shape[1] == 1
-        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+        )
 
     def test_fast_cross_val_pls_2_m_less_k(self):
         """
@@ -2854,8 +2902,15 @@ class TestClass:
         splits = self.load_Y(["split"])
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
-        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-7)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-7)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-7
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-7
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-7
+        )
 
     def test_fast_cross_val_pls_2_m_eq_k(self):
         """
@@ -2886,8 +2941,15 @@ class TestClass:
         X = X[..., :10]
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
-        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+        )
 
     def test_fast_cross_val_pls_2_m_greater_k(self):
         """
@@ -2918,8 +2980,15 @@ class TestClass:
         X = X[..., :9]
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
-        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=0, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=0, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+        )
 
     def test_fast_cross_val_pls_1_loocv(self):
         """
@@ -2938,8 +3007,15 @@ class TestClass:
         Y = Y[::50]
         splits = np.arange(X.shape[0])
         assert Y.shape[1] == 1
-        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=1e-6, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-6, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=1e-6, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=1e-6, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=1e-6, rtol=1e-8
+        )
 
     def test_fast_cross_val_pls_2_m_less_k_loocv(self):
         """
@@ -2972,8 +3048,15 @@ class TestClass:
         splits = np.arange(X.shape[0])
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
-        self.check_fast_cross_val_pls(X, Y, splits, center=False, atol=2e-6, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=2e-6, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=2e-6, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=2e-6, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=2e-6, rtol=1e-8
+        )
 
     def test_fast_cross_val_pls_2_m_eq_k_loocv(self):
         """
@@ -3008,8 +3091,15 @@ class TestClass:
         splits = np.arange(X.shape[0])
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-7, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e7, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=1e-7, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=1e-7, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=1e-7, rtol=1e-8
+        )
 
     def test_fast_cross_val_pls_2_m_greater_k_loocv(self):
         """
@@ -3043,5 +3133,12 @@ class TestClass:
         splits = np.arange(X.shape[0])
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-7, rtol=1e-8)
-        self.check_fast_cross_val_pls(X, Y, splits, center=True, atol=1e-7, rtol=1e-8)
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=1e-7, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=1e-7, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=1e-7, rtol=1e-8
+        )

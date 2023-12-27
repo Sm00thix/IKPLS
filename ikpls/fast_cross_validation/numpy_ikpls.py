@@ -93,6 +93,12 @@ class PLS:
         training_Y_mean : Array of shape (1, M)
             Mean row of training Y. Will be an array of zeros if `self.center` is False.
 
+        training_X_std : Array of shape (1, K)
+            Sample standard deviation row of training X. Will be an array of ones if `self.scale` is False. Any zero standard deviations will be replaced with ones.
+
+        training_Y_std : Array of shape (1, M)
+            Sample standard deviation row of training Y. Will be an array of ones if `self.scale` is False. Any zero standard deviations will be replaced with ones.
+
         Warns
         -----
         UserWarning.
@@ -130,6 +136,35 @@ class PLS:
                 N_total_over_N_train * self.Y_mean
                 - N_val_over_N_train * np.mean(validation_Y, axis=0, keepdims=True)
             )
+            if self.scale:
+                train_sum_X = self.sum_X - np.sum(validation_X, axis=0, keepdims=True)
+                train_sum_sq_X = self.sum_sq_X - np.sum(
+                    validation_X**2, axis=0, keepdims=True
+                )
+                training_X_std = np.sqrt(
+                    1
+                    / (training_size - 1)
+                    * (
+                        -2 * training_X_mean * train_sum_X
+                        + training_size * training_X_mean**2
+                        + train_sum_sq_X
+                    )
+                )
+                training_X_std[training_X_std == 0] = 1
+                train_sum_Y = self.sum_Y - np.sum(validation_Y, axis=0, keepdims=True)
+                train_sum_sq_Y = self.sum_sq_Y - np.sum(
+                    validation_Y**2, axis=0, keepdims=True
+                )
+                training_Y_std = np.sqrt(
+                    1
+                    / (training_size - 1)
+                    * (
+                        -2 * training_Y_mean * train_sum_Y
+                        + training_size * training_Y_mean**2
+                        + train_sum_sq_Y
+                    )
+                )
+                training_Y_std[training_Y_std == 0] = 1
         # Subtract the validation set's contribution
         training_XTY = self.XTY - validation_X.T @ validation_Y
         if self.center:
@@ -137,11 +172,17 @@ class PLS:
             training_XTY = training_XTY - training_size * (
                 training_X_mean.T @ training_Y_mean
             )
+            if self.scale:
+                # Apply the training set scaling
+                training_XTY = training_XTY / (training_X_std.T @ training_Y_std)
         if self.algorithm == 1:
             training_X = self.X[~validation_indices]
             if self.center:
                 # Apply the training set centering
                 training_X = training_X - training_X_mean
+                if self.scale:
+                    # Apply the training set scaling
+                    training_X = training_X / training_X_std
         else:
             # Used for algorithm #2
             # Subtract the validation set's contribution
@@ -151,6 +192,9 @@ class PLS:
                 training_XTX = training_XTX - training_size * (
                     training_X_mean.T @ training_X_mean
                 )
+                if self.scale:
+                    # Apply the training set scaling
+                    training_XTX = training_XTX / (training_X_std.T @ training_X_std)
 
         for i in range(self.A):
             # Step 2
@@ -215,10 +259,34 @@ class PLS:
         if not self.center:
             training_X_mean = np.zeros((1, self.K))
             training_Y_mean = np.zeros((1, self.M))
+        if not self.scale:
+            training_X_std = np.ones((1, self.K))
+            training_Y_std = np.ones((1, self.M))
         if self.algorithm == 1:
-            return B, W, P, Q, R, T, training_X_mean, training_Y_mean
+            return (
+                B,
+                W,
+                P,
+                Q,
+                R,
+                T,
+                training_X_mean,
+                training_Y_mean,
+                training_X_std,
+                training_Y_std,
+            )
         else:
-            return B, W, P, Q, R, training_X_mean, training_Y_mean
+            return (
+                B,
+                W,
+                P,
+                Q,
+                R,
+                training_X_mean,
+                training_Y_mean,
+                training_X_std,
+                training_Y_std,
+            )
 
     def _stateless_predict(
         self,
@@ -226,6 +294,8 @@ class PLS:
         B: npt.ArrayLike,
         training_X_mean: npt.ArrayLike,
         training_Y_mean: npt.ArrayLike,
+        training_X_std: npt.ArrayLike,
+        training_Y_std: npt.ArrayLike,
         n_components: Union[None, int] = None,
     ) -> npt.NDArray[np.float_]:
         """
@@ -240,10 +310,16 @@ class PLS:
             PLS regression coefficients tensor.
 
         training_X_mean : Array of shape (1, K)
-            Mean row of training X. If self.center is False, then this is an array of zeros.
+            Mean row of training X. If self.center is False, then this should be an array of zeros.
 
         training_Y_mean : Array of shape (1, M)
-            Mean row of training Y. If self.center is False, then this is an array of zeros.
+            Mean row of training Y. If self.center is False, then this should be an array of zeros.
+
+        training_X_std : Array of shape (1, K)
+            Sample standard deviation row of training X. If self.scale is False, then this should be an array of ones. Any zero standard deviations should be replaced with ones.
+
+        training_Y_std : Array of shape (1, M)
+            Sample standard deviation row of training Y. If self.scale is False, then this should be an array of ones. Any zero standard deviations should be replaced with ones.
 
         n_components : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
@@ -256,13 +332,13 @@ class PLS:
 
         predictor_variables = self.X[indices]
         # Apply the potential training set centering
-        predictor_variables = predictor_variables - training_X_mean
+        predictor_variables = (predictor_variables - training_X_mean) / training_X_std
         if n_components is None:
             Y_pred = predictor_variables @ B
         else:
             Y_pred = predictor_variables @ B[n_components - 1]
         # Add the potential training set bias
-        return Y_pred + training_Y_mean
+        return Y_pred * training_Y_std + training_Y_mean
 
     def _stateless_fit_predict_eval(self, validation_indices, metric_function):
         """
@@ -282,15 +358,31 @@ class PLS:
         """
         matrices = self._stateless_fit(validation_indices)
         B = matrices[0]
-        training_X_mean = matrices[-2]
-        training_Y_mean = matrices[-1]
+        training_X_mean = matrices[-4]
+        training_Y_mean = matrices[-3]
+        training_X_std = matrices[-2]
+        training_Y_std = matrices[-1]
         Y_pred = self._stateless_predict(
-            validation_indices, B, training_X_mean, training_Y_mean
+            validation_indices,
+            B,
+            training_X_mean,
+            training_Y_mean,
+            training_X_std,
+            training_Y_std,
         )
         return metric_function(self.Y[validation_indices], Y_pred)
 
     def cross_validate(
-        self, X, Y, A, cv_splits, metric_function, center=False, n_jobs=-1, verbose=10
+        self,
+        X,
+        Y,
+        A,
+        cv_splits,
+        metric_function,
+        center=False,
+        scale=False,
+        n_jobs=-1,
+        verbose=10,
     ):
         """
         Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with `n_components` components evaluating results with `metric_function`.
@@ -318,6 +410,9 @@ class PLS:
         center : bool, optional default=False
             Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
 
+        scale : bool, optional default=False, only used if `center` is True
+            Whether to scale `X` and `Y` before fitting by dividing each row by its standard deviation. The scaling is computed on the training set for each fold to avoid data leakage. The scaling is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific scaling.
+
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use the minimum of all available cores and the number of unique values in `cv_splits`.
 
@@ -334,6 +429,7 @@ class PLS:
         self.Y = np.asarray(Y, dtype=self.dtype)
         self.A = A
         self.center = center
+        self.scale = scale
         self.N, self.K = X.shape
         self.M = Y.shape[1]
         unique_splits = np.unique(cv_splits)
@@ -349,6 +445,12 @@ class PLS:
             # We can compute these once for the entire dataset and subtract the validation parts during cross-validation.
             self.X_mean = np.mean(self.X, axis=0, keepdims=True)
             self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
+            if self.scale:
+                self.sum_X = np.sum(self.X, axis=0, keepdims=True)
+                self.sum_Y = np.sum(self.Y, axis=0, keepdims=True)
+                self.sum_sq_X = np.sum(self.X**2, axis=0, keepdims=True)
+                self.sum_sq_Y = np.sum(self.Y**2, axis=0, keepdims=True)
+
         if verbose > 0:
             print("Computing total XTY...")
         self.XTY = self.X.T @ self.Y
