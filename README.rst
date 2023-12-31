@@ -36,13 +36,12 @@ The documentation is available at https://ikpls.readthedocs.io/en/latest/, and e
 
 Extremely Fast Cross-Validation
 -------------------------------
-In addition to the aforementioned implementations, this package contains a novel, fast cross-validation implementations of both IKPLS algorithms.
-The fast cross-validation algorithm benefits both IKPLS Algorithms but especially Algorithm #2.
-The fast cross-validation algorithm is mathematically equivalent with the classical cross-validation algorithm,
-but it is much faster if the training split size is larger than the validation split size.
-The fast cross-validation algorithm is correct for any preprocessing that is not dependent on dataset statistics.
-An exception to this rule is the built-in support for (column-wise) centering of the X and Y input matrices.
-This centering can be enabled by setting the center parameter to True.
+In addition to the implementations mentioned above, this package contains a novel, fast cross-validation implementations of both IKPLS algorithms.
+The fast cross-validation algorithm benefits both IKPLS Algorithms and especially Algorithm #2.
+The fast cross-validation algorithm is mathematically equivalent to the classical cross-validation algorithm. Still, it is much quicker if cross-validation splits exceed 3.
+The fast cross-validation algorithm is correct for any preprocessing not dependent on dataset statistics.
+Two exceptions to this rule are the built-in support for (column-wise) centering and scaling of the X and Y input matrices.
+This centering and scaling can be enabled by setting the center parameter to True and the scale parameter to True, respectively.
 
 Pre-requisites
 --------------
