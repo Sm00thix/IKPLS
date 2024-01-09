@@ -43,9 +43,9 @@ The fast cross-validation algorithm is correct for any preprocessing not depende
 Two exceptions to this rule are the built-in support for (column-wise) centering and scaling of the X and Y input matrices.
 This centering and scaling can be enabled by setting the center parameter to True and the scale parameter to True, respectively.
 
-.. [7] `Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation: Deriving Possibly Centered and Possibly Scaled Split-Wise :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}` Without Full Recomputation of Matrix Products or Statistical Moments`_.
+.. [7] `Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation: Deriving Possibly Centered and Possibly Scaled Split-Wise XTX and XTY Without Full Recomputation of Matrix Products or Statistical Moments`_.
 
-.. _Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation\: Deriving Possibly Centered and Possibly Scaled Split-Wise :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}` Without Full Recomputation of Matrix Products or Statistical Moments: https://arxiv.org/abs/
+.. _Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation\: Deriving Possibly Centered and Possibly Scaled Split-Wise XTX and XTY Without Full Recomputation of Matrix Products or Statistical Moments: https://arxiv.org/abs/
 
 Pre-requisites
 --------------
