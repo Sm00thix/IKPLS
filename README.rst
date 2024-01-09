@@ -45,7 +45,7 @@ This centering and scaling can be enabled by setting the center parameter to Tru
 
 .. [7] `Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation: Deriving Possibly Centered and Possibly Scaled Split-Wise :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}` Without Full Recomputation of Matrix Products or Statistical Moments`_.
 
-.. _Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation\: Deriving Possibly Centered and Possibly Scaled Split-Wise $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments: https://arxiv.org/abs/
+.. _Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation\: Deriving Possibly Centered and Possibly Scaled Split-Wise :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}` Without Full Recomputation of Matrix Products or Statistical Moments: https://arxiv.org/abs/
 
 Pre-requisites
 --------------
