@@ -47,7 +47,7 @@ In conclusion, `ikpls` empowers researchers and practitioners in chemometrics an
 
 1. both variants of IKPLS for CPUs;
 2. both variants of IKPLS for GPUs, both of which are end-to-end differentiable, allowing integration with deep learning models;
-3. A new algorithm for cross-validation that yields a substantial speedup if the training set is larger than the validation set.
+3. a new algorithm for cross-validation that yields a substantial speedup if the training set is larger than the validation set.
 
 # Statement of need
 
