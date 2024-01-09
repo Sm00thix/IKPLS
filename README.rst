@@ -1,5 +1,5 @@
-Improved Kernel Partial Least Squares (IKPLS)
-=============================================
+Improved Kernel Partial Least Squares (IKPLS) and Fast Cross-Validation
+=======================================================================
 
 .. image:: https://img.shields.io/pypi/v/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
@@ -36,12 +36,16 @@ The documentation is available at https://ikpls.readthedocs.io/en/latest/, and e
 
 Extremely Fast Cross-Validation
 -------------------------------
-In addition to the implementations mentioned above, this package contains a novel, fast cross-validation implementations of both IKPLS algorithms.
+In addition to the implementations mentioned above, this package contains the novel, fast cross-validation algorithms mentioned in [7]_ using both IKPLS algorithms.
 The fast cross-validation algorithm benefits both IKPLS Algorithms and especially Algorithm #2.
 The fast cross-validation algorithm is mathematically equivalent to the classical cross-validation algorithm. Still, it is much quicker if cross-validation splits exceed 3.
 The fast cross-validation algorithm is correct for any preprocessing not dependent on dataset statistics.
 Two exceptions to this rule are the built-in support for (column-wise) centering and scaling of the X and Y input matrices.
 This centering and scaling can be enabled by setting the center parameter to True and the scale parameter to True, respectively.
+
+.. [7] `Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation: Deriving Possibly Centered and Possibly Scaled Split-Wise $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments`_.
+
+.. _Engstrøm, O.-C. G., & Jensen, M. H. (2024). Shortcutting Cross-Validation\: Deriving Possibly Centered and Possibly Scaled Split-Wise $\mathbf{X}^{\mathbf{T}}\mathbf{X}$ And $\mathbf{X}^{\mathbf{T}}\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments: https://arxiv.org/abs/
 
 Pre-requisites
 --------------
