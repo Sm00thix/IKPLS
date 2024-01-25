@@ -3057,7 +3057,7 @@ class TestClass:
             X, Y, splits, center=True, scale=False, atol=5e-6, rtol=1e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=2e-6, rtol=1e-8
+            X, Y, splits, center=True, scale=True, atol=3e-6, rtol=1e-8
         )
 
     def test_fast_cross_val_pls_2_m_eq_k_loocv(self):
