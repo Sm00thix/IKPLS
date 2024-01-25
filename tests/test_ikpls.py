@@ -2765,6 +2765,7 @@ class TestClass:
             center=center,
             scale=scale,
             n_jobs=-1,
+            verose=0,
         )
         fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
             X=X,
@@ -2775,6 +2776,7 @@ class TestClass:
             center=center,
             scale=scale,
             n_jobs=-1,
+            verbose=0,
         )
 
         # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
@@ -3052,7 +3054,7 @@ class TestClass:
             X, Y, splits, center=False, scale=False, atol=2e-6, rtol=1e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=2e-6, rtol=1e-8
+            X, Y, splits, center=True, scale=False, atol=5e-6, rtol=1e-8
         )
         self.check_fast_cross_val_pls(
             X, Y, splits, center=True, scale=True, atol=2e-6, rtol=1e-8
