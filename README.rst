@@ -1,5 +1,5 @@
-Improved Kernel Partial Least Squares (IKPLS)
-=============================================
+Improved Kernel Partial Least Squares (IKPLS) and Fast Cross-Validation
+=======================================================================
 
 .. image:: https://img.shields.io/pypi/v/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
@@ -14,11 +14,11 @@ Improved Kernel Partial Least Squares (IKPLS)
    :target: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
    :alt: Build Status
 
-Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS has been shown to be both fast [2]_ and numerically stable [3]_.
-The CPU implementations are made using NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>`_.
-The GPU and TPU implementations are made using Google's JAX [6]_. While allowing CPU, GPU, and TPU execution, automatic differentiation is also supported by JAX. This implies that the JAX implementations can be used together with deep learning approaches as the PLS fit is differentiable.
+Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS is both fast [2]_ and numerically stable [3]_.
+The CPU implementations use NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>`_.
+The GPU and TPU implementations use Google's JAX [6]_. JAX supports automatic differentiation while allowing CPU, GPU, and TPU execution. This implies that the JAX implementations can be combined with deep learning approaches, as the PLS fit is differentiable.
 
-The documentation is available at https://ikpls.readthedocs.io/en/latest/, and examples can be found at https://github.com/Sm00thix/IKPLS/tree/main/examples.
+The documentation is available at https://ikpls.readthedocs.io/en/latest/; examples can be found at https://github.com/Sm00thix/IKPLS/tree/main/examples.
 
 .. [1] `Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. Journal of Chemometrics: A Journal of the Chemometrics Society, 11(1), 73-85`_.
 .. [2] `Alin, A. (2009). Comparison of PLS algorithms when the number of objects is much larger than the number of variables. Statistical papers, 50, 711-720`_.
@@ -36,13 +36,15 @@ The documentation is available at https://ikpls.readthedocs.io/en/latest/, and e
 
 Extremely Fast Cross-Validation
 -------------------------------
-In addition to the aforementioned implementations, this package contains a novel, fast cross-validation implementations of both IKPLS algorithms.
-The fast cross-validation algorithm benefits both IKPLS Algorithms but especially Algorithm #2.
-The fast cross-validation algorithm is mathematically equivalent with the classical cross-validation algorithm,
-but it is much faster if the training split size is larger than the validation split size.
-The fast cross-validation algorithm is correct for any preprocessing that is not dependent on dataset statistics.
-An exception to this rule is the built-in support for (column-wise) centering of the X and Y input matrices.
-This centering can be enabled by setting the center parameter to True.
+In addition to the implementations mentioned above, this package contains the novel, fast cross-validation algorithms mentioned in [7]_ using both IKPLS algorithms.
+The fast cross-validation algorithms benefit both IKPLS Algorithms and especially Algorithm #2.
+The fast cross-validation algorithms are mathematically equivalent to the classical cross-validation algorithm. Still, they are much quicker if cross-validation splits exceed 3.
+The fast cross-validation algorithms correctly handle (column-wise) centering and scaling of the X and Y input matrices using training set means and standard deviations to avoid data leakage from the validation set.
+This centering and scaling can be enabled by setting the center parameter to True and the scale parameter to True, respectively.
+
+.. [7] `Engstrøm, O.-C. G. (2024). Shortcutting Cross-Validation\: Efficiently Deriving Column-Wise Centered and Scaled Training Set $\mathbf{X}^\mathbf{T}\mathbf{X}$ and $\mathbf{X}^\mathbf{T}\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments`_.
+
+.. _Engstrøm, O.-C. G. (2024). Shortcutting Cross-Validation\: Efficiently Deriving Column-Wise Centered and Scaled Training Set $\mathbf{X}^\mathbf{T}\mathbf{X}$ and $\mathbf{X}^\mathbf{T}\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments: https://arxiv.org/abs/2401.13185
 
 Pre-requisites
 --------------
@@ -67,8 +69,8 @@ Installation
 
 Quick Start
 -----------
-Use the ikpls package for PLS modelling
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	
+Use the ikpls package for PLS modeling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   
 
   .. code:: python
 
@@ -88,7 +90,7 @@ Use the ikpls package for PLS modelling
     np_ikpls_alg_1 = PLS(algorithm=1)
     np_ikpls_alg_1.fit(X, Y, A)
 
-    y_pred = np_ikpls_alg_1.predict(X) # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible number of components up to and including A.
+    y_pred = np_ikpls_alg_1.predict(X) # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible numbers of components up to and including A.
     y_pred_20_components = np_ikpls_alg_1.predict(X, n_components=20) # Has shape (N, M) = (100, 10).
     (y_pred_20_components == y_pred[19]).all() # True
 
@@ -116,3 +118,4 @@ In `examples <https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will f
 - `Cross-validate with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py>`_
 
 - `Compute the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_
+

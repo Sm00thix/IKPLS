@@ -1,8 +1,4 @@
-from typing import Union
-
 import numpy as np
-import numpy.typing as npt
-from sklearn.model_selection import cross_validate
 
 from ikpls.fast_cross_validation.numpy_ikpls import PLS
 
@@ -57,6 +53,7 @@ if __name__ == "__main__":
         cv_splits=splits,
         metric_function=mse_for_each_target,
         center=True,
+        scale=True,
         n_jobs=-1,
         verbose=10,
     )
