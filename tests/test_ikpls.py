@@ -2765,7 +2765,7 @@ class TestClass:
             center=center,
             scale=scale,
             n_jobs=-1,
-            verose=0,
+            verbose=0,
         )
         fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
             X=X,
