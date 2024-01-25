@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     y_pred = np_ikpls_alg_1.predict(
         X
-    )  # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible number of components up to and including A.
+    )  # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible numbers of components up to and including A.
     y_pred_20_components = np_ikpls_alg_1.predict(
         X, n_components=20
     )  # Has shape (N, M) = (100, 10).
