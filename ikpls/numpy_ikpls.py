@@ -87,6 +87,18 @@ class PLS(BaseEstimator):
 
         T : Array of shape (N, A)
             PLS scores matrix of X. Only assigned for Improved Kernel PLS Algorithm #1.
+        
+        X_mean : Array of shape (1, K) or None
+            Mean of X. If centering is not performed, this is None.
+
+        Y_mean : Array of shape (1, M) or None
+            Mean of Y. If centering is not performed, this is None.
+
+        X_std : Array of shape (1, K) or None
+            Sample standard deviation of X. If scaling is not performed, this is None.
+
+        Y_std : Array of shape (1, M) or None
+            Sample standard deviation of Y. If scaling is not performed, this is None.
 
         Returns
         -------

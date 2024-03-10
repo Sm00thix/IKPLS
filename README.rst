@@ -4,6 +4,9 @@ Improved Kernel Partial Least Squares (IKPLS) and Fast Cross-Validation
 .. image:: https://img.shields.io/pypi/v/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: PyPI Version
+.. image:: https://img.shields.io/pypi/pyversions/ikpls.svg
+   :target: https://pypi.python.org/pypi/ikpls/
+   :alt: Python Versions
 .. image:: https://img.shields.io/pypi/l/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: License
@@ -13,6 +16,9 @@ Improved Kernel Partial Least Squares (IKPLS) and Fast Cross-Validation
 .. image:: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml/badge.svg
    :target: https://github.com/Sm00thix/IKPLS/actions/workflows/workflow.yml
    :alt: Build Status
+.. image:: https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc/status.svg
+   :target: https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc
+   :alt: JOSS Status
 
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS Algorithm #1 and Algorithm #2 by Dayal and MacGregor [1]_. Improved Kernel PLS is both fast [2]_ and numerically stable [3]_.
 The CPU implementations use NumPy [4]_ and subclass BaseEstimator from scikit-learn [5]_, allowing integration into scikit-learn's ecosystem of machine learning algorithms and pipelines. For example, the CPU implementations can be used with scikit-learn's `cross_validate <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>`_.
