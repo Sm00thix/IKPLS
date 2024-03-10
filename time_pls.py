@@ -1,14 +1,14 @@
 import argparse
 
+from ikpls.fast_cross_validation.numpy_ikpls import PLS as NP_PLS_FCV
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
 from ikpls.jax_ikpls_alg_2 import PLS as JAX_PLS_Alg_2
 from ikpls.numpy_ikpls import PLS as NP_PLS
-from ikpls.fast_cross_validation.numpy_ikpls import PLS as NP_PLS_FCV
 from timings.timings import (
     SK_PLS_All_Components,
     cross_val_cpu_pls,
-    fast_cross_val_cpu_pls,
     cross_val_gpu_pls,
+    fast_cross_val_cpu_pls,
     gen_random_data,
     single_fit_cpu_pls,
     single_fit_gpu_pls,

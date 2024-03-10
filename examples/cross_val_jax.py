@@ -8,7 +8,7 @@ from ikpls.jax_ikpls_alg_1 import (
 )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
 
 
-# Function to apply mean centering to X and Y based on training data.
+# Function to apply preprocessing to each split of the cross-validation. Here, we just use the identity function. This function will be applied before any potential centering and scaling.
 def cross_val_preprocessing(
     X_train: jnp.ndarray,
     Y_train: jnp.ndarray,
@@ -17,13 +17,7 @@ def cross_val_preprocessing(
 ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     print(
         "Preprocessing function will be JIT compiled..."
-    )  # The internals of .cv() in JAX are JIT compiled. That includes the preprocessing function.
-    x_mean = X_train.mean(axis=0, keepdims=True)
-    X_train -= x_mean
-    X_val -= x_mean
-    y_mean = Y_train.mean(axis=0, keepdims=True)
-    Y_train -= y_mean
-    Y_val -= y_mean
+    )  # The internals of .cross_validate() in JAX are JIT compiled. That includes the preprocessing function.
     return X_train, Y_train, X_val, Y_val
 
 
@@ -56,7 +50,9 @@ if __name__ == "__main__":
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
-    jax_pls_alg_1 = PLS(verbose=True)
+    jax_pls_alg_1 = PLS(
+        verbose=True
+    )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical. Centering and scaling are enabled by default and computed over the training splits only to avoid data leakage from the validation splits.
 
     metric_names = ["mse", "best_num_components"]
     metric_values_dict = jax_pls_alg_1.cross_validate(
