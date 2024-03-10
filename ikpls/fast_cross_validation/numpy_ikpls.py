@@ -443,7 +443,7 @@ class PLS:
             self.Y = self.Y.reshape(-1, 1)
         self.A = A
         self.N, self.K = X.shape
-        self.M = Y.shape[1]
+        self.M = self.Y.shape[1]
         unique_splits = np.unique(cv_splits)
 
         if n_jobs == -1:
