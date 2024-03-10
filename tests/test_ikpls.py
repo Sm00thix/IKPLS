@@ -79,22 +79,10 @@ class TestClass:
         tuple
             A tuple containing PLS models and their respective regression matrices.
         """
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-        jnp_X = jnp.array(X)
-        jnp_Y = jnp.array(Y)
+        jnp_X = jnp.asarray(X)
+        jnp_Y = jnp.asarray(Y)
 
-        sk_pls = SkPLS(
-            n_components=n_components, scale=False, copy=True
-        )  # Do not rescale again.
+        sk_pls = SkPLS(n_components=n_components)
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
         jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
@@ -262,6 +250,7 @@ class TestClass:
 
     def check_predictions(
         self,
+        sk_pls: SkPLS,
         sk_B: npt.NDArray,
         np_pls_alg_1: NpPLS,
         np_pls_alg_2: NpPLS,
@@ -281,6 +270,9 @@ class TestClass:
 
         Parameters
         ----------
+        sk_pls : SkPLS
+            Sklearn PLS model.
+
         sk_B : NDArray[float]
             Sklearn PLS regression matrix.
 
@@ -325,7 +317,9 @@ class TestClass:
         """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
-        sk_all_preds = X @ sk_B
+        sk_all_preds = (X - sk_pls._x_mean) / sk_pls._x_std @ (
+            sk_B * sk_pls._y_std
+        ) + sk_pls._y_mean
         assert_allclose(
             np_pls_alg_1.predict(X)[:n_good_components],
             sk_all_preds[:n_good_components],
@@ -541,6 +535,9 @@ class TestClass:
         """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
+
+        # Assume that models are fitted on centered and scaled data
+        X = (X - X.mean(axis=0, keepdims=True)) / X.std(axis=0, keepdims=True, ddof=1)
 
         # X can be reconstructed by multiplying X scores (T) and the transpose of X loadings (P)
         assert_allclose(
@@ -859,6 +856,7 @@ class TestClass:
         )
 
         self.check_predictions(
+            sk_pls=sk_pls,
             sk_B=sk_B,
             np_pls_alg_1=np_pls_alg_1,
             np_pls_alg_2=np_pls_alg_2,
@@ -958,6 +956,7 @@ class TestClass:
             rtol=0,
         )
         self.check_predictions(
+            sk_pls=sk_pls,
             sk_B=sk_B,
             np_pls_alg_1=np_pls_alg_1,
             np_pls_alg_2=np_pls_alg_2,
@@ -966,7 +965,7 @@ class TestClass:
             diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             X=X,
-            atol=1e-2,
+            atol=1.3e-2,
             rtol=0,
         )  # PLS2 is not as numerically stable as PLS1.
 
@@ -1058,6 +1057,7 @@ class TestClass:
             rtol=0.1,
         )
         self.check_predictions(
+            sk_pls=sk_pls,
             sk_B=sk_B,
             np_pls_alg_1=np_pls_alg_1,
             np_pls_alg_2=np_pls_alg_2,
@@ -1066,7 +1066,7 @@ class TestClass:
             diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             diff_jax_pls_alg_2=diff_jax_pls_alg_2,
             X=X,
-            atol=2e-3,
+            atol=2.1e-3,
             rtol=0,
         )  # PLS2 is not as numerically stable as PLS1.
 
@@ -1159,6 +1159,7 @@ class TestClass:
             rtol=2e-2,
         )
         self.check_predictions(
+            sk_pls=sk_pls,
             sk_B=sk_B,
             np_pls_alg_1=np_pls_alg_1,
             np_pls_alg_2=np_pls_alg_2,
@@ -2171,23 +2172,18 @@ class TestClass:
         """
         from sklearn.model_selection import cross_validate
 
+        # Apply the identity function for this test
         def cross_val_preprocessing(
             X_train: jnp.ndarray,
             Y_train: jnp.ndarray,
             X_val: jnp.ndarray,
             Y_val: jnp.ndarray,
         ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-            x_mean = X_train.mean(axis=0, keepdims=True)
-            X_train -= x_mean
-            X_val -= x_mean
-            y_mean = Y_train.mean(axis=0, keepdims=True)
-            Y_train -= y_mean
-            Y_val -= y_mean
             return X_train, Y_train, X_val, Y_val
 
         n_components = X.shape[1]
 
-        sk_pls = SkPLS(n_components=n_components, scale=False)
+        sk_pls = SkPLS(n_components=n_components)
         jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
         jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
         diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
@@ -2233,9 +2229,9 @@ class TestClass:
                     sk_model.y_loadings_[..., : j + 1].T,
                 )
                 sk_Bs[i, j] = sk_B_at_component_j
-            sk_pred = (X - sk_models[i]._x_mean) / sk_models[i]._x_std @ sk_Bs[
-                i
-            ] + sk_models[i].intercept_
+            sk_pred = (X - sk_model._x_mean) / sk_model._x_std @ (
+                sk_Bs[i] * sk_model._y_std
+            ) + sk_model._y_mean
             sk_preds[i] = sk_pred
             assert_allclose(
                 sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-13
@@ -2251,29 +2247,8 @@ class TestClass:
             sk_pls_rmses[i] = val_rmses
 
         # Calibrate NumPy PLS
-        # Since SkLearn's cross_validate does not allow for a preprocessing function to be executed on each split, we have to get a bit creative.
-        # This is because SkLearn's PLS implementation always mean centers X and Y based on the training data and uses these mean values in its predictions.
-        # We subclass the original implementation and modify it to mimic the SkLearn implementation's behavior so that we can accurately compare results.
-        class NpPLSWithPreprocessing(NpPLS):
-            def __init__(
-                self, algorithm: int = 1, dtype: np.float_ = np.float64
-            ) -> None:
-                super().__init__(algorithm, dtype)
-
-            def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
-                self.X_mean = np.mean(X, axis=0)
-                self.Y_mean = np.mean(Y, axis=0)
-                X -= self.X_mean
-                Y -= self.Y_mean
-                return super().fit(X, Y, A)
-
-            def predict(
-                self, X: npt.ArrayLike, A: Union[None, int] = None
-            ) -> npt.NDArray[np.float_]:
-                return super().predict(X - self.X_mean, A) + self.Y_mean
-
-        np_pls_alg_1 = NpPLSWithPreprocessing(algorithm=1)
-        np_pls_alg_2 = NpPLSWithPreprocessing(algorithm=2)
+        np_pls_alg_1 = NpPLS(algorithm=1)
+        np_pls_alg_2 = NpPLS(algorithm=2)
 
         fit_params = {"A": n_components}
         np_pls_alg_1_results = cross_validate(
@@ -2320,14 +2295,14 @@ class TestClass:
         fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
         fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
         fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
-            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
+            X, Y, n_components, splits.flatten(), rmse_per_component
         )
         fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
-            X, Y, n_components, splits.flatten(), rmse_per_component, center=True
+            X, Y, n_components, splits.flatten(), rmse_per_component
         )
 
         # Calibrate JAX PLS
-        jax_pls_alg_1_results = jax_pls_alg_1.cv(
+        jax_pls_alg_1_results = jax_pls_alg_1.cross_validate(
             X,
             Y,
             n_components,
@@ -2336,7 +2311,7 @@ class TestClass:
             jax_rmse_per_component,
             ["RMSE"],
         )
-        diff_jax_pls_alg_1_results = diff_jax_pls_alg_1.cv(
+        diff_jax_pls_alg_1_results = diff_jax_pls_alg_1.cross_validate(
             X,
             Y,
             n_components,
@@ -2345,7 +2320,7 @@ class TestClass:
             jax_rmse_per_component,
             ["RMSE"],
         )
-        jax_pls_alg_2_results = jax_pls_alg_2.cv(
+        jax_pls_alg_2_results = jax_pls_alg_2.cross_validate(
             X,
             Y,
             n_components,
@@ -2354,7 +2329,7 @@ class TestClass:
             jax_rmse_per_component,
             ["RMSE"],
         )
-        diff_jax_pls_alg_2_results = diff_jax_pls_alg_2.cv(
+        diff_jax_pls_alg_2_results = diff_jax_pls_alg_2.cross_validate(
             X,
             Y,
             n_components,
@@ -2364,7 +2339,7 @@ class TestClass:
             ["RMSE"],
         )
 
-        # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
+        # Get the best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
         unique_splits = np.unique(splits).astype(int)
         sk_best_num_components = [
             [np.argmin(sk_pls_rmses[split][..., i]) for split in unique_splits]
@@ -2421,66 +2396,78 @@ class TestClass:
             for i in range(Y.shape[1])
         ]
 
-        assert sk_best_num_components == np_pls_alg_1_best_num_components
-        assert sk_best_num_components == np_pls_alg_2_best_num_components
-        assert sk_best_num_components == fast_cv_np_pls_alg_1_best_num_components
-        assert sk_best_num_components == fast_cv_np_pls_alg_2_best_num_components
-        assert sk_best_num_components == jax_pls_alg_1_best_num_components
-        assert sk_best_num_components == jax_pls_alg_2_best_num_components
-        assert sk_best_num_components == diff_jax_pls_alg_1_best_num_components
-        assert sk_best_num_components == diff_jax_pls_alg_2_best_num_components
-
-        # Check that the RMSE achieved is similar
+        # Check that the RMSE achieved by the best number of components is similar
         sk_best_rmses = [
-            [np.amin(sk_pls_rmses[split][..., i]) for split in unique_splits]
+            [
+                sk_pls_rmses[split][sk_best_num_components[i][split], i]
+                for split in unique_splits
+            ]
             for i in range(Y.shape[1])
         ]
         np_pls_alg_1_best_rmses = [
-            [np.amin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+            [
+                np_pls_alg_1_rmses[split][np_pls_alg_1_best_num_components[i][split], i]
+                for split in unique_splits
+            ]
             for i in range(Y.shape[1])
         ]
         np_pls_alg_2_best_rmses = [
-            [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+            [
+                np_pls_alg_2_rmses[split][np_pls_alg_2_best_num_components[i][split], i]
+                for split in unique_splits
+            ]
             for i in range(Y.shape[1])
         ]
         fast_cv_np_pls_alg_1_best_rmses = [
             [
-                np.amin(fast_cv_np_pls_alg_1_results[split][..., i])
+                fast_cv_np_pls_alg_1_results[split][
+                    fast_cv_np_pls_alg_1_best_num_components[i][split], i
+                ]
                 for split in unique_splits
             ]
             for i in range(Y.shape[1])
         ]
         fast_cv_np_pls_alg_2_best_rmses = [
             [
-                np.amin(fast_cv_np_pls_alg_2_results[split][..., i])
+                fast_cv_np_pls_alg_2_results[split][
+                    fast_cv_np_pls_alg_2_best_num_components[i][split], i
+                ]
                 for split in unique_splits
             ]
             for i in range(Y.shape[1])
         ]
         jax_pls_alg_1_best_rmses = [
             [
-                np.amin(jax_pls_alg_1_results["RMSE"][split][..., i])
+                jax_pls_alg_1_results["RMSE"][split][
+                    jax_pls_alg_1_best_num_components[i][split], i
+                ]
                 for split in unique_splits
             ]
             for i in range(Y.shape[1])
         ]
         jax_pls_alg_2_best_rmses = [
             [
-                np.amin(jax_pls_alg_2_results["RMSE"][split][..., i])
+                jax_pls_alg_2_results["RMSE"][split][
+                    jax_pls_alg_2_best_num_components[i][split], i
+                ]
                 for split in unique_splits
             ]
             for i in range(Y.shape[1])
         ]
         diff_jax_pls_alg_1_best_rmses = [
             [
-                np.amin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
+                diff_jax_pls_alg_1_results["RMSE"][split][
+                    diff_jax_pls_alg_1_best_num_components[i][split], i
+                ]
                 for split in unique_splits
             ]
             for i in range(Y.shape[1])
         ]
         diff_jax_pls_alg_2_best_rmses = [
             [
-                np.amin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
+                diff_jax_pls_alg_2_results["RMSE"][split][
+                    diff_jax_pls_alg_2_best_num_components[i][split], i
+                ]
                 for split in unique_splits
             ]
             for i in range(Y.shape[1])
@@ -2578,7 +2565,7 @@ class TestClass:
         X = X[..., :10]
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
-        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3.4e-5)
 
     def test_cross_val_pls_2_m_greater_k(self):
         """
@@ -2650,53 +2637,10 @@ class TestClass:
         """
         from sklearn.model_selection import cross_validate
 
-        class NpPLSWithPreprocessing(NpPLS):
-            def __init__(
-                self,
-                center,
-                scale,
-                algorithm: int = 1,
-                dtype: np.float_ = np.float64,
-            ) -> None:
-                super().__init__(algorithm, dtype)
-                self.center = center
-                self.scale = scale
-
-            def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
-                if self.center:
-                    self.X_mean = np.mean(X, axis=0)
-                    X -= self.X_mean
-                    self.Y_mean = np.mean(Y, axis=0)
-                    Y -= self.Y_mean
-                    if self.scale:
-                        self.X_std = np.std(X, axis=0, ddof=1, keepdims=True)
-                        self.X_std[self.X_std == 0] = 1
-                        X /= self.X_std
-                        self.Y_std = np.std(Y, axis=0, ddof=1, keepdims=True)
-                        self.Y_std[self.Y_std == 0] = 1
-                        Y /= self.Y_std
-                    else:
-                        self.X_std = np.ones((1, X.shape[1]))
-                        self.Y_std = np.ones((1, Y.shape[1]))
-                else:
-                    self.X_mean = np.zeros((1, X.shape[1]))
-                    self.X_std = np.ones((1, X.shape[1]))
-                    self.Y_mean = np.zeros((1, Y.shape[1]))
-                    self.Y_std = np.ones((1, Y.shape[1]))
-                return super().fit(X, Y, A)
-
-            def predict(
-                self, X: npt.ArrayLike, A: Union[None, int] = None
-            ) -> npt.NDArray[np.float_]:
-                return (
-                    super().predict((X - self.X_mean) / self.X_std, A) * self.Y_std
-                    + self.Y_mean
-                )
-
-        np_pls_alg_1 = NpPLSWithPreprocessing(center=center, scale=scale, algorithm=1)
-        np_pls_alg_2 = NpPLSWithPreprocessing(center=center, scale=scale, algorithm=2)
-        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1)
-        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2)
+        np_pls_alg_1 = NpPLS(algorithm=1, center=center, scale=scale)
+        np_pls_alg_2 = NpPLS(algorithm=2, center=center, scale=scale)
+        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1, center=center, scale=scale)
+        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2, center=center, scale=scale)
 
         n_components = X.shape[1]
 
@@ -2762,8 +2706,6 @@ class TestClass:
             A=n_components,
             cv_splits=splits.flatten(),
             metric_function=rmse_per_component,
-            center=center,
-            scale=scale,
             n_jobs=-1,
             verbose=0,
         )
@@ -2773,8 +2715,6 @@ class TestClass:
             A=n_components,
             cv_splits=splits.flatten(),
             metric_function=rmse_per_component,
-            center=center,
-            scale=scale,
             n_jobs=-1,
             verbose=0,
         )

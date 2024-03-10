@@ -7,27 +7,6 @@ from sklearn.model_selection import cross_validate
 from ikpls.numpy_ikpls import PLS
 
 
-class PLSWithPreprocessing(
-    PLS
-):  # We can simply inherit from the numpy implementation to override the fit and predict methods to include preprocessing.
-    def __init__(self, algorithm: int = 1, dtype: np.float_ = np.float64) -> None:
-        super().__init__(algorithm, dtype)
-
-    def fit(
-        self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int
-    ) -> None:  # Override the fit method to include mean centering of X and Y.
-        self.X_mean = np.mean(X, axis=0)
-        self.Y_mean = np.mean(Y, axis=0)
-        X -= self.X_mean
-        Y -= self.Y_mean
-        return super().fit(X, Y, A)
-
-    def predict(  # Override the predict method to include mean centering of X and Y based on values encountered in fit.
-        self, X: npt.ArrayLike, A: Union[None, int] = None
-    ) -> npt.NDArray[np.float_]:
-        return super().predict(X - self.X_mean, A) + self.Y_mean
-
-
 def cv_splitter(
     splits: npt.NDArray,
 ):  # Splits is a 1D array of integers indicating the split number for each sample.
@@ -78,9 +57,9 @@ if __name__ == "__main__":
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
-    np_pls_alg_1 = PLSWithPreprocessing(
+    np_pls_alg_1 = PLS(
         algorithm=1
-    )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
+    )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical. Centering and scaling are enabled by default and computed over the training splits only to avoid data leakage from the validation splits.
     fit_params = {"A": A}
     np_pls_alg_1_results = cross_validate(
         np_pls_alg_1,

@@ -13,8 +13,17 @@ class PLS(BaseEstimator):
 
     Parameters
     ----------
-    algorithm : int
-        Whether to use Improved Kernel PLS Algorithm #1 or #2. Defaults to 1.
+    algorithm : int, default=1
+        Whether to use Improved Kernel PLS Algorithm #1 or #2.
+
+    center : bool, default=True
+        Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+
+    scale : bool, default=True
+        Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+
+    copy : bool, default=True
+        Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
 
     dtype : numpy.float, default=numpy.float64
         The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
@@ -25,8 +34,18 @@ class PLS(BaseEstimator):
         If `algorithm` is not 1 or 2.
     """
 
-    def __init__(self, algorithm: int = 1, dtype: np.float_ = np.float64) -> None:
+    def __init__(
+        self,
+        algorithm: int = 1,
+        center: bool = True,
+        scale: bool = True,
+        copy: bool = True,
+        dtype: np.float_ = np.float64,
+    ) -> None:
         self.algorithm = algorithm
+        self.center = center
+        self.scale = scale
+        self.copy = copy
         self.dtype = dtype
         self.name = f"Improved Kernel PLS Algorithm #{algorithm}"
         if self.algorithm not in [1, 2]:
@@ -43,7 +62,7 @@ class PLS(BaseEstimator):
         X : Array of shape (N, K)
             Predictor variables.
 
-        Y : Array of shape (N, M)
+        Y : Array of shape (N, M) or (N,)
             Response variables.
 
         A : int
@@ -80,6 +99,27 @@ class PLS(BaseEstimator):
         """
         X = np.asarray(X, dtype=self.dtype)
         Y = np.asarray(Y, dtype=self.dtype)
+
+        if Y.ndim == 1:
+            Y = Y.reshape(-1, 1)
+
+        if (self.center or self.scale) and self.copy:
+            X = X.copy()
+            Y = Y.copy()
+
+        if self.center:
+            self.X_mean = X.mean(axis=0, dtype=self.dtype, keepdims=True)
+            self.Y_mean = Y.mean(axis=0, dtype=self.dtype, keepdims=True)
+            X -= self.X_mean
+            Y -= self.Y_mean
+
+        if self.scale:
+            self.X_std = X.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
+            self.Y_std = Y.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
+            self.X_std[self.X_std == 0] = 1
+            self.Y_std[self.Y_std == 0] = 1
+            X /= self.X_std
+            Y /= self.Y_std
 
         N, K = X.shape
         M = Y.shape[1]
@@ -180,7 +220,7 @@ class PLS(BaseEstimator):
         X : Array of shape (N, K)
             Predictor variables.
 
-        n_components : int or None, optional
+        n_components : int or None, optional, default=None.
             Number of components in the PLS model. If None, then all number of components are used.
 
         Returns
@@ -189,6 +229,18 @@ class PLS(BaseEstimator):
             If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
         """
         X = np.asarray(X, dtype=self.dtype)
+        if self.center:
+            X = X - self.X_mean
+        if self.scale:
+            X = X / self.X_std
+
         if n_components is None:
-            return X @ self.B
-        return X @ self.B[n_components - 1]
+            Y_pred = X @ self.B
+        else:
+            Y_pred = X @ self.B[n_components - 1]
+
+        if self.scale:
+            Y_pred = Y_pred * self.Y_std
+        if self.center:
+            Y_pred = Y_pred + self.Y_mean
+        return Y_pred

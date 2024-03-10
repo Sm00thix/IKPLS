@@ -59,7 +59,7 @@ if __name__ == "__main__":
     jax_pls_alg_1 = PLS(verbose=True)
 
     metric_names = ["mse", "best_num_components"]
-    metric_values_dict = jax_pls_alg_1.cv(
+    metric_values_dict = jax_pls_alg_1.cross_validate(
         X,
         Y,
         A,

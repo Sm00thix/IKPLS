@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Tuple
+from typing import Tuple, Union
 
 import jax
 import jax.numpy as jnp
@@ -14,17 +14,42 @@ class PLS(PLSBase):
 
     Parameters
     ----------
-    reverse_differentiable: bool, optional (default=False). Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+    center : bool, optional, default=True
+        Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
 
-    verbose : bool, optional (default=False). If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
+    scale : bool, optional, default=True
+        Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+
+    copy : bool, optional, default=True
+        Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+
+    dtype : jnp.float_, optional, default=jnp.float64
+        The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+
+    reverse_differentiable: bool, optional, default=False
+        Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+
+    verbose : bool, optional, default=False
+        If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
     """
 
     def __init__(
-        self, reverse_differentiable: bool = False, verbose: bool = False
+        self,
+        center: bool = True,
+        scale: bool = True,
+        copy: bool = True,
+        dtype: jnp.float_ = jnp.float64,
+        reverse_differentiable: bool = False,
+        verbose: bool = False,
     ) -> None:
-        name = "Improved Kernel PLS Algorithm #1"
+        self.name = "Improved Kernel PLS Algorithm #1"
         super().__init__(
-            name=name, reverse_differentiable=reverse_differentiable, verbose=verbose
+            center=center,
+            scale=scale,
+            copy=copy,
+            dtype=dtype,
+            reverse_differentiable=reverse_differentiable,
+            verbose=verbose,
         )
 
     @partial(jax.jit, static_argnums=(0, 1, 2, 3, 4))
@@ -73,7 +98,7 @@ class PLS(PLSBase):
         if self.verbose:
             print(f"_get_initial_matrices for {self.name} will be JIT compiled...")
         B, W, P, Q, R = super()._get_initial_matrices(A, K, M)
-        T = jnp.empty(shape=(A, N), dtype=jnp.float64)
+        T = jnp.empty(shape=(A, N), dtype=self.dtype)
         return B, W, P, Q, R, T
 
     @partial(jax.jit, static_argnums=(0,))
@@ -237,10 +262,10 @@ class PLS(PLSBase):
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
-        Y : Array of shape (N, M)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+        Y : Array of shape (N, M) or (N,)
+            Response variables.
 
         A : int
             Number of components in the PLS model.
@@ -265,6 +290,18 @@ class PLS(PLSBase):
         T : Array of shape (N, A)
             PLS scores matrix of X.
 
+        X_mean : Array of shape (1, K) or None
+            Mean of X. If centering is not performed, this is None.
+
+        Y_mean : Array of shape (1, M) or None
+            Mean of Y. If centering is not performed, this is None.
+
+        X_std : Array of shape (1, K) or None
+            Sample standard deviation of X. If scaling is not performed, this is None.
+
+        Y_std : Array of shape (1, M) or None
+            Sample standard deviation of Y. If scaling is not performed, this is None.
+
         Returns
         -------
         None.
@@ -272,24 +309,30 @@ class PLS(PLSBase):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the residual goes below machine precision.
 
         See Also
         --------
         stateless_fit : Performs the same operation but returns the output matrices instead of storing them in the class instance.
         """
-        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 precision
-        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 precision
-        self.B, W, P, Q, R, T = self.stateless_fit(X, Y, A)
+        self.B, W, P, Q, R, T, self.X_mean, self.Y_mean, self.X_std, self.Y_std = (
+            self.stateless_fit(X, Y, A, self.center, self.scale, self.copy)
+        )
         self.W = W.T
         self.P = P.T
         self.Q = Q.T
         self.R = R.T
         self.T = T.T
 
-    @partial(jax.jit, static_argnums=(0, 3))
+    @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6))
     def stateless_fit(
-        self, X: jnp.ndarray, Y: jnp.ndarray, A: int
+        self,
+        X: jnp.ndarray,
+        Y: jnp.ndarray,
+        A: int,
+        center: bool = True,
+        scale: bool = True,
+        copy: bool = True,
     ) -> Tuple[
         jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
     ]:
@@ -301,11 +344,20 @@ class PLS(PLSBase):
         X : Array of shape (N, K)
             Predictor variables. Its dtype will be converted to float64 for reliable results.
 
-        Y : Array of shape (N, M)
+        Y : Array of shape (N, M) or (N,)
             Response variables. Its dtype will be converted to float64 for reliable results.
 
         A : int
             Number of components in the PLS model.
+
+        center : bool, optional, default=True
+            Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+
+        scale : bool, optional, default=True
+            Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+
+        copy : bool, optional, default=True
+            Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
 
         Returns
         -------
@@ -327,6 +379,18 @@ class PLS(PLSBase):
         T : Array of shape (A, N)
             PLS scores matrix of X.
 
+        X_mean : Array of shape (1, K) or None
+            Mean of X. If centering is not performed, this is None.
+
+        Y_mean : Array of shape (1, M) or None
+            Mean of Y. If centering is not performed, this is None.
+
+        X_std : Array of shape (1, K) or None
+            Sample standard deviation of X. If scaling is not performed, this is None.
+
+        Y_std : Array of shape (1, M) or None
+            Sample standard deviation of Y. If scaling is not performed, this is None.
+
         Warns
         -----
         UserWarning.
@@ -344,8 +408,10 @@ class PLS(PLSBase):
         if self.verbose:
             print(f"stateless_fit for {self.name} will be JIT compiled...")
 
-        X = jnp.asarray(X, dtype=jnp.float64)  # Ensure float64 precision
-        Y = jnp.asarray(Y, dtype=jnp.float64)  # Ensure float64 precision
+        X, Y = self._initialize_input_matrices(X, Y)
+        X, Y, X_mean, Y_mean, X_std, Y_std = self._center_scale_input_matrices(
+            X, Y, center, scale, copy
+        )
 
         # Get shapes
         N, K = X.shape
@@ -357,6 +423,7 @@ class PLS(PLSBase):
         # step 1
         XTY = self._step_1(X, Y)
 
+        # steps 2-6
         for i in range(A):
             XTY, w, p, q, r, t = self._main_loop_body(
                 A, i, X, XTY, M, K, P, R, self.reverse_differentiable
@@ -369,4 +436,4 @@ class PLS(PLSBase):
             b = self._compute_regression_coefficients(B[i - 1], r, q)
             B = B.at[i].set(b)
 
-        return B, W, P, Q, R, T
+        return B, W, P, Q, R, T, X_mean, Y_mean, X_std, Y_std

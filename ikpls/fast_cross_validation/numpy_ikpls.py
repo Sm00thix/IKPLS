@@ -14,8 +14,14 @@ class PLS:
 
     Parameters
     ----------
-    algorithm : int
-        Whether to use Improved Kernel PLS Algorithm #1 or #2. Defaults to 1.
+    center : bool, optional default=False
+            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
+
+    scale : bool, optional default=False, only used if `center` is True
+        Whether to scale `X` and `Y` before fitting by dividing each row by its standard deviation. The scaling is computed on the training set for each fold to avoid data leakage. The scaling is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific scaling.
+
+    algorithm : int, default=1
+        Whether to use Improved Kernel PLS Algorithm #1 or #2.
 
     dtype : numpy.float, default=numpy.float64
         The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
@@ -26,7 +32,15 @@ class PLS:
         If `algorithm` is not 1 or 2.
     """
 
-    def __init__(self, algorithm: int = 1, dtype: np.float_ = np.float64) -> None:
+    def __init__(
+        self,
+        center: bool = True,
+        scale: bool = True,
+        algorithm: int = 1,
+        dtype: np.float_ = np.float64,
+    ) -> None:
+        self.center = center
+        self.scale = scale
         self.algorithm = algorithm
         self.dtype = dtype
         self.name = f"Improved Kernel PLS Algorithm #{algorithm}"
@@ -124,7 +138,7 @@ class PLS:
         validation_X = self.X[validation_indices]
         validation_Y = self.Y[validation_indices]
         if self.center:
-            validation_size = np.sum(validation_indices)
+            validation_size = np.einsum("i->", validation_indices, dtype=int)
             training_size = self.N - validation_size
             N_total_over_N_train = self.N / training_size
             N_val_over_N_train = validation_size / training_size
@@ -137,30 +151,36 @@ class PLS:
                 - N_val_over_N_train * np.mean(validation_Y, axis=0, keepdims=True)
             )
             if self.scale:
-                train_sum_X = self.sum_X - np.sum(validation_X, axis=0, keepdims=True)
-                train_sum_sq_X = self.sum_sq_X - np.sum(
-                    validation_X**2, axis=0, keepdims=True
+                train_sum_X = self.sum_X - np.expand_dims(
+                    np.einsum("ij -> j", validation_X), axis=0
+                )
+                train_sum_sq_X = self.sum_sq_X - np.expand_dims(
+                    np.einsum("ij,ij -> j", validation_X, validation_X), axis=0
                 )
                 training_X_std = np.sqrt(
                     1
                     / (training_size - 1)
                     * (
                         -2 * training_X_mean * train_sum_X
-                        + training_size * training_X_mean**2
+                        + training_size
+                        * np.einsum("ij,ij -> ij", training_X_mean, training_X_mean)
                         + train_sum_sq_X
                     )
                 )
                 training_X_std[training_X_std == 0] = 1
-                train_sum_Y = self.sum_Y - np.sum(validation_Y, axis=0, keepdims=True)
-                train_sum_sq_Y = self.sum_sq_Y - np.sum(
-                    validation_Y**2, axis=0, keepdims=True
+                train_sum_Y = self.sum_Y - np.expand_dims(
+                    np.einsum("ij -> j", validation_Y), axis=0
+                )
+                train_sum_sq_Y = self.sum_sq_Y - np.expand_dims(
+                    np.einsum("ij,ij -> j", validation_Y, validation_Y), axis=0
                 )
                 training_Y_std = np.sqrt(
                     1
                     / (training_size - 1)
                     * (
                         -2 * training_Y_mean * train_sum_Y
-                        + training_size * training_Y_mean**2
+                        + training_size
+                        * np.einsum("ij,ij -> ij", training_Y_mean, training_Y_mean)
                         + train_sum_sq_Y
                     )
                 )
@@ -379,8 +399,6 @@ class PLS:
         A,
         cv_splits,
         metric_function,
-        center=False,
-        scale=False,
         n_jobs=-1,
         verbose=10,
     ):
@@ -392,7 +410,7 @@ class PLS:
         X : Array of shape (N, K)
             Predictor variables.
 
-        Y : Array of shape (N, M)
+        Y : Array of shape (N, M) or (N,)
             Target variables.
 
         A : int
@@ -406,12 +424,6 @@ class PLS:
 
         mean_centering : bool, optional default=True
             Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
-
-        center : bool, optional default=False
-            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
-
-        scale : bool, optional default=False, only used if `center` is True
-            Whether to scale `X` and `Y` before fitting by dividing each row by its standard deviation. The scaling is computed on the training set for each fold to avoid data leakage. The scaling is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific scaling.
 
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use the minimum of all available cores and the number of unique values in `cv_splits`.
@@ -427,9 +439,9 @@ class PLS:
 
         self.X = np.asarray(X, dtype=self.dtype)
         self.Y = np.asarray(Y, dtype=self.dtype)
+        if self.Y.ndim == 1:
+            self.Y = self.Y.reshape(-1, 1)
         self.A = A
-        self.center = center
-        self.scale = scale
         self.N, self.K = X.shape
         self.M = Y.shape[1]
         unique_splits = np.unique(cv_splits)
@@ -446,10 +458,14 @@ class PLS:
             self.X_mean = np.mean(self.X, axis=0, keepdims=True)
             self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
             if self.scale:
-                self.sum_X = np.sum(self.X, axis=0, keepdims=True)
-                self.sum_Y = np.sum(self.Y, axis=0, keepdims=True)
-                self.sum_sq_X = np.sum(self.X**2, axis=0, keepdims=True)
-                self.sum_sq_Y = np.sum(self.Y**2, axis=0, keepdims=True)
+                self.sum_X = np.expand_dims(np.einsum("ij->j", self.X), axis=0)
+                self.sum_Y = np.expand_dims(np.einsum("ij->j", self.Y), axis=0)
+                self.sum_sq_X = np.expand_dims(
+                    np.einsum("ij,ij->j", self.X, self.X), axis=0
+                )
+                self.sum_sq_Y = np.expand_dims(
+                    np.einsum("ij,ij->j", self.Y, self.Y), axis=0
+                )
 
         if verbose > 0:
             print("Computing total XTY...")

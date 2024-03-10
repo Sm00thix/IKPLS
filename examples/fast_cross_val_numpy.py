@@ -45,15 +45,13 @@ if __name__ == "__main__":
 
     np_pls_alg_1_fast_cv = PLS(
         algorithm=1
-    )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical.
+    )  # For this example, we will use IKPLS Algorithm #1. The interface for IKPLS Algorithm #2 is identical. Centering and scaling are enabled by default and computed over the training splits only to avoid data leakage from the validation splits.
     np_pls_alg_1_fast_cv_results = np_pls_alg_1_fast_cv.cross_validate(
         X=X,
         Y=Y,
         A=A,
         cv_splits=splits,
         metric_function=mse_for_each_target,
-        center=True,
-        scale=True,
         n_jobs=-1,
         verbose=10,
     )
