@@ -8,6 +8,7 @@ import jax
 import jax.numpy as jnp
 import jax.numpy.linalg as jla
 import numpy as np
+from jax.typing import ArrayLike, DTypeLike
 from tqdm import tqdm
 
 
@@ -43,7 +44,7 @@ class PLSBase(abc.ABC):
         center: bool = True,
         scale: bool = True,
         copy: bool = True,
-        dtype: jnp.float_ = jnp.float64,
+        dtype: DTypeLike = jnp.float64,
         reverse_differentiable: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -69,22 +70,22 @@ class PLSBase(abc.ABC):
         Warns
         -----
         UserWarning.
-            If the weight norm is below machine epsilon for float64, a warning message is displayed.
+            If the weight norm is below machine epsilon, a warning message is displayed.
 
         Notes
         -----
         This method issues a warning if the weight becomes close to zero during the PLS algorithm. It provides a hint about potential instability in results with a higher number of components.
         """
         i, norm = arg
-        if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+        if np.isclose(norm, 0, atol=np.finfo(self.dtype).eps, rtol=0):
             warnings.warn(
                 f"Weight is close to zero. Results with A = {i} component(s) or higher may be unstable."
             )
 
     @partial(jax.jit, static_argnums=0)
     def _compute_regression_coefficients(
-        self, b_last: jnp.ndarray, r: jnp.ndarray, q: jnp.ndarray
-    ) -> jnp.ndarray:
+        self, b_last: jax.Array, r: jax.Array, q: jax.Array
+    ) -> jax.Array:
         """
         Compute the regression coefficients in the PLS algorithm.
 
@@ -112,7 +113,7 @@ class PLSBase(abc.ABC):
         return b
 
     @partial(jax.jit, static_argnums=0)
-    def _initialize_input_matrices(self, X, Y):
+    def _initialize_input_matrices(self, X: jax.Array, Y: jax.Array):
         """
         Initialize the input matrices used in the PLS algorithm.
 
@@ -132,7 +133,7 @@ class PLSBase(abc.ABC):
         return X, Y
 
     @partial(jax.jit, static_argnums=0)
-    def get_means(self, X, Y):
+    def get_means(self, X: ArrayLike, Y: ArrayLike):
         """
         Get the mean of the input matrices.
 
@@ -141,7 +142,7 @@ class PLSBase(abc.ABC):
         X : Array of shape (N, K)
             Predictor variables matrix.
 
-        Y : Array of shape (N, M) or (N,)
+        Y : Array of shape (N, M)
             Response variables matrix.
 
         Returns
@@ -160,7 +161,7 @@ class PLSBase(abc.ABC):
         return X_mean, Y_mean
 
     @partial(jax.jit, static_argnums=0)
-    def get_stds(self, X, Y):
+    def get_stds(self, X: ArrayLike, Y: ArrayLike):
         """
         Get the standard deviation of the input matrices.
 
@@ -169,7 +170,7 @@ class PLSBase(abc.ABC):
         X : Array of shape (N, K)
             Predictor variables matrix.
 
-        Y : Array of shape (N, M) or (N,)
+        Y : Array of shape (N, M)
             Response variables matrix.
 
         Returns
@@ -190,7 +191,9 @@ class PLSBase(abc.ABC):
         return X_std, Y_std
 
     @partial(jax.jit, static_argnums=(0, 3, 4, 5))
-    def _center_scale_input_matrices(self, X, Y, center, scale, copy):
+    def _center_scale_input_matrices(
+        self, X: jax.Array, Y: jax.Array, center: bool, scale: bool, copy: bool
+    ):
         """
         Preprocess the input matrices based on the centering and scaling parameters.
 
@@ -244,8 +247,8 @@ class PLSBase(abc.ABC):
     @abc.abstractmethod
     @partial(jax.jit, static_argnums=(0, 1, 2, 3))
     def _get_initial_matrices(
-        self, A, K, M
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+        self, A: int, K: int, M: int
+    ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
         Initialize the matrices used in the PLS algorithm.
 
@@ -290,7 +293,7 @@ class PLSBase(abc.ABC):
         return B, W, P, Q, R
 
     @partial(jax.jit, static_argnums=0)
-    def _compute_XT(self, X: jnp.ndarray) -> jnp.ndarray:
+    def _compute_XT(self, X: jax.Array) -> jax.Array:
         """
         Compute the transposed predictor variable matrix.
 
@@ -311,7 +314,7 @@ class PLSBase(abc.ABC):
         return X.T
 
     @partial(jax.jit, static_argnums=0)
-    def _compute_initial_XTY(self, XT: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
+    def _compute_initial_XTY(self, XT: jax.Array, Y: jax.Array) -> jax.Array:
         """
         Compute the initial cross-covariance matrix of the predictor variables and the response variables.
 
@@ -335,7 +338,7 @@ class PLSBase(abc.ABC):
         return XT @ Y
 
     @partial(jax.jit, static_argnums=0)
-    def _compute_XTX(self, XT: jnp.ndarray, X: jnp.ndarray) -> jnp.ndarray:
+    def _compute_XTX(self, XT: jax.Array, X: jax.Array) -> jax.Array:
         """
         Compute the product of the transposed predictor variables matrix and the predictor variables matrix.
 
@@ -379,8 +382,8 @@ class PLSBase(abc.ABC):
 
     @partial(jax.jit, static_argnums=(0, 2, 3))
     def _step_2(
-        self, XTY: jnp.ndarray, M: jnp.ndarray, K: jnp.ndarray
-    ) -> Tuple[jnp.ndarray, jnp.float64]:
+        self, XTY: jax.Array, M: jax.Array, K: jax.Array
+    ) -> Tuple[jax.Array, DTypeLike]:
         """
         The second step of the PLS algorithm. Computes the next weight vector and the associated norm.
 
@@ -429,9 +432,7 @@ class PLSBase(abc.ABC):
         return w, norm
 
     @partial(jax.jit, static_argnums=(0, 1))
-    def _step_3(
-        self, i: int, w: jnp.ndarray, P: jnp.ndarray, R: jnp.ndarray
-    ) -> jnp.ndarray:
+    def _step_3(self, i: int, w: jax.Array, P: jax.Array, R: jax.Array) -> jax.Array:
         """
         The third step of the PLS algorithm. Computes the orthogonal weight vectors.
 
@@ -466,8 +467,8 @@ class PLSBase(abc.ABC):
 
     @partial(jax.jit, static_argnums=0)
     def _step_3_body(
-        self, j: int, carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+        self, j: int, carry: Tuple[jax.Array, jax.Array, jax.Array, jax.Array]
+    ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array]:
         """
         The body of the third step of the PLS algorithm. Iteratively computes orthogonal weight vectors.
 
@@ -515,8 +516,8 @@ class PLSBase(abc.ABC):
 
     @partial(jax.jit, static_argnums=0)
     def _step_5(
-        self, XTY: jnp.ndarray, p: jnp.ndarray, q: jnp.ndarray, tTt: jnp.ndarray
-    ) -> jnp.ndarray:
+        self, XTY: jax.Array, p: jax.Array, q: jax.Array, tTt: jax.Array
+    ) -> jax.Array:
         if self.verbose:
             print(f"_step_5 for {self.name} will be JIT compiled...")
         return XTY - (p @ q.T) * tTt
@@ -544,17 +545,15 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=(0, 3))
     def stateless_fit(
         self,
-        X: jnp.ndarray,
-        Y: jnp.ndarray,
+        X: ArrayLike,
+        Y: ArrayLike,
         A: int,
         center: bool = True,
         scale: bool = True,
         copy: bool = True,
     ) -> Union[
-        Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
-        Tuple[
-            jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray
-        ],
+        Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array],
+        Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array, jax.Array],
     ]:
         """
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components. Returns the internal matrices instead of storing them in the class instance.
@@ -562,10 +561,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
         Y : Array of shape (N, M) or (N,)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+            Response variables.
 
         A : int
             Number of components in the PLS model.
@@ -614,7 +613,7 @@ class PLSBase(abc.ABC):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
 
         See Also
         --------
@@ -626,17 +625,17 @@ class PLSBase(abc.ABC):
         """
 
     @abc.abstractmethod
-    def fit(self, X: jnp.ndarray, Y: jnp.ndarray, A: int) -> None:
+    def fit(self, X: ArrayLike, Y: ArrayLike, A: int) -> None:
         """
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
 
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
-        Y : Array of shape (N, M)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+        Y : Array of shape (N, M) or (N,)
+            Response variables.
 
         A : int
             Number of components in the PLS model.
@@ -668,7 +667,7 @@ class PLSBase(abc.ABC):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
 
         See Also
         --------
@@ -678,21 +677,21 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=(0, 3))
     def stateless_predict(
         self,
-        X: jnp.ndarray,
-        B: jnp.ndarray,
+        X: ArrayLike,
+        B: jax.Array,
         n_components: Union[None, int] = None,
-        X_mean: Union[None, jnp.ndarray] = None,
-        X_std: Union[None, jnp.ndarray] = None,
-        Y_mean: Union[None, jnp.ndarray] = None,
-        Y_std: Union[None, jnp.ndarray] = None,
-    ) -> jnp.ndarray:
+        X_mean: Union[None, jax.Array] = None,
+        X_std: Union[None, jax.Array] = None,
+        Y_mean: Union[None, jax.Array] = None,
+        Y_std: Union[None, jax.Array] = None,
+    ) -> jax.Array:
         """
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
 
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
         B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
@@ -741,16 +740,14 @@ class PLSBase(abc.ABC):
             Y_pred = Y_pred + Y_mean
         return Y_pred
 
-    def predict(
-        self, X: jnp.ndarray, n_components: Union[None, int] = None
-    ) -> jnp.ndarray:
+    def predict(self, X: ArrayLike, n_components: Union[None, int] = None) -> jax.Array:
         """
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
 
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
         n_components : int or None, optional
             Number of components in the PLS model. If None, then all number of components are used.
@@ -771,12 +768,12 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=(0, 3, 6, 7, 8, 9))
     def stateless_fit_predict_eval(
         self,
-        X_train: jnp.ndarray,
-        Y_train: jnp.ndarray,
+        X_train: ArrayLike,
+        Y_train: ArrayLike,
         A: int,
-        X_test: jnp.ndarray,
-        Y_test: jnp.ndarray,
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        X_test: ArrayLike,
+        Y_test: ArrayLike,
+        metric_function: Callable[[jax.Array, jax.Array], Any],
         center: bool = True,
         scale: bool = True,
         copy: bool = True,
@@ -787,19 +784,19 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         X_train : Array of shape (N_train, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
-        Y_train : Array of shape (N_train, M)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+        Y_train : Array of shape (N_train, M) or (N_train,)
+            Response variables.
 
         A : int
             Number of components in the PLS model.
 
         X_test : Array of shape (N_test, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
-        Y_test : Array of shape (N_test, M)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+        Y_test : Array of shape (N_test, M) or (N_test,)
+            Response variables.
 
         metric_function : Callable receiving arrays `Y_test` of shape (N, M) and `Y_pred` (A, N, M) and returns Any
             Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
@@ -841,15 +838,15 @@ class PLSBase(abc.ABC):
 
     def cross_validate(
         self,
-        X: jnp.ndarray,
-        Y: jnp.ndarray,
+        X: ArrayLike,
+        Y: ArrayLike,
         A: int,
-        cv_splits: jnp.ndarray,
+        cv_splits: ArrayLike,
         preprocessing_function: Callable[
-            [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
-            Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+            [jax.Array, jax.Array, jax.Array, jax.Array],
+            Tuple[jax.Array, jax.Array, jax.Array, jax.Array],
         ],
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        metric_function: Callable[[jax.Array, jax.Array], Any],
         metric_names: list[str],
         show_progress=True,
     ) -> dict[str, Any]:
@@ -859,10 +856,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
-        Y : Array of shape (N, M)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+        Y : Array of shape (N, M) or (N,)
+            Response variables.
 
         A : int
             Number of components in the PLS model.
@@ -929,16 +926,16 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=(0, 5, 6, 7, 8, 9, 10))
     def _inner_cross_validate(
         self,
-        X: jnp.ndarray,
-        Y: jnp.ndarray,
-        train_idxs: jnp.ndarray,
-        val_idxs: jnp.ndarray,
+        X: ArrayLike,
+        Y: ArrayLike,
+        train_idxs: jax.Array,
+        val_idxs: jax.Array,
         A: int,
         preprocessing_function: Callable[
-            [jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
-            Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray],
+            [jax.Array, jax.Array, jax.Array, jax.Array],
+            Tuple[jax.Array, jax.Array, jax.Array, jax.Array],
         ],
-        metric_function: Callable[[jnp.ndarray, jnp.ndarray], Any],
+        metric_function: Callable[[jax.Array, jax.Array], Any],
         center: bool = True,
         scale: bool = True,
         copy: bool = True,
@@ -949,10 +946,10 @@ class PLSBase(abc.ABC):
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables.
 
         Y : Array of shape (N, M)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+            Response variables.
 
         train_idxs : Array of shape (N_train,)
             Indices of data points in the training set.

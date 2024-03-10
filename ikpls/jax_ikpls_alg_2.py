@@ -4,6 +4,7 @@ from typing import Tuple
 import jax
 import jax.numpy as jnp
 from jax.experimental import host_callback
+from jax.typing import ArrayLike, DTypeLike
 
 from ikpls.jax_ikpls_base import PLSBase
 
@@ -23,7 +24,7 @@ class PLS(PLSBase):
     copy : bool, optional, default=True
         Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
 
-    dtype : jnp.float_, optional, default=jnp.float64
+    dtype : DTypeLike, optional, default=jnp.float64
         The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
 
     reverse_differentiable: bool, optional, default=False
@@ -38,7 +39,7 @@ class PLS(PLSBase):
         center: bool = True,
         scale: bool = True,
         copy: bool = True,
-        dtype: jnp.float_ = jnp.float64,
+        dtype: DTypeLike = jnp.float64,
         reverse_differentiable: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -53,8 +54,8 @@ class PLS(PLSBase):
         )
 
     def _get_initial_matrices(
-        self, X: jnp.ndarray, Y: jnp.ndarray, A: int
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+        self, X: ArrayLike, Y: ArrayLike, A: int
+    ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
         Initialize the matrices and arrays needed for the PLS algorithm. This method is part of the PLS fitting process.
 
@@ -94,9 +95,7 @@ class PLS(PLSBase):
         return super()._get_initial_matrices(X, Y, A)
 
     @partial(jax.jit, static_argnums=(0,))
-    def _step_1(
-        self, X: jnp.ndarray, Y: jnp.ndarray
-    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    def _step_1(self, X: ArrayLike, Y: ArrayLike) -> Tuple[jax.Array, jax.Array]:
         """
         Perform the first step of Improved Kernel PLS Algorithm #2.
 
@@ -125,8 +124,8 @@ class PLS(PLSBase):
 
     @partial(jax.jit, static_argnums=(0,))
     def _step_4(
-        self, XTX: jnp.ndarray, XTY: jnp.ndarray, r: jnp.ndarray
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+        self, XTX: jax.Array, XTY: jax.Array, r: jax.Array
+    ) -> Tuple[jax.Array, jax.Array, jax.Array]:
         """
         Perform the fourth step of Improved Kernel PLS Algorithm #2.
 
@@ -165,14 +164,14 @@ class PLS(PLSBase):
         self,
         A: int,
         i: int,
-        XTX: jnp.ndarray,
-        XTY: jnp.ndarray,
+        XTX: jax.Array,
+        XTY: jax.Array,
         M: int,
         K: int,
-        P: jnp.ndarray,
-        R: jnp.ndarray,
+        P: jax.Array,
+        R: jax.Array,
         reverse_differentiable: bool,
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
         Execute the main loop body of Improved Kernel PLS Algorithm #2. This function performs various steps of the PLS algorithm for each component.
 
@@ -238,7 +237,7 @@ class PLS(PLSBase):
         XTY = self._step_5(XTY, p, q, tTt)
         return XTY, w, p, q, r
 
-    def fit(self, X: jnp.ndarray, Y: jnp.ndarray, A: int) -> None:
+    def fit(self, X: ArrayLike, Y: ArrayLike, A: int) -> None:
         """
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
 
@@ -289,7 +288,7 @@ class PLS(PLSBase):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
 
         See Also
         --------
@@ -306,13 +305,13 @@ class PLS(PLSBase):
     @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6))
     def stateless_fit(
         self,
-        X: jnp.ndarray,
-        Y: jnp.ndarray,
+        X: ArrayLike,
+        Y: ArrayLike,
         A: int,
         center: bool = True,
         scale: bool = True,
         copy: bool = True,
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components. Returns the internal matrices instead of storing them in the class instance.
 
@@ -359,7 +358,7 @@ class PLS(PLSBase):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
 
         See Also
         --------

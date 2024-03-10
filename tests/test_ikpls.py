@@ -869,6 +869,75 @@ class TestClass:
             rtol=1e-5,
         )  # PLS1 is very numerically stable for protein.
 
+        Y = (
+            Y.squeeze()
+        )  # Remove the singleton dimension and check that the predictions are consistent.
+        assert Y.ndim == 1
+        (
+            sk_pls,
+            sk_B,
+            np_pls_alg_1,
+            np_pls_alg_2,
+            jax_pls_alg_1,
+            jax_pls_alg_2,
+            diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2,
+        ) = self.fit_models(X=X, Y=Y, n_components=n_components)
+
+        self.check_cpu_gpu_equality(
+            np_pls_alg_1=np_pls_alg_1,
+            np_pls_alg_2=np_pls_alg_2,
+            jax_pls_alg_1=jax_pls_alg_1,
+            jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
+        )
+
+        self.check_equality_properties(
+            np_pls_alg_1=np_pls_alg_1,
+            jax_pls_alg_1=jax_pls_alg_1,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            X=X,
+            atol=1e-1,
+            rtol=1e-5,
+        )
+        self.check_orthogonality_properties(
+            np_pls_alg_1=np_pls_alg_1,
+            np_pls_alg_2=np_pls_alg_2,
+            jax_pls_alg_1=jax_pls_alg_1,
+            jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
+            atol=1e-1,
+            rtol=0,
+        )
+
+        self.check_regression_matrices(
+            sk_B=sk_B,
+            np_pls_alg_1=np_pls_alg_1,
+            np_pls_alg_2=np_pls_alg_2,
+            jax_pls_alg_1=jax_pls_alg_1,
+            jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
+            atol=1e-8,
+            rtol=6e-5,
+        )
+
+        self.check_predictions(
+            sk_pls=sk_pls,
+            sk_B=sk_B,
+            np_pls_alg_1=np_pls_alg_1,
+            np_pls_alg_2=np_pls_alg_2,
+            jax_pls_alg_1=jax_pls_alg_1,
+            jax_pls_alg_2=jax_pls_alg_2,
+            diff_jax_pls_alg_1=diff_jax_pls_alg_1,
+            diff_jax_pls_alg_2=diff_jax_pls_alg_2,
+            X=X,
+            atol=1e-8,
+            rtol=1e-5,
+        )  # PLS1 is very numerically stable for protein.
+
     def test_pls_2_m_less_k(self):
         """
         Description
@@ -1688,27 +1757,18 @@ class TestClass:
         AssertionError
             If the warnings for weights being close to zero are not raised for all implementations.
         """
-        ## Taken from self.fit_models to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-        jnp_X = jnp.array(X)
-        jnp_Y = jnp.array(Y)
         n_components = 2
-        sk_pls = SkPLS(n_components=n_components, scale=False)  # Do not rescale again.
+        sk_pls = SkPLS(n_components=n_components)  # Do not rescale again.
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
         jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
         jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
         diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
         diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
+        fast_cv_alg_1 = FastCVPLS(algorithm=1)
+        fast_cv_alg_2 = FastCVPLS(algorithm=2)
+        cv_splits = np.zeros(shape=(X.shape[0],), dtype=int)
+        cv_splits[: X.shape[0] // 2] = 1
 
         sk_msg = "Y residual is constant at iteration"
         with pytest.warns(UserWarning, match=sk_msg):
@@ -1723,13 +1783,31 @@ class TestClass:
             np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
             assert_allclose(np_pls_alg_2.R, 0)
         with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+            jax_pls_alg_1.fit(X=X, Y=Y, A=n_components)
         with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+            jax_pls_alg_2.fit(X=X, Y=Y, A=n_components)
         with pytest.warns(UserWarning, match=msg):
-            diff_jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+            diff_jax_pls_alg_1.fit(X=X, Y=Y, A=n_components)
         with pytest.warns(UserWarning, match=msg):
-            diff_jax_pls_alg_2.fit(X=jnp_X, Y=jnp_Y, A=n_components)
+            diff_jax_pls_alg_2.fit(X=X, Y=Y, A=n_components)
+        with pytest.warns(UserWarning, match=msg):
+            fast_cv_alg_1.cross_validate(
+                X=X,
+                Y=Y,
+                A=n_components,
+                cv_splits=cv_splits,
+                metric_function=lambda x, y: 0,
+                n_jobs=1,
+            )
+        with pytest.warns(UserWarning, match=msg):
+            fast_cv_alg_2.cross_validate(
+                X=X,
+                Y=Y,
+                A=n_components,
+                cv_splits=cv_splits,
+                metric_function=lambda x, y: 0,
+                n_jobs=1,
+            )
 
     def test_pls_1_constant_y(self):
         """
@@ -1749,6 +1827,10 @@ class TestClass:
         X = rng.rand(100, 3)
         Y = np.zeros(shape=(100, 1))
         assert Y.shape[1] == 1
+        self.check_pls_constant_y(X, Y)
+        Y = (
+            Y.squeeze()
+        )  # Remove the singleton dimension and check that the predictions are consistent.
         self.check_pls_constant_y(X, Y)
 
     def test_pls_2_m_less_k_constant_y(self):
@@ -1866,18 +1948,6 @@ class TestClass:
         AssertionError
             If the gradients are not computed, if the gradients are not equal across Improved Kernel PLS Algorithm #1 and #2, or if the output values are not consistent across all JAX implementations.
         """
-        # Taken from self.fit_models to check each individual algorithm for early stopping.
-        x_mean = X.mean(axis=0)
-        X -= x_mean
-        y_mean = Y.mean(axis=0)
-        Y -= y_mean
-        x_std = X.std(axis=0, ddof=1)
-        x_std[x_std == 0.0] = 1.0
-        X /= x_std
-        y_std = Y.std(axis=0, ddof=1)
-        y_std[y_std == 0.0] = 1.0
-        Y /= y_std
-
         jnp_X = jnp.array(X, dtype=jnp.float64)
         jnp_Y = jnp.array(Y, dtype=jnp.float64)
 
@@ -1993,6 +2063,19 @@ class TestClass:
         num_components = 25
         filter_size = 7
         assert Y.shape[1] == 1
+        self.check_gradient_pls(
+            X=X,
+            Y=Y,
+            num_components=num_components,
+            filter_size=filter_size,
+            val_atol=0,
+            val_rtol=1e-5,
+            grad_atol=0,
+            grad_rtol=1e-5,
+        )
+        Y = (
+            Y.squeeze()
+        )  # Remove the singleton dimension and check that the predictions are consistent.
         self.check_gradient_pls(
             X=X,
             Y=Y,
@@ -2172,6 +2255,11 @@ class TestClass:
         """
         from sklearn.model_selection import cross_validate
 
+        try:
+            M = Y.shape[1]
+        except:
+            M = 1
+
         # Apply the identity function for this test
         def cross_val_preprocessing(
             X_train: jnp.ndarray,
@@ -2197,6 +2285,8 @@ class TestClass:
                 yield train_idxs, val_idxs
 
         def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
+            if Y_true.ndim == 1:
+                Y_true = Y_true.reshape(-1, 1)
             e = Y_true - Y_pred
             se = e**2
             mse = np.mean(se, axis=-2)
@@ -2206,6 +2296,8 @@ class TestClass:
         def jax_rmse_per_component(
             Y_true: jnp.ndarray, Y_pred: jnp.ndarray
         ) -> jnp.ndarray:
+            if Y_true.ndim == 1:
+                Y_true = Y_true.reshape(-1, 1)
             e = Y_true - Y_pred
             se = e**2
             mse = jnp.mean(se, axis=-2)
@@ -2220,8 +2312,8 @@ class TestClass:
         )
         sk_models = sk_results["estimator"]
         # Extract regression matrices for SkPLS for all possible number of components and make a prediction with the regression matrices at all possible number of components.
-        sk_Bs = np.empty((len(sk_models), n_components, X.shape[1], Y.shape[1]))
-        sk_preds = np.empty((len(sk_models), n_components, X.shape[0], Y.shape[1]))
+        sk_Bs = np.empty((len(sk_models), n_components, X.shape[1], M))
+        sk_preds = np.empty((len(sk_models), n_components, X.shape[0], M))
         for i, sk_model in enumerate(sk_models):
             for j in range(sk_Bs.shape[1]):
                 sk_B_at_component_j = np.dot(
@@ -2234,11 +2326,14 @@ class TestClass:
             ) + sk_model._y_mean
             sk_preds[i] = sk_pred
             assert_allclose(
-                sk_pred[-1], sk_models[i].predict(X), atol=0, rtol=1e-13
+                sk_pred[-1],
+                sk_models[i].predict(X).reshape(X.shape[0], M),
+                atol=0,
+                rtol=1e-13,
             )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
 
         # Compute RMSE on the validation predictions
-        sk_pls_rmses = np.empty((len(sk_models), n_components, Y.shape[1]))
+        sk_pls_rmses = np.empty((len(sk_models), n_components, M))
         for i in range(len(sk_models)):
             val_idxs = val_idxs = np.nonzero(splits == i)[0]
             Y_true = Y[val_idxs]
@@ -2275,12 +2370,8 @@ class TestClass:
         np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
 
         # Compute RMSE on the validation predictions
-        np_pls_alg_1_rmses = np.empty(
-            (len(np_pls_alg_1_models), n_components, Y.shape[1])
-        )
-        np_pls_alg_2_rmses = np.empty(
-            (len(np_pls_alg_2_models), n_components, Y.shape[1])
-        )
+        np_pls_alg_1_rmses = np.empty((len(np_pls_alg_1_models), n_components, M))
+        np_pls_alg_2_rmses = np.empty((len(np_pls_alg_2_models), n_components, M))
         for i in range(len(np_pls_alg_1_models)):
             val_idxs = val_idxs = np.nonzero(splits == i)[0]
             Y_true = Y[val_idxs]
@@ -2343,57 +2434,57 @@ class TestClass:
         unique_splits = np.unique(splits).astype(int)
         sk_best_num_components = [
             [np.argmin(sk_pls_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         np_pls_alg_1_best_num_components = [
             [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         np_pls_alg_2_best_num_components = [
             [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_1_best_num_components = [
             [
                 np.argmin(fast_cv_np_pls_alg_1_results[split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_2_best_num_components = [
             [
                 np.argmin(fast_cv_np_pls_alg_2_results[split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         jax_pls_alg_1_best_num_components = [
             [
                 np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         jax_pls_alg_2_best_num_components = [
             [
                 np.argmin(jax_pls_alg_2_results["RMSE"][split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         diff_jax_pls_alg_1_best_num_components = [
             [
                 np.argmin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         diff_jax_pls_alg_2_best_num_components = [
             [
                 np.argmin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
 
         # Check that the RMSE achieved by the best number of components is similar
@@ -2402,21 +2493,21 @@ class TestClass:
                 sk_pls_rmses[split][sk_best_num_components[i][split], i]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         np_pls_alg_1_best_rmses = [
             [
                 np_pls_alg_1_rmses[split][np_pls_alg_1_best_num_components[i][split], i]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         np_pls_alg_2_best_rmses = [
             [
                 np_pls_alg_2_rmses[split][np_pls_alg_2_best_num_components[i][split], i]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_1_best_rmses = [
             [
@@ -2425,7 +2516,7 @@ class TestClass:
                 ]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_2_best_rmses = [
             [
@@ -2434,7 +2525,7 @@ class TestClass:
                 ]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         jax_pls_alg_1_best_rmses = [
             [
@@ -2443,7 +2534,7 @@ class TestClass:
                 ]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         jax_pls_alg_2_best_rmses = [
             [
@@ -2452,7 +2543,7 @@ class TestClass:
                 ]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         diff_jax_pls_alg_1_best_rmses = [
             [
@@ -2461,7 +2552,7 @@ class TestClass:
                 ]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         diff_jax_pls_alg_2_best_rmses = [
             [
@@ -2470,7 +2561,7 @@ class TestClass:
                 ]
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
 
         assert_allclose(np_pls_alg_1_best_rmses, sk_best_rmses, atol=atol, rtol=rtol)
@@ -2504,6 +2595,12 @@ class TestClass:
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
         assert Y.shape[1] == 1
+        self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
+
+        Y = (
+            Y.squeeze()
+        )  # Remove the singleton dimension and check that the predictions are consistent.
+        assert Y.ndim == 1
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
     def test_cross_val_pls_2_m_less_k(self):
@@ -2637,6 +2734,11 @@ class TestClass:
         """
         from sklearn.model_selection import cross_validate
 
+        try:
+            M = Y.shape[1]
+        except:
+            M = 1
+
         np_pls_alg_1 = NpPLS(algorithm=1, center=center, scale=scale)
         np_pls_alg_2 = NpPLS(algorithm=2, center=center, scale=scale)
         fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1, center=center, scale=scale)
@@ -2645,6 +2747,8 @@ class TestClass:
         n_components = X.shape[1]
 
         def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
+            if Y_true.ndim == 1:
+                Y_true = np.expand_dims(Y_true, axis=-1)
             e = Y_true - Y_pred
             se = e**2
             mse = np.mean(se, axis=-2)
@@ -2683,12 +2787,8 @@ class TestClass:
         np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
 
         # Compute RMSE on the validation predictions
-        np_pls_alg_1_rmses = np.empty(
-            (len(np_pls_alg_1_models), n_components, Y.shape[1])
-        )
-        np_pls_alg_2_rmses = np.empty(
-            (len(np_pls_alg_2_models), n_components, Y.shape[1])
-        )
+        np_pls_alg_1_rmses = np.empty((len(np_pls_alg_1_models), n_components, M))
+        np_pls_alg_2_rmses = np.empty((len(np_pls_alg_2_models), n_components, M))
         for i in range(len(np_pls_alg_1_models)):
             val_idxs = val_idxs = np.nonzero(splits == i)[0]
             Y_true = Y[val_idxs]
@@ -2723,25 +2823,25 @@ class TestClass:
         unique_splits = np.unique(splits).astype(int)
         np_pls_alg_1_best_num_components = [
             [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         np_pls_alg_2_best_num_components = [
             [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_1_best_num_components = [
             [
                 np.argmin(np.array(fast_cv_np_pls_alg_1_results)[split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_2_best_num_components = [
             [
                 np.argmin(np.array(fast_cv_np_pls_alg_2_results)[split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
 
         assert np_pls_alg_1_best_num_components == np_pls_alg_2_best_num_components
@@ -2755,25 +2855,25 @@ class TestClass:
         # Check that the RMSE achieved is similar
         np_pls_alg_1_best_rmses = [
             [np.amin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         np_pls_alg_2_best_rmses = [
             [np.amin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_1_best_rmses = [
             [
                 np.amin(np.array(fast_cv_np_pls_alg_1_results)[split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
         fast_cv_np_pls_alg_2_best_rmses = [
             [
                 np.amin(np.array(fast_cv_np_pls_alg_2_results)[split][..., i])
                 for split in unique_splits
             ]
-            for i in range(Y.shape[1])
+            for i in range(M)
         ]
 
         assert_allclose(
@@ -2806,6 +2906,20 @@ class TestClass:
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])
         assert Y.shape[1] == 1
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+        )
+
+        Y = (
+            Y.squeeze()
+        )  # Remove the singleton dimension and check that the predictions are consistent.
+        assert Y.ndim == 1
         self.check_fast_cross_val_pls(
             X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
         )
@@ -2949,6 +3063,20 @@ class TestClass:
         Y = Y[::50]
         splits = np.arange(X.shape[0])
         assert Y.shape[1] == 1
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=False, scale=False, atol=1e-6, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=False, atol=1e-6, rtol=1e-8
+        )
+        self.check_fast_cross_val_pls(
+            X, Y, splits, center=True, scale=True, atol=1e-6, rtol=1e-8
+        )
+
+        Y = (
+            Y.squeeze()
+        )  # Remove the singleton dimension and check that the predictions are consistent.
+        assert Y.ndim == 1
         self.check_fast_cross_val_pls(
             X, Y, splits, center=False, scale=False, atol=1e-6, rtol=1e-8
         )

@@ -20,5 +20,6 @@ runs:
         python3 -m pip install build --user
         pip3 install -U "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
         pip3 install pytest pytest-cov
-        python3 -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html
+        pip3 install pytest pytest-typeguard
+        python3 -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
       shell: bash 

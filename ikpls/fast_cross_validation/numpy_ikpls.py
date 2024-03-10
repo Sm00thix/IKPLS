@@ -1,5 +1,5 @@
 import warnings
-from typing import Union
+from typing import Any, Callable, Union
 
 import joblib
 import numpy as np
@@ -54,23 +54,27 @@ class PLS:
         validation_indices: npt.ArrayLike,
     ) -> Union[
         tuple[
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
         ],
         tuple[
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
-            np.ndarray,
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
         ],
     ]:
         """
@@ -116,7 +120,7 @@ class PLS:
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
         """
 
         B = np.zeros(shape=(self.A, self.K, self.M), dtype=self.dtype)
@@ -310,12 +314,12 @@ class PLS:
 
     def _stateless_predict(
         self,
-        indices: npt.ArrayLike,
-        B: npt.ArrayLike,
-        training_X_mean: npt.ArrayLike,
-        training_Y_mean: npt.ArrayLike,
-        training_X_std: npt.ArrayLike,
-        training_Y_std: npt.ArrayLike,
+        indices: npt.NDArray[np.float_],
+        B: npt.NDArray[np.float_],
+        training_X_mean: npt.NDArray[np.float_],
+        training_Y_mean: npt.NDArray[np.float_],
+        training_X_std: npt.NDArray[np.float_],
+        training_Y_std: npt.NDArray[np.float_],
         n_components: Union[None, int] = None,
     ) -> npt.NDArray[np.float_]:
         """
@@ -360,7 +364,13 @@ class PLS:
         # Add the potential training set bias
         return Y_pred * training_Y_std + training_Y_mean
 
-    def _stateless_fit_predict_eval(self, validation_indices, metric_function):
+    def _stateless_fit_predict_eval(
+        self,
+        validation_indices: npt.NDArray[np.float_],
+        metric_function: Callable[
+            [npt.NDArray[np.float_], npt.NDArray[np.float_]], Any
+        ],
+    ) -> Any:
         """
         Fits Improved Kernel PLS Algorithm #1 or #2 on `X` or `XTX`, `XTY` and `Y` using `A` components, predicts on `X` and evaluates predictions using `metric_function`. The fit is performed on the training set defined by `validation_indices`. The prediction is performed on the validation set defined by `validation_indices`.
 
@@ -394,14 +404,14 @@ class PLS:
 
     def cross_validate(
         self,
-        X,
-        Y,
-        A,
-        cv_splits,
-        metric_function,
+        X: npt.ArrayLike,
+        Y: npt.ArrayLike,
+        A: int,
+        cv_splits: npt.ArrayLike,
+        metric_function: Callable[[npt.ArrayLike, npt.ArrayLike], Any],
         n_jobs=-1,
         verbose=10,
-    ):
+    ) -> list[Any]:
         """
         Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with `n_components` components evaluating results with `metric_function`.
 
