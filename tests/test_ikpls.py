@@ -15,6 +15,7 @@ from ikpls.numpy_ikpls import PLS as NpPLS
 
 from . import load_data
 
+# Allow JAX to use 64-bit floating point precision.
 jax.config.update("jax_enable_x64", True)
 
 
