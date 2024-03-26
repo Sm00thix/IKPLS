@@ -15,6 +15,8 @@ from ikpls.numpy_ikpls import PLS as NpPLS
 
 from . import load_data
 
+jax.config.update("jax_enable_x64", True)
+
 
 class TestClass:
     csv = load_data.load_csv()
