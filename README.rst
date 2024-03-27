@@ -47,6 +47,7 @@ The fast cross-validation algorithms benefit both IKPLS Algorithms and especiall
 The fast cross-validation algorithms are mathematically equivalent to the classical cross-validation algorithm. Still, they are much quicker if cross-validation splits exceed 3.
 The fast cross-validation algorithms correctly handle (column-wise) centering and scaling of the X and Y input matrices using training set means and standard deviations to avoid data leakage from the validation set.
 This centering and scaling can be enabled by setting the center parameter to True and the scale parameter to True, respectively.
+The fast cross-validation algorithms correctly handle if the user has applied row-wise preprocessing such as (row-wise) centering and scaling of the X and Y input matrices, convolution, or other preprocessing.
 
 .. [7] `Engstrøm, O.-C. G. (2024). Shortcutting Cross-Validation: Efficiently Deriving Column-Wise Centered and Scaled Training Set $\\mathbf{X}^\\mathbf{T}\\mathbf{X}$ and $\\mathbf{X}^\\mathbf{T}\\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments`_.
 
