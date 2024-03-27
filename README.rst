@@ -4,6 +4,9 @@ Improved Kernel Partial Least Squares (IKPLS) and Fast Cross-Validation
 .. image:: https://img.shields.io/pypi/v/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: PyPI Version
+.. image:: https://img.shields.io/pypi/dm/ikpls
+   :target: https://pypi.python.org/pypi/ikpls/
+   :alt: PyPI - Downloads
 .. image:: https://img.shields.io/pypi/pyversions/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: Python Versions
