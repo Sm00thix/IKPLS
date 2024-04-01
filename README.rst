@@ -153,4 +153,4 @@ In `examples <https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will f
 Contribute
 ----------
 
-To contribute, please read the `Contribution Guidelines <CONTRIBUTING.rst>`_.
+To contribute, please read the `Contribution Guidelines <https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.rst>`_.
