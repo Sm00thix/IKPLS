@@ -51,6 +51,8 @@ If you feel like you've made a valuable contribution, but you don't know how to 
 Build from source
 *****************
 
+IKPLS uses `poetry <https://python-poetry.org/>`_ to manage its dependencies and packaging. To build the package from source, follow these steps:
+
 #.  Clone the repository:
 
     .. code-block::
