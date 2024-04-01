@@ -54,14 +54,29 @@ Build from source
 
     -  Clone the repository:
        $ git clone https://github.com/Sm00thix/IKPLS.git
+
+.. code-block:: bash
+
     -  Change to the repository directory:
        $ cd IKPLS
+
+.. code-block:: bash
+
     -  Install poetry and twine:
        $ pip3 install poetry
        $ pip3 install twine
+
+.. code-block:: bash
+
     -  Install the dependencies:
        $ poetry install
+
+.. code-block:: bash
+
     -  Build the package:
        $ poetry build
+
+.. code-block:: bash
+
     -  Check the package:
        $ twine check dist/*
