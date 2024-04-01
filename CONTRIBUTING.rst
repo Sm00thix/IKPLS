@@ -53,43 +53,43 @@ Build from source
 
 #.  Clone the repository:
 
-.. code-block:: bash
-    :class: nohighlight
+    .. code-block:: bash
+        :class: nohighlight
 
-    git clone https://github.com/Sm00thix/IKPLS.git
+        git clone https://github.com/Sm00thix/IKPLS.git
 
 #.  Change to the repository directory:
 
-.. code-block:: bash
-    :class: nohighlight
-    
-    cd IKPLS
+    .. code-block:: bash
+        :class: nohighlight
+        
+        cd IKPLS
 
 #.  Install poetry and twine:
 
-.. code-block:: bash
-    :class: nohighlight
+    .. code-block:: bash
+        :class: nohighlight
 
-    pip3 install poetry
-    pip3 install twine
+        pip3 install poetry
+        pip3 install twine
 
 #.  Install the dependencies:
 
-.. code-block:: bash
-    :class: nohighlight
+    .. code-block:: bash
+        :class: nohighlight
 
-    poetry install
+        poetry install
 
 #.  Build the package:
 
-.. code-block:: bash
-    :class: nohighlight
+    .. code-block:: bash
+        :class: nohighlight
 
-    poetry build
+        poetry build
 
 #.  Check the package with twine:
 
-.. code-block:: bash
-    :class: nohighlight
+    .. code-block:: bash
+        :class: nohighlight
 
-    twine check dist/*
+        twine check dist/*
