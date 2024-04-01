@@ -150,3 +150,7 @@ In `examples <https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will f
 
 - `Compute the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_
 
+Contribute
+----------
+
+To contribute, please read the `Contribution Guidelines <https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.rst>`_.
