@@ -1,4 +1,3 @@
-
 .. This file is heavily inspired by the equivalent in https://github.com/NLESC-JCER/QMCTorch
 
 ############################
@@ -38,10 +37,31 @@ You want to make some kind of change to the code base
 #. (**important**) announce your plan to the rest of the community *before you start working*. This announcement should be in the form of a (new) issue;
 #. (**important**) wait until some kind of consensus is reached about your idea being a good idea;
 #. if needed, fork the repository to your own Github profile and create your own feature branch off of the latest main commit. While working on your feature branch, make sure to stay up to date with the main branch by pulling in changes, possibly from the 'upstream' repository (follow the instructions `here <https://help.github.com/articles/configuring-a-remote-for-a-fork/>`__ and `here <https://help.github.com/articles/syncing-a-fork/>`__);
-#. make sure the existing tests still work by running ``python3 -m pytest tests``;
+#. make sure the existing tests still work by running ``python3 -m pytest tests --typeguard-packages=ikpls/``;
 #. add your own tests (if necessary);
 #. update or expand the documentation;
+#. check that you can build the package locally and that it passes twine check. See `build_from_source`_ for more information;
 #. `push <http://rogerdudler.github.io/git-guide/>`_ your feature branch to (your fork of) the IKPLS repository on GitHub;
 #. create the pull request, e.g. following the instructions `here <https://help.github.com/articles/creating-a-pull-request/>`__.
 
 If you feel like you've made a valuable contribution, but you don't know how to write or run tests for it or generate the documentation, don't let this discourage you from making the pull request; we can help you! Just submit the pull request, but remember that you might be asked to append additional commits to your pull request.
+
+.. _build_from_source:
+
+Build from source
+*****************
+.. code-block:: bash
+
+    -  Clone the repository:
+       $ git clone https://github.com/Sm00thix/IKPLS.git
+    -  Change to the repository directory:
+       $ cd IKPLS
+    -  Install poetry and twine:
+       $ pip3 install poetry
+       $ pip3 install twine
+    -  Install the dependencies:
+       $ poetry install
+    -  Build the package:
+       $ poetry build
+    -  Check the package:
+       $ twine check dist/*
