@@ -40,7 +40,7 @@ You want to make some kind of change to the code base
 #. make sure the existing tests still work by running ``python3 -m pytest tests --typeguard-packages=ikpls/``;
 #. add your own tests (if necessary);
 #. update or expand the documentation;
-#. check that you can build the package locally and that it passes twine check. See `build_from_source`_ for more information;
+#. check that you can build the package locally and that it passes twine check. See `Build from source build_from_source`_ for more information;
 #. `push <http://rogerdudler.github.io/git-guide/>`_ your feature branch to (your fork of) the IKPLS repository on GitHub;
 #. create the pull request, e.g. following the instructions `here <https://help.github.com/articles/creating-a-pull-request/>`__.
 
@@ -51,21 +51,21 @@ If you feel like you've made a valuable contribution, but you don't know how to 
 Build from source
 *****************
 
--  Clone the repository:
+#.  Clone the repository:
 
 .. code-block:: bash
     :class: nohighlight
 
     git clone https://github.com/Sm00thix/IKPLS.git
 
--  Change to the repository directory:
+#.  Change to the repository directory:
 
 .. code-block:: bash
     :class: nohighlight
     
     cd IKPLS
 
--  Install poetry and twine:
+#.  Install poetry and twine:
 
 .. code-block:: bash
     :class: nohighlight
@@ -73,21 +73,21 @@ Build from source
     pip3 install poetry
     pip3 install twine
 
--  Install the dependencies:
+#.  Install the dependencies:
 
 .. code-block:: bash
     :class: nohighlight
 
     poetry install
 
--  Build the package:
+#.  Build the package:
 
 .. code-block:: bash
     :class: nohighlight
 
     poetry build
 
--  Check the package with twine:
+#.  Check the package with twine:
 
 .. code-block:: bash
     :class: nohighlight
