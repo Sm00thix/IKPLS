@@ -50,33 +50,40 @@ If you feel like you've made a valuable contribution, but you don't know how to 
 
 Build from source
 *****************
-.. code-block:: bash
 
-    -  Clone the repository:
-       $ git clone https://github.com/Sm00thix/IKPLS.git
+-  Clone the repository:
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    -  Change to the repository directory:
-       $ cd IKPLS
+        git clone https://github.com/Sm00thix/IKPLS.git
 
-.. code-block:: bash
+-  Change to the repository directory:
 
-    -  Install poetry and twine:
-       $ pip3 install poetry
-       $ pip3 install twine
+    .. code-block:: bash
+    
+        cd IKPLS
 
-.. code-block:: bash
+-  Install poetry and twine:
 
-    -  Install the dependencies:
-       $ poetry install
+    .. code-block:: bash
 
-.. code-block:: bash
+        pip3 install poetry
+        pip3 install twine
 
-    -  Build the package:
-       $ poetry build
+-  Install the dependencies:
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    -  Check the package:
-       $ twine check dist/*
+        poetry install
+
+-  Build the package:
+
+    .. code-block:: bash
+
+        poetry build
+
+-  Check the package with twine:
+
+    .. code-block:: bash
+
+        twine check dist/*
