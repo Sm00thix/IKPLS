@@ -7,8 +7,8 @@ inputs:
     required: true
 
 runs:
-    using: "composite"
-    steps:
+  using: "composite"
+  steps:
     - name: Test
       run: |
         python3 -m pip install --upgrade pip
@@ -18,5 +18,5 @@ runs:
         pip3 install -U "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
         python3 -m pip install flake8 pytest
         pip3 install pytest pytest-cov typeguard
-        python3 -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
-      shell: bash 
+        poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
+      shell: bash
