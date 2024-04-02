@@ -16,6 +16,6 @@ runs:
         python3 -m pip install poetry
         poetry install
         python3 -m pip install flake8 pytest
-        pip3 install pytest pytest-cov typeguard
+        python3 -m pip install pytest pytest-cov typeguard
         poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
       shell: bash
