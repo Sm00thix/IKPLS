@@ -17,7 +17,7 @@ runs:
 
     - name: Install project dependencies
       run: |
-        poetry env use ${{ inputs.PYTHON_VERSION }}
+        poetry env use ${{ inputs.PYTHON_VERSION }} --path
         poetry install
       shell: bash
 
