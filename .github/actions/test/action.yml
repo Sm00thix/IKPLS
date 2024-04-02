@@ -2,7 +2,7 @@ name: Test
 description: Test
 
 inputs:
-  python-version:
+  PYTHON_VERSION:
     description: test
     required: true
 
@@ -21,9 +21,7 @@ runs:
       shell: bash
 
     - name: Install project dependencies
-      run: |
-        poetry env use ${{ inputs.python-version }}
-        poetry install
+      run: poetry install
       shell: bash
 
     - name: Install additional dependencies for testing

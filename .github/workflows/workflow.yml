@@ -18,6 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/test
+        with:
+          PYTHON_VERSION: ${{ matrix.python-version }}
 
   build_package:
     runs-on: ubuntu-latest
