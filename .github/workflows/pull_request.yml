@@ -20,9 +20,7 @@ jobs:
       - uses: ./.github/actions/test
 
   build_package:
-    runs-on: ubuntu-latest  
-    env:
-      JAX_ENABLE_X64: True
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build
