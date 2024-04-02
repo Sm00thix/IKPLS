@@ -13,12 +13,9 @@ runs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade pandas
-        python3 -m pip install --upgrade numpy
-        python3 -m pip install --upgrade tqdm
-        python3 -m pip install --upgrade scikit-learn
+        python3 -m pip install poetry
+        poetry install
         python3 -m pip install flake8 pytest
-        python3 -m pip install build --user
-        pip3 install -U "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
         pip3 install pytest pytest-cov typeguard
         python3 -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
       shell: bash 
