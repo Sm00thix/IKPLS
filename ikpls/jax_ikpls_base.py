@@ -1,3 +1,17 @@
+"""
+Implements an abstract class for partial least-squares regression using Improved Kernel
+PLS by Dayal and MacGregor.
+
+Implementations of concrete classes exist for both Improved Kernel PLS Algorithm #1
+and Improved Kernel PLS Algorithm #2.
+
+For more details, refer to the paper: 
+"Improved Kernel Partial Least Squares Regression" by Dayal and MacGregor.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
+"""
+
 import abc
 import warnings
 from collections.abc import Callable
@@ -14,29 +28,45 @@ from tqdm import tqdm
 
 class PLSBase(abc.ABC):
     """
-    Implements an abstract class for partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23.
+    Implements an abstract class for partial least-squares regression using Improved
+    Kernel PLS by Dayal and MacGregor:
+    https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
-    Implementations of concrete classes exist for both Improved Kernel PLS Algorithm #1 and Improved Kernel PLS Algorithm #2.
+    Implementations of concrete classes exist for both Improved Kernel PLS Algorithm #1
+    and Improved Kernel PLS Algorithm #2.
 
     Parameters
     ----------
     center : bool, optional, default=True
-        Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+        Whether to center the data before fitting. If True, then the mean of the
+        training data is subtracted from the data. If False, then the data is assumed
+        to be already centered.
 
     scale : bool, optional, default=True
-        Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+        Whether to scale the data before fitting. If True, then the data is scaled
+        using Bessel's correction for the unbiased estimate of the sample standard
+        deviation. If False, then the data is assumed to be already scaled.
 
     copy : bool, optional, default=True
-        Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+        Whether to copy `X` and `Y` in fit before potentially applying centering and
+        scaling. If True, then the data is copied before fitting. If False, and `dtype`
+        matches the type of `X` and `Y`, then centering and scaling is done inplace,
+        modifying both arrays.
 
     dtype : jnp.float, optional, default=jnp.float64
-        The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+        The float datatype to use in computation of the PLS algorithm. Using a lower
+        precision than float64 will yield significantly worse results when using an
+        increasing number of components due to propagation of numerical errors.
 
     reverse_differentiable: bool, optional, default=False
-        Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+        Whether to make the implementation end-to-end differentiable. The
+        differentiable version is slightly slower. Results among the two versions are
+        identical.
 
     verbose : bool, optional, default=False
-        If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
+        If True, each sub-function will print when it will be JIT compiled. This can be
+        useful to track if recompilation is triggered due to passing inputs with
+        different shapes.
     """
 
     def __init__(
@@ -70,16 +100,20 @@ class PLSBase(abc.ABC):
         Warns
         -----
         UserWarning.
-            If the weight norm is below machine epsilon, a warning message is displayed.
+            If the weight norm is below machine epsilon, a warning message is
+            displayed.
 
         Notes
         -----
-        This method issues a warning if the weight becomes close to zero during the PLS algorithm. It provides a hint about potential instability in results with a higher number of components.
+        This method issues a warning if the weight becomes close to zero during the PLS
+        algorithm. It provides a hint about potential instability in results with a
+        higher number of components.
         """
         i, norm = arg
         if np.isclose(norm, 0, atol=np.finfo(self.dtype).eps, rtol=0):
             warnings.warn(
-                f"Weight is close to zero. Results with A = {i} component(s) or higher may be unstable."
+                f"Weight is close to zero. Results with A = {i} component(s) or higher"
+                  " may be unstable."
             )
 
     @partial(jax.jit, static_argnums=0)
@@ -107,7 +141,9 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method computes the regression coefficients matrix for the current component in the PLS algorithm, incorporating the orthogonal weight vector and loadings vector.
+        This method computes the regression coefficients matrix for the current
+        component in the PLS algorithm, incorporating the orthogonal weight vector and
+        loadings vector.
         """
         b = b_last + r @ q.T
         return b
@@ -220,7 +256,8 @@ class PLSBase(abc.ABC):
             Potentially centered and potentially scaled response variables matrix.
         """
         if self.verbose:
-            print(f"_preprocess_input_matrices for {self.name} will be JIT compiled...")
+            print(f"_preprocess_input_matrices for {self.name} will be JIT compiled..."
+                 )
 
         if (center or scale) and copy:
             X = X.copy()
@@ -283,7 +320,9 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This abstract method is responsible for initializing various matrices used in the PLS algorithm, including regression coefficients, weights, loadings, and orthogonal weights.
+        This abstract method is responsible for initializing various matrices used in
+        the PLS algorithm, including regression coefficients, weights, loadings, and
+        orthogonal weights.
         """
         B = jnp.zeros(shape=(A, K, M), dtype=self.dtype)
         W = jnp.zeros(shape=(A, K), dtype=self.dtype)
@@ -309,14 +348,16 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method calculates the transposed predictor variables matrix from the original predictor variables matrix.
+        This method calculates the transposed predictor variables matrix from the
+        original predictor variables matrix.
         """
         return X.T
 
     @partial(jax.jit, static_argnums=0)
     def _compute_initial_XTY(self, XT: jax.Array, Y: jax.Array) -> jax.Array:
         """
-        Compute the initial cross-covariance matrix of the predictor variables and the response variables.
+        Compute the initial cross-covariance matrix of the predictor variables and the
+        response variables.
 
         Parameters
         ----------
@@ -329,18 +370,21 @@ class PLSBase(abc.ABC):
         Returns
         -------
         XTY : Array of shape (K, M)
-            Initial cross-covariance matrix of the predictor variables and the response variables.
+            Initial cross-covariance matrix of the predictor variables and the response
+            variables.
 
         Notes
         -----
-        This method calculates the initial cross-covariance matrix of the predictor variables and the response variables.
+        This method calculates the initial cross-covariance matrix of the predictor
+        variables and the response variables.
         """
         return XT @ Y
 
     @partial(jax.jit, static_argnums=0)
     def _compute_XTX(self, XT: jax.Array, X: jax.Array) -> jax.Array:
         """
-        Compute the product of the transposed predictor variables matrix and the predictor variables matrix.
+        Compute the product of the transposed predictor variables matrix and the
+        predictor variables matrix.
 
         Parameters
         ----------
@@ -357,7 +401,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method calculates the product of the transposed predictor variables matrix and the predictor variables matrix.
+        This method calculates the product of the transposed predictor variables matrix
+        and the predictor variables matrix.
         """
         return XT @ X
 
@@ -365,7 +410,8 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _step_1(self):
         """
-        Abstract method representing the first step in the PLS algorithm. This step should be implemented in concrete PLS classes.
+        Abstract method representing the first step in the PLS algorithm. This step
+        should be implemented in concrete PLS classes.
 
         Parameters
         ----------
@@ -377,7 +423,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method represents the first step of the PLS algorithm and should be implemented in concrete PLS classes.
+        This method represents the first step of the PLS algorithm and should be
+        implemented in concrete PLS classes.
         """
 
     @partial(jax.jit, static_argnums=(0, 2, 3))
@@ -385,12 +432,14 @@ class PLSBase(abc.ABC):
         self, XTY: jax.Array, M: jax.Array, K: jax.Array
     ) -> Tuple[jax.Array, DTypeLike]:
         """
-        The second step of the PLS algorithm. Computes the next weight vector and the associated norm.
+        The second step of the PLS algorithm. Computes the next weight vector and the
+        associated norm.
 
         Parameters
         ----------
         XTY : Array of shape (K, M)
-            The cross-covariance matrix of the predictor variables and the response variables.
+            The cross-covariance matrix of the predictor variables and the response
+            variables.
 
         M : int
             Number of response variables.
@@ -408,7 +457,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method computes the next weight vector `w` for the PLS algorithm and its associated norm. It is an essential step in the PLS algorithm.
+        This method computes the next weight vector `w` for the PLS algorithm and its
+        associated norm. It is an essential step in the PLS algorithm.
         """
         if self.verbose:
             print(f"_step_2 for {self.name} will be JIT compiled...")
@@ -448,7 +498,8 @@ class PLSBase(abc.ABC):
             The loadings matrix for the predictor variables.
 
         R : Array of shape (A, K)
-            The weights matrix to compute scores `T` directly from the original predictor variables.
+            The weights matrix to compute scores `T` directly from the original
+            predictor variables.
 
         Returns
         -------
@@ -457,7 +508,9 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method computes the orthogonal weight vector `r` for the current component in the PLS algorithm. It is a key step for calculating the loadings and weights matrices.
+        This method computes the orthogonal weight vector `r` for the current component
+        in the PLS algorithm. It is a key step for calculating the loadings and weights
+        matrices.
         """
         if self.verbose:
             print(f"_step_3 for {self.name} will be JIT compiled...")
@@ -470,7 +523,8 @@ class PLSBase(abc.ABC):
         self, j: int, carry: Tuple[jax.Array, jax.Array, jax.Array, jax.Array]
     ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array]:
         """
-        The body of the third step of the PLS algorithm. Iteratively computes orthogonal weight vectors.
+        The body of the third step of the PLS algorithm. Iteratively computes
+        orthogonal weight vectors.
 
         Parameters
         ----------
@@ -487,7 +541,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method is the body of the third step of the PLS algorithm and iteratively computes orthogonal weight vectors used in the PLS algorithm.
+        This method is the body of the third step of the PLS algorithm and iteratively
+        computes orthogonal weight vectors used in the PLS algorithm.
         """
         if self.verbose:
             print(f"_step_3_body for {self.name} will be JIT compiled...")
@@ -499,7 +554,8 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _step_4(self):
         """
-        Abstract method representing the fourth step in the PLS algorithm. This step should be implemented in concrete PLS classes.
+        Abstract method representing the fourth step in the PLS algorithm. This step
+        should be implemented in concrete PLS classes.
 
         Parameters
         ----------
@@ -511,7 +567,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method represents the fourth step of the PLS algorithm and should be implemented in concrete PLS classes.
+        This method represents the fourth step of the PLS algorithm and should be
+        implemented in concrete PLS classes.
         """
 
     @partial(jax.jit, static_argnums=0)
@@ -526,7 +583,8 @@ class PLSBase(abc.ABC):
     @partial(jax.jit, static_argnums=0)
     def _main_loop_body(self):
         """
-        Abstract method representing the main loop body in the PLS algorithm. This method should be implemented in concrete PLS classes.
+        Abstract method representing the main loop body in the PLS algorithm. This
+        method should be implemented in concrete PLS classes.
 
         Parameters
         ----------
@@ -538,7 +596,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method represents the main loop body of the PLS algorithm and should be implemented in concrete PLS classes.
+        This method represents the main loop body of the PLS algorithm and should be
+        implemented in concrete PLS classes.
         """
 
     @abc.abstractmethod
@@ -556,7 +615,8 @@ class PLSBase(abc.ABC):
         Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array, jax.Array],
     ]:
         """
-        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components. Returns the internal matrices instead of storing them in the class instance.
+        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
+        Returns the internal matrices instead of storing them in the class instance.
 
         Parameters
         ----------
@@ -570,13 +630,20 @@ class PLSBase(abc.ABC):
             Number of components in the PLS model.
 
         center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+            Whether to center the data before fitting. If True, then the mean of the
+            training data is subtracted from the data. If False, then the data is
+            assumed to be already centered.
 
         scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+            Whether to scale the data before fitting. If True, then the data is scaled
+            using Bessel's correction for the unbiased estimate of the sample standard
+            deviation. If False, then the data is assumed to be already scaled.
 
         copy : bool, optional, default=True
-            Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+            Whether to copy `X` and `Y` in fit before potentially applying centering
+            and scaling. If True, then the data is copied before fitting. If False, and
+            `dtype` matches the type of `X` and `Y`, then centering and scaling is done
+            inplace, modifying both arrays.
 
         Returns
         -------
@@ -605,23 +672,28 @@ class PLSBase(abc.ABC):
             Mean of the response variables `center` is True, otherwise None.
 
         X_std : Array of shape (1, K) or None
-            Sample standard deviation of the predictor variables `scale` is True, otherwise None.
+            Sample standard deviation of the predictor variables `scale` is True,
+            otherwise None.
 
         Y_std : Array of shape (1, M) or None
-            Sample standard deviation of the response variables `scale` is True, otherwise None.
+            Sample standard deviation of the response variables `scale` is True,
+            otherwise None.
 
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
+            If at any point during iteration over the number of components `A`, the
+            residual goes below machine epsilon.
 
         See Also
         --------
-        fit : Performs the same operation but stores the output matrices in the class instance instead of returning them.
+        fit : Performs the same operation but stores the output matrices in the class
+        instance instead of returning them.
 
         Notes
         -----
-        For optimization purposes, the internal representation of all matrices (except B) is transposed from the usual representation.
+        For optimization purposes, the internal representation of all matrices
+        (except B) is transposed from the usual representation.
         """
 
     @abc.abstractmethod
@@ -667,11 +739,13 @@ class PLSBase(abc.ABC):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
+            If at any point during iteration over the number of components `A`, the
+            residual goes below machine epsilon.
 
         See Also
         --------
-        stateless_fit : Performs the same operation but returns the output matrices instead of storing them in the class instance.
+        stateless_fit : Performs the same operation but returns the output matrices
+        instead of storing them in the class instance.
         """
 
     @partial(jax.jit, static_argnums=(0, 3))
@@ -686,7 +760,9 @@ class PLSBase(abc.ABC):
         Y_std: Union[None, jax.Array] = None,
     ) -> jax.Array:
         """
-        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
+        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
+        `n_components` components. If `n_components` is None, then predictions are
+        returned for all number of components.
 
         Parameters
         ----------
@@ -697,28 +773,38 @@ class PLSBase(abc.ABC):
             PLS regression coefficients tensor.
 
         n_components : int or None, optional
-            Number of components in the PLS model. If None, then all number of components are used.
+            Number of components in the PLS model. If None, then all number of
+            components are used.
 
         X_mean : Array of shape (1, K) or None, optional, default=None
-            Mean of the predictor variables. If None, then no mean is subtracted from the predictor variables.
+            Mean of the predictor variables. If None, then no mean is subtracted from
+            the predictor variables.
 
         X_std : Array of shape (1, K) or None, optional, default=None
-            Sample standard deviation of the predictor variables. If None, then no scaling is applied to the predictor variables.
+            Sample standard deviation of the predictor variables. If None, then no
+            scaling is applied to the predictor variables.
 
         Y_mean : Array of shape (1, M) or None, optional, default=None
-            Mean of the response variables. If None, then no mean is subtracted from the response variables.
+            Mean of the response variables. If None, then no mean is subtracted from
+            the response variables.
 
         Y_std : Array of shape (1, M) or None, optional, default=None
-            Sample standard deviation of the response variables. If None, then no scaling is applied to the response variables.
+            Sample standard deviation of the response variables. If None, then no
+            scaling is applied to the response variables.
 
         Returns
         -------
         Y_pred : Array of shape (N, M) or (A, N, M)
-            If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
+            If `n_components` is an int, then an array of shape (N, M) with the
+            predictions for that specific number of components is used. If
+            `n_components` is None, returns a prediction for each number of components
+            up to `A`.
 
         See Also
         --------
-        predict : Performs the same operation but uses the class instances of `B`, `X_mean`, `X_std`, `Y_mean`, and `Y_std` instead of the ones passed as arguments.
+        predict : Performs the same operation but uses the class instances of `B`,
+        `X_mean`, `X_std`, `Y_mean`, and `Y_std` instead of the ones passed as
+        arguments.
         """
         X = jnp.asarray(X, dtype=self.dtype)
         if self.verbose:
@@ -740,9 +826,12 @@ class PLSBase(abc.ABC):
             Y_pred = Y_pred + Y_mean
         return Y_pred
 
-    def predict(self, X: ArrayLike, n_components: Union[None, int] = None) -> jax.Array:
+    def predict(self, X: ArrayLike, n_components: Union[None, int] = None
+    ) -> jax.Array:
         """
-        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
+        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
+        `n_components` components. If `n_components` is None, then predictions are
+        returned for all number of components.
 
         Parameters
         ----------
@@ -750,16 +839,22 @@ class PLSBase(abc.ABC):
             Predictor variables.
 
         n_components : int or None, optional
-            Number of components in the PLS model. If None, then all number of components are used.
+            Number of components in the PLS model. If None, then all number of
+            components are used.
 
         Returns
         -------
         Y_pred : Array of shape (N, M) or (A, N, M)
-            If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
+            If `n_components` is an int, then an array of shape (N, M) with the
+            predictions for that specific number of components is used. If
+            `n_components` is None, returns a prediction for each number of components
+            up to `A`.
 
         See Also
         --------
-        stateless_predict : Performs the same operation but uses inputs `B`, `X_mean`, `X_std`, `Y_mean`, and `Y_std` instead of the ones stored in the class instance.
+        stateless_predict : Performs the same operation but uses inputs `B`, `X_mean`,
+        `X_std`, `Y_mean`, and `Y_std` instead of the ones stored in the class
+        instance.
         """
         return self.stateless_predict(
             X, self.B, n_components, self.X_mean, self.X_std, self.Y_mean, self.Y_std
@@ -779,7 +874,9 @@ class PLSBase(abc.ABC):
         copy: bool = True,
     ) -> Any:
         """
-        Computes `B` with `stateless_fit`. Then computes `Y_pred` with `stateless_predict`. `Y_pred` is an array of shape (A, N, M). Then evaluates and returns the result of `metric_function(Y_test, Y_pred)`.
+        Computes `B` with `stateless_fit`. Then computes `Y_pred` with
+        `stateless_predict`. `Y_pred` is an array of shape (A, N, M). Then evaluates
+        and returns the result of `metric_function(Y_test, Y_pred)`.
 
         Parameters
         ----------
@@ -798,17 +895,26 @@ class PLSBase(abc.ABC):
         Y_test : Array of shape (N_test, M) or (N_test,)
             Response variables.
 
-        metric_function : Callable receiving arrays `Y_test` of shape (N, M) and `Y_pred` (A, N, M) and returns Any
-            Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        metric_function : Callable receiving arrays `Y_test` of shape (N, M) and
+        `Y_pred` (A, N, M) and returns Any
+            Computes a metric based on true values `Y_test` and predicted values
+            `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+            Whether to center the data before fitting. If True, then the mean of the
+            training data is subtracted from the data. If False, then the data is
+            assumed to be already centered.
 
         scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+            Whether to scale the data before fitting. If True, then the data is scaled
+            using Bessel's correction for the unbiased estimate of the sample standard
+            deviation. If False, then the data is assumed to be already scaled.
 
         copy : bool, optional, default=True
-            Whether to copy `X_train` and `Y_train` in stateless_fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+            Whether to copy `X_train` and `Y_train` in stateless_fit before potentially
+            applying centering and scaling. If True, then the data is copied before
+            fitting. If False, and `dtype` matches the type of `X` and `Y`, then
+            centering and scaling is done inplace, modifying both arrays.
 
         Returns
         -------
@@ -816,12 +922,16 @@ class PLSBase(abc.ABC):
 
         See Also
         --------
-        stateless_fit : Fits on `X_train` and `Y_train` using `A` components while optionally performing centering and scaling. Then returns the internal matrices instead of storing them in the class instance.
+        stateless_fit : Fits on `X_train` and `Y_train` using `A` components while
+        optionally performing centering and scaling. Then returns the internal matrices
+        instead of storing them in the class instance.
 
-        stateless_predict : Computes `Y_pred` given predictor variables `X` and regression tensor `B` and optionally `A` components.
+        stateless_predict : Computes `Y_pred` given predictor variables `X` and
+        regression tensor `B` and optionally `A` components.
         """
         if self.verbose:
-            print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled...")
+            print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled..."
+                 )
 
         X_train, Y_train = self._initialize_input_matrices(X=X_train, Y=Y_train)
         X_test, Y_test = self._initialize_input_matrices(X=X_test, Y=Y_test)
@@ -851,7 +961,11 @@ class PLSBase(abc.ABC):
         show_progress=True,
     ) -> dict[str, Any]:
         """
-        Performs cross-validation for the Partial Least-Squares (PLS) model on given data. `preprocessing_function` will be applied before any potential centering and scaling as determined by `self.center` and `self.scale`. Any such potential centering and scaling is applied for each split using training set statistics to avoid data leakage from the validation set.
+        Performs cross-validation for the Partial Least-Squares (PLS) model on given
+        data. `preprocessing_function` will be applied before any potential centering
+        and scaling as determined by `self.center` and `self.scale`. Any such potential
+        centering and scaling is applied for each split using training set statistics
+        to avoid data leakage from the validation set.
 
         Parameters
         ----------
@@ -865,13 +979,19 @@ class PLSBase(abc.ABC):
             Number of components in the PLS model.
 
         cv_splits : Array of shape (N,)
-            An array defining cross-validation splits. Each unique value in `cv_splits` corresponds to a different fold.
+            An array defining cross-validation splits. Each unique value in `cv_splits`
+            corresponds to a different fold.
 
-        preprocessing_function : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
-            A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
+        preprocessing_function : Callable receiving arrays `X_train`, `Y_train`,
+        `X_val`, and `Y_val`
+            A function that preprocesses the training and validation data for each
+            fold. It should return preprocessed arrays for `X_train`, `Y_train`,
+            `X_val`, and `Y_val`.
 
-        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
-            Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning
+        Any
+            Computes a metric based on true values `Y_test` and predicted values
+            `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         metric_names : list of str
             A list of names for the metrics used for evaluation.
@@ -882,21 +1002,28 @@ class PLSBase(abc.ABC):
         Returns
         -------
         metrics : dict[str, Any]
-            A dictionary containing evaluation metrics for each metric specified in `metric_names`. The keys are metric names, and the values are lists of metric values for each cross-validation fold.
+            A dictionary containing evaluation metrics for each metric specified in
+            `metric_names`. The keys are metric names, and the values are lists of
+            metric values for each cross-validation fold.
 
         See Also
         --------
-        _inner_cv : Performs cross-validation for a single fold and computes evaluation metrics.
+        _inner_cv : Performs cross-validation for a single fold and computes evaluation
+        metrics.
 
-        _update_metric_value_lists : Updates lists of metric values for each metric and fold.
+        _update_metric_value_lists : Updates lists of metric values for each metric and
+        fold.
 
-        _finalize_metric_values : Organizes and finalizes the metric values into a dictionary for the specified metric names.
+        _finalize_metric_values : Organizes and finalizes the metric values into a
+        dictionary for the specified metric names.
 
-        stateless_fit_predict_eval : Fits the PLS model, makes predictions, and evaluates metrics for a given fold.
+        stateless_fit_predict_eval : Fits the PLS model, makes predictions, and
+        evaluates metrics for a given fold.
 
         Notes
         -----
-        This method is used to perform cross-validation on the PLS model with different data splits and evaluate its performance using user-defined metrics.
+        This method is used to perform cross-validation on the PLS model with different
+        data splits and evaluate its performance using user-defined metrics.
         """
         X = jnp.asarray(X, dtype=self.dtype)
         Y = jnp.asarray(Y, dtype=self.dtype)
@@ -941,7 +1068,8 @@ class PLSBase(abc.ABC):
         copy: bool = True,
     ):
         """
-        Performs cross-validation for a single fold of the data and computes evaluation metrics.
+        Performs cross-validation for a single fold of the data and computes evaluation
+        metrics.
 
         Parameters
         ----------
@@ -960,20 +1088,32 @@ class PLSBase(abc.ABC):
         A : int
             Number of components in the PLS model.
 
-        preprocessing_function : Callable receiving arrays `X_train`, `Y_train`, `X_val`, and `Y_val`
-            A function that preprocesses the training and validation data for each fold. It should return preprocessed arrays for `X_train`, `Y_train`, `X_val`, and `Y_val`.
+        preprocessing_function : Callable receiving arrays `X_train`, `Y_train`,
+        `X_val`, and `Y_val`
+            A function that preprocesses the training and validation data for each
+            fold. It should return preprocessed arrays for `X_train`, `Y_train`,
+            `X_val`, and `Y_val`.
 
-        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
-            Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning
+        Any
+            Computes a metric based on true values `Y_test` and predicted values
+            `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+            Whether to center the data before fitting. If True, then the mean of the
+            training data is subtracted from the data. If False, then the data is
+            assumed to be already centered.
 
         scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+            Whether to scale the data before fitting. If True, then the data is scaled
+            using Bessel's correction for the unbiased estimate of the sample standard
+            deviation. If False, then the data is assumed to be already scaled.
 
         copy : bool, optional, default=True
-            Whether to copy `X_train` and `Y_train` in stateless_fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+            Whether to copy `X_train` and `Y_train` in stateless_fit before potentially
+            applying centering and scaling. If True, then the data is copied before
+            fitting. If False, and `dtype` matches the type of `X` and `Y`, then
+            centering and scaling is done inplace, modifying both arrays.
 
         Returns
         -------
@@ -982,7 +1122,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method performs cross-validation for a single fold of the data, including preprocessing, fitting, predicting, and evaluating the PLS model.
+        This method performs cross-validation for a single fold of the data, including
+        preprocessing, fitting, predicting, and evaluating the PLS model.
         """
         if self.verbose:
             print(f"_inner_cv for {self.name} will be JIT compiled...")
@@ -1015,7 +1156,8 @@ class PLSBase(abc.ABC):
         metric_values: Any,
     ):
         """
-        Updates lists of metric values for each metric and fold during cross-validation.
+        Updates lists of metric values for each metric and fold during
+        cross-validation.
 
         Parameters
         ----------
@@ -1032,7 +1174,8 @@ class PLSBase(abc.ABC):
 
         Notes
         -----
-        This method updates the lists of metric values for each metric and fold during cross-validation.
+        This method updates the lists of metric values for each metric and fold during
+        cross-validation.
         """
         if len(metric_names) == 1:
             metric_value_lists[0].append(metric_values)
@@ -1045,7 +1188,8 @@ class PLSBase(abc.ABC):
         self, metrics_results: list[list[Any]], metric_names: list[str]
     ):
         """
-        Organizes and finalizes the metric values into a dictionary for the specified metric names.
+        Organizes and finalizes the metric values into a dictionary for the specified
+        metric names.
 
         Parameters
         ----------
@@ -1058,11 +1202,14 @@ class PLSBase(abc.ABC):
         Returns
         -------
         metrics : dict[str, list[Any]]
-            A dictionary containing evaluation metrics for each metric specified in `metric_names`. The keys are metric names, and the values are lists of metric values for each cross-validation fold.
+            A dictionary containing evaluation metrics for each metric specified in
+            `metric_names`. The keys are metric names, and the values are lists of
+            metric values for each cross-validation fold.
 
         Notes
         -----
-        This method organizes and finalizes the metric values into a dictionary for the specified metric names, making it easy to analyze the cross-validation results.
+        This method organizes and finalizes the metric values into a dictionary for the
+        specified metric names, making it easy to analyze the cross-validation results.
         """
         metrics = {}
         for name, lst_of_metric_value_for_each_split in zip(

@@ -10,6 +10,9 @@ The code includes the following functions:
     and predicted values.
 - `convolve_fit_mse`: A function to differentiate the mean squared error with respect
     to the weights of the convolution filter.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
 """
 
 from typing import Callable, Union

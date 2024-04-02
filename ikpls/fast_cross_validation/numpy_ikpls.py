@@ -1,3 +1,16 @@
+"""
+Contains the PLS class which implements fast cross-validation with partial
+least-squares regression using Improved Kernel PLS by Dayal and MacGregor:
+https://arxiv.org/abs/2401.13185
+https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+
+The implementation is written using NumPy and allows for parallelization of the
+cross-validation process using joblib.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
+"""
+
 import warnings
 from typing import Any, Callable, Union
 
@@ -10,21 +23,36 @@ from joblib import Parallel, delayed
 
 class PLS:
     """
-    Implements fast cross-validation with partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+    Implements fast cross-validation with partial least-squares regression using
+    Improved Kernel PLS by Dayal and MacGregor:
+    https://arxiv.org/abs/2401.13185
+    https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
     Parameters
     ----------
     center : bool, optional default=False
-            Whether to center `X` and `Y` before fitting by subtracting a mean row from each. The centering is computed on the training set for each fold to avoid data leakage. The centering is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific centering.
+            Whether to center `X` and `Y` before fitting by subtracting a mean row from
+            each. The centering is computed on the training set for each fold to avoid
+            data leakage. The centering is undone before returning predictions. Setting
+            this to True while using multiple jobs will increase the memory consumption
+            as each job will then have to keep its own copy of the data with its
+            specific centering.
 
     scale : bool, optional default=False, only used if `center` is True
-        Whether to scale `X` and `Y` before fitting by dividing each row by its standard deviation. The scaling is computed on the training set for each fold to avoid data leakage. The scaling is undone before returning predictions. Setting this to True while using multiple jobs will increase the memory consumption as each job will then have to keep its own copy of the data with its specific scaling.
+        Whether to scale `X` and `Y` before fitting by dividing each row by its
+        standard deviation. The scaling is computed on the training set for each fold
+        to avoid data leakage. The scaling is undone before returning predictions.
+        Setting this to True while using multiple jobs will increase the memory
+        consumption as each job will then have to keep its own copy of the data with
+        its specific scaling.
 
     algorithm : int, default=1
         Whether to use Improved Kernel PLS Algorithm #1 or #2.
 
     dtype : numpy.float, default=numpy.float64
-        The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+        The float datatype to use in computation of the PLS algorithm. Using a lower
+        precision than float64 will yield significantly worse results when using an
+        increasing number of components due to propagation of numerical errors.
 
     Raises
     ------
@@ -83,7 +111,8 @@ class PLS:
         Parameters
         ----------
         validation_indices : Array of shape (N,)
-            Boolean array defining indices into X and Y corresponding to validation samples.
+            Boolean array defining indices into X and Y corresponding to validation
+            samples.
 
         Returns
         -------
@@ -106,21 +135,28 @@ class PLS:
             PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
 
         training_X_mean : Array of shape (1, K)
-            Mean row of training X. Will be an array of zeros if `self.center` is False.
+            Mean row of training X. Will be an array of zeros if `self.center` is
+            False.
 
         training_Y_mean : Array of shape (1, M)
-            Mean row of training Y. Will be an array of zeros if `self.center` is False.
+            Mean row of training Y. Will be an array of zeros if `self.center` is
+            False.
 
         training_X_std : Array of shape (1, K)
-            Sample standard deviation row of training X. Will be an array of ones if `self.scale` is False. Any zero standard deviations will be replaced with ones.
+            Sample standard deviation row of training X. Will be an array of ones if
+            `self.scale` is False. Any zero standard deviations will be replaced with
+            ones.
 
         training_Y_std : Array of shape (1, M)
-            Sample standard deviation row of training Y. Will be an array of ones if `self.scale` is False. Any zero standard deviations will be replaced with ones.
+            Sample standard deviation row of training Y. Will be an array of ones if
+            `self.scale` is False. Any zero standard deviations will be replaced with
+            ones.
 
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
+            If at any point during iteration over the number of components `A`, the
+            residual goes below machine epsilon.
         """
 
         B = np.zeros(shape=(self.A, self.K, self.M), dtype=self.dtype)
@@ -226,7 +262,8 @@ class PLS:
                 norm = la.norm(training_XTY, ord=2)
                 if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                     warnings.warn(
-                        f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                        f"Weight is close to zero. Stopping fitting after A = {i}"
+                        "component(s)."
                     )
                     break
                 w = training_XTY / norm
@@ -239,7 +276,8 @@ class PLS:
                     norm = la.norm(w)
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                         warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                            f"Weight is close to zero. Stopping fitting after A = {i}"
+                            "component(s)."
                         )
                         break
                     w = w / norm
@@ -249,7 +287,8 @@ class PLS:
                     norm = eig_vals[-1]
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                         warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                            f"Weight is close to zero. Stopping fitting after A = {i}"
+                            "component(s)."
                         )
                         break
                     w = eig_vecs[:, -1:]
@@ -299,18 +338,17 @@ class PLS:
                 training_X_std,
                 training_Y_std,
             )
-        else:
-            return (
-                B,
-                W,
-                P,
-                Q,
-                R,
-                training_X_mean,
-                training_Y_mean,
-                training_X_std,
-                training_Y_std,
-            )
+        return (
+            B,
+            W,
+            P,
+            Q,
+            R,
+            training_X_mean,
+            training_Y_mean,
+            training_X_std,
+            training_Y_std,
+        )
 
     def _stateless_predict(
         self,
@@ -323,35 +361,48 @@ class PLS:
         n_components: Union[None, int] = None,
     ) -> npt.NDArray[np.float_]:
         """
-        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
+        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
+        `n_components` components. If `n_components` is None, then predictions are
+        returned for all number of components.
 
         Parameters
         ----------
         indices : Array of shape (N,)
-            Boolean array defining indices into X and Y corresponding to samples on which to predict.
+            Boolean array defining indices into X and Y corresponding to samples on
+            which to predict.
 
         B : Array of shape (A, K, M)
             PLS regression coefficients tensor.
 
         training_X_mean : Array of shape (1, K)
-            Mean row of training X. If self.center is False, then this should be an array of zeros.
+            Mean row of training X. If self.center is False, then this should be an
+            array of zeros.
 
         training_Y_mean : Array of shape (1, M)
-            Mean row of training Y. If self.center is False, then this should be an array of zeros.
+            Mean row of training Y. If self.center is False, then this should be an
+            array of zeros.
 
         training_X_std : Array of shape (1, K)
-            Sample standard deviation row of training X. If self.scale is False, then this should be an array of ones. Any zero standard deviations should be replaced with ones.
+            Sample standard deviation row of training X. If self.scale is False, then
+            this should be an array of ones. Any zero standard deviations should be
+            replaced with ones.
 
         training_Y_std : Array of shape (1, M)
-            Sample standard deviation row of training Y. If self.scale is False, then this should be an array of ones. Any zero standard deviations should be replaced with ones.
+            Sample standard deviation row of training Y. If self.scale is False, then
+            this should be an array of ones. Any zero standard deviations should be
+            replaced with ones.
 
         n_components : int or None, optional
-            Number of components in the PLS model. If None, then all number of components are used.
+            Number of components in the PLS model. If None, then all number of
+            components are used.
 
         Returns
         -------
         Y_pred : Array of shape (N_pred, M) or (A, N_pred, M)
-            If `n_components` is an int, then an array of shape (N_pred, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
+            If `n_components` is an int, then an array of shape (N_pred, M) with the
+            predictions for that specific number of components is used. If
+            `n_components` is None, returns a prediction for each number of components
+            up to `A`.
         """
 
         predictor_variables = self.X[indices]
@@ -372,14 +423,20 @@ class PLS:
         ],
     ) -> Any:
         """
-        Fits Improved Kernel PLS Algorithm #1 or #2 on `X` or `XTX`, `XTY` and `Y` using `A` components, predicts on `X` and evaluates predictions using `metric_function`. The fit is performed on the training set defined by `validation_indices`. The prediction is performed on the validation set defined by `validation_indices`.
+        Fits Improved Kernel PLS Algorithm #1 or #2 on `X` or `XTX`, `XTY` and `Y`
+        using `A` components, predicts on `X` and evaluates predictions using
+        `metric_function`. The fit is performed on the training set defined by
+        `validation_indices`. The prediction is performed on the validation set defined
+        by `validation_indices`.
 
         Parameters
         ----------
         validation_indices : Array of shape (N,)
-            Boolean array defining indices into X and Y corresponding to validation samples.
+            Boolean array defining indices into X and Y corresponding to validation
+            samples.
 
-        metric_function : Callable receiving arrays `Y_true` and `Y_pred` and returning Any
+        metric_function : Callable receiving arrays `Y_true` and `Y_pred` and returning
+        Any
 
         Returns
         -------
@@ -413,7 +470,8 @@ class PLS:
         verbose=10,
     ) -> list[Any]:
         """
-        Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with `n_components` components evaluating results with `metric_function`.
+        Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with
+        `n_components` components evaluating results with `metric_function`.
 
         Parameters
         ----------
@@ -427,16 +485,23 @@ class PLS:
             Number of components in the PLS model.
 
         cv_splits : Array of shape (N,)
-            An array defining cross-validation splits. Each unique value in `cv_splits` corresponds to a different fold.
+            An array defining cross-validation splits. Each unique value in `cv_splits`
+            corresponds to a different fold.
 
-        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning Any
-            Computes a metric based on true values `Y_test` and predicted values `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning
+        Any
+            Computes a metric based on true values `Y_test` and predicted values
+            `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         mean_centering : bool, optional default=True
-            Whether to mean X and Y across the sample axis before fitting. The mean is subtracted from X and Y before fitting and added back to the predictions. This implementation ensures that no data leakage occurs between training and validation sets.
+            Whether to mean X and Y across the sample axis before fitting. The mean is
+            subtracted from X and Y before fitting and added back to the predictions.
+            This implementation ensures that no data leakage occurs between training
+            and validation sets.
 
         n_jobs : int, optional default=-1
-            Number of parallel jobs to use. A value of -1 will use the minimum of all available cores and the number of unique values in `cv_splits`.
+            Number of parallel jobs to use. A value of -1 will use the minimum of all
+            available cores and the number of unique values in `cv_splits`.
 
         verbose : int, optional default=10
             Controls verbosity of parallel jobs.
@@ -460,11 +525,14 @@ class PLS:
             n_jobs = min(joblib.cpu_count(), unique_splits.size)
 
         print(
-            f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A} components on {len(unique_splits)} unique splits using {n_jobs} parallel processes."
+            f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A}"
+            f" components on {len(unique_splits)} unique splits using {n_jobs} "
+            f"parallel processes."
         )
 
         if self.center:
-            # We can compute these once for the entire dataset and subtract the validation parts during cross-validation.
+            # We can compute these once for the entire dataset and subtract the
+            # validation parts during cross-validation.
             self.X_mean = np.mean(self.X, axis=0, keepdims=True)
             self.Y_mean = np.mean(self.Y, axis=0, keepdims=True)
             if self.scale:

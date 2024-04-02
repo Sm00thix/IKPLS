@@ -1,3 +1,15 @@
+"""
+Contains the PLS Class which implements partial least-squares regression using Improved
+Kernel PLS Algorithm #2 by Dayal and MacGregor:
+https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+
+The class is implemented using JAX for end-to-end differentiability. Additionally, JAX
+allows CPU, GPU, and TPU execution.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
+"""
+
 from functools import partial
 from typing import Tuple
 
@@ -11,27 +23,42 @@ from ikpls.jax_ikpls_base import PLSBase
 
 class PLS(PLSBase):
     """
-    Implements partial least-squares regression using Improved Kernel PLS Algorithm #2 by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23.
+    Implements partial least-squares regression using Improved Kernel PLS Algorithm #2
+    by Dayal and MacGregor:
+    https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23.
 
     Parameters
     ----------
     center : bool, optional, default=True
-        Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+        Whether to center the data before fitting. If True, then the mean of the
+        training data is subtracted from the data. If False, then the data is assumed
+        to be already centered.
 
     scale : bool, optional, default=True
-        Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+        Whether to scale the data before fitting. If True, then the data is scaled
+        using Bessel's correction for the unbiased estimate of the sample standard
+        deviation. If False, then the data is assumed to be already scaled.
 
     copy : bool, optional, default=True
-        Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+        Whether to copy `X` and `Y` in fit before potentially applying centering and
+        scaling. If True, then the data is copied before fitting. If False, and `dtype`
+        matches the type of `X` and `Y`, then centering and scaling is done inplace,
+        modifying both arrays.
 
     dtype : DTypeLike, optional, default=jnp.float64
-        The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+        The float datatype to use in computation of the PLS algorithm. Using a lower
+        precision than float64 will yield significantly worse results when using an
+        increasing number of components due to propagation of numerical errors.
 
     reverse_differentiable: bool, optional, default=False
-        Whether to make the implementation end-to-end differentiable. The differentiable version is slightly slower. Results among the two versions are identical.
+        Whether to make the implementation end-to-end differentiable. The
+        differentiable version is slightly slower. Results among the two versions are
+        identical.
 
     verbose : bool, optional, default=False
-        If True, each sub-function will print when it will be JIT compiled. This can be useful to track if recompilation is triggered due to passing inputs with different shapes.
+        If True, each sub-function will print when it will be JIT compiled. This can be
+        useful to track if recompilation is triggered due to passing inputs with
+        different shapes.
     """
 
     def __init__(
@@ -57,7 +84,8 @@ class PLS(PLSBase):
         self, X: ArrayLike, Y: ArrayLike, A: int
     ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
-        Initialize the matrices and arrays needed for the PLS algorithm. This method is part of the PLS fitting process.
+        Initialize the matrices and arrays needed for the PLS algorithm. This method is
+        part of the PLS fitting process.
 
         Parameters
         ----------
@@ -113,7 +141,8 @@ class PLS(PLSBase):
             Product of transposed predictor variables and predictor variables.
 
         XTY : Array of shape (K, M)
-            Initial cross-covariance matrix of the predictor variables and the response variables.
+            Initial cross-covariance matrix of the predictor variables and the response
+            variables.
         """
         if self.verbose:
             print(f"_step_1 for {self.name} will be JIT compiled...")
@@ -173,7 +202,8 @@ class PLS(PLSBase):
         reverse_differentiable: bool,
     ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
-        Execute the main loop body of Improved Kernel PLS Algorithm #2. This function performs various steps of the PLS algorithm for each component.
+        Execute the main loop body of Improved Kernel PLS Algorithm #2. This function
+        performs various steps of the PLS algorithm for each component.
 
         Parameters
         ----------
@@ -288,11 +318,13 @@ class PLS(PLSBase):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
+            If at any point during iteration over the number of components `A`, the
+            residual goes below machine epsilon.
 
         See Also
         --------
-        stateless_fit : Performs the same operation but returns the output matrices instead of storing them in the class instance.
+        stateless_fit : Performs the same operation but returns the output matrices
+        instead of storing them in the class instance.
         """
         self.B, W, P, Q, R, self.X_mean, self.Y_mean, self.X_std, self.Y_std = (
             self.stateless_fit(X, Y, A, self.center, self.scale, self.copy)
@@ -313,15 +345,18 @@ class PLS(PLSBase):
         copy: bool = True,
     ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
-        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components. Returns the internal matrices instead of storing them in the class instance.
+        Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
+        Returns the internal matrices instead of storing them in the class instance.
 
         Parameters
         ----------
         X : Array of shape (N, K)
-            Predictor variables. Its dtype will be converted to float64 for reliable results.
+            Predictor variables. Its dtype will be converted to float64 for reliable
+            results.
 
         Y : Array of shape (N, M) or (N,)
-            Response variables. Its dtype will be converted to float64 for reliable results.
+            Response variables. Its dtype will be converted to float64 for reliable
+            results.
 
         A : int
             Number of components in the PLS model.
@@ -358,15 +393,18 @@ class PLS(PLSBase):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine epsilon.
+            If at any point during iteration over the number of components `A`, the
+            residual goes below machine epsilon.
 
         See Also
         --------
-        fit : Performs the same operation but stores the output matrices in the class instance instead of returning them.
+        fit : Performs the same operation but stores the output matrices in the class
+        instance instead of returning them.
 
         Notes
         -----
-        For optimization purposes, the internal representation of all matrices (except B) is transposed from the usual representation.
+        For optimization purposes, the internal representation of all matrices
+        (except B) is transposed from the usual representation.
         """
         if self.verbose:
             print(f"stateless_fit for {self.name} will be JIT compiled...")

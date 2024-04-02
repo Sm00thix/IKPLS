@@ -1,3 +1,15 @@
+"""
+Contains the PLS Class which implements partial least-squares regression using Improved
+Kernel PLS by Dayal and MacGregor:
+https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+
+The PLS class subclasses scikit-learn's BaseEstimator to ensure compatibility with e.g.
+scikit-learn's cross_validate. It is written using NumPy.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
+"""
+
 import warnings
 from typing import Union
 
@@ -9,7 +21,9 @@ from sklearn.base import BaseEstimator
 
 class PLS(BaseEstimator):
     """
-    Implements partial least-squares regression using Improved Kernel PLS by Dayal and MacGregor: https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
+    Implements partial least-squares regression using Improved Kernel PLS by Dayal and
+    MacGregor:
+    https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23
 
     Parameters
     ----------
@@ -17,16 +31,25 @@ class PLS(BaseEstimator):
         Whether to use Improved Kernel PLS Algorithm #1 or #2.
 
     center : bool, default=True
-        Whether to center the data before fitting. If True, then the mean of the training data is subtracted from the data. If False, then the data is assumed to be already centered.
+        Whether to center the data before fitting. If True, then the mean of the
+        training data is subtracted from the data. If False, then the data is assumed
+        to be already centered.
 
     scale : bool, default=True
-        Whether to scale the data before fitting. If True, then the data is scaled using Bessel's correction for the unbiased estimate of the sample standard deviation. If False, then the data is assumed to be already scaled.
+        Whether to scale the data before fitting. If True, then the data is scaled
+        using Bessel's correction for the unbiased estimate of the sample standard
+        deviation. If False, then the data is assumed to be already scaled.
 
     copy : bool, default=True
-        Whether to copy `X` and `Y` in fit before potentially applying centering and scaling. If True, then the data is copied before fitting. If False, and `dtype` matches the type of `X` and `Y`, then centering and scaling is done inplace, modifying both arrays.
+        Whether to copy `X` and `Y` in fit before potentially applying centering and
+        scaling. If True, then the data is copied before fitting. If False, and `dtype`
+        matches the type of `X` and `Y`, then centering and scaling is done inplace,
+        modifying both arrays.
 
     dtype : numpy.float, default=numpy.float64
-        The float datatype to use in computation of the PLS algorithm. Using a lower precision than float64 will yield significantly worse results when using an increasing number of components due to propagation of numerical errors.
+        The float datatype to use in computation of the PLS algorithm. Using a lower
+        precision than float64 will yield significantly worse results when using an
+        increasing number of components due to propagation of numerical errors.
 
     Raises
     ------
@@ -107,7 +130,8 @@ class PLS(BaseEstimator):
         Warns
         -----
         UserWarning.
-            If at any point during iteration over the number of components `A`, the residual goes below machine precision for jnp.float64.
+            If at any point during iteration over the number of components `A`, the
+            residual goes below machine precision for np.float64.
         """
         X = np.asarray(X, dtype=self.dtype)
         Y = np.asarray(Y, dtype=self.dtype)
@@ -166,7 +190,8 @@ class PLS(BaseEstimator):
                 norm = la.norm(XTY, ord=2)
                 if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                     warnings.warn(
-                        f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                        f"Weight is close to zero. Stopping fitting after A = {i}"
+                         "component(s)."
                     )
                     break
                 w = XTY / norm
@@ -179,7 +204,8 @@ class PLS(BaseEstimator):
                     norm = la.norm(w)
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                         warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                            f"Weight is close to zero. Stopping fitting after A = {i}"
+                            "component(s)."
                         )
                         break
                     w = w / norm
@@ -189,7 +215,8 @@ class PLS(BaseEstimator):
                     norm = eig_vals[-1]
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                         warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i} component(s)."
+                            f"Weight is close to zero. Stopping fitting after A = {i}"
+                            "component(s)."
                         )
                         break
                     w = eig_vecs[:, -1:]
@@ -225,7 +252,9 @@ class PLS(BaseEstimator):
         self, X: npt.ArrayLike, n_components: Union[None, int] = None
     ) -> npt.NDArray[np.float_]:
         """
-        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using `n_components` components. If `n_components` is None, then predictions are returned for all number of components.
+        Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
+        `n_components` components. If `n_components` is None, then predictions are
+        returned for all number of components.
 
         Parameters
         ----------
@@ -233,12 +262,16 @@ class PLS(BaseEstimator):
             Predictor variables.
 
         n_components : int or None, optional, default=None.
-            Number of components in the PLS model. If None, then all number of components are used.
+            Number of components in the PLS model. If None, then all number of
+            components are used.
 
         Returns
         -------
         Y_pred : Array of shape (N, M) or (A, N, M)
-            If `n_components` is an int, then an array of shape (N, M) with the predictions for that specific number of components is used. If `n_components` is None, returns a prediction for each number of components up to `A`.
+            If `n_components` is an int, then an array of shape (N, M) with the
+            predictions for that specific number of components is used. If
+            `n_components` is None, returns a prediction for each number of components
+            up to `A`.
         """
         X = np.asarray(X, dtype=self.dtype)
         if self.center:

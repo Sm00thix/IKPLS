@@ -13,6 +13,9 @@ The code includes the following functions:
 To run the cross-validation, execute the file.
 
 Note: The code assumes the availability of the `ikpls` package and its dependencies.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
 """
 
 import numpy as np

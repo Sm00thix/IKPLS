@@ -1,10 +1,13 @@
 """
-    This script demonstrates the usage of the JAX implementation of IKPLS for fitting
-    and predicting on data. The script generates random input data and fits the IKPLS
-    model to the data. It then demonstrates how to make predictions using the fitted
-    model. The internal model parameters can also be accessed for further analysis.
+This script demonstrates the usage of the JAX implementation of IKPLS for fitting and
+predicting on data. The script generates random input data and fits the IKPLS model to
+the data. It then demonstrates how to make predictions using the fitted model. The
+internal model parameters can also be accessed for further analysis.
 
-    Note: The script assumes that the 'ikpls' package is installed and accessible.
+Note: The script assumes that the 'ikpls' package is installed and accessible.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
 """
 
 import numpy as np
