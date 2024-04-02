@@ -9,6 +9,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.PYTHON_VERSION }}
+
     - name: Install Poetry
       run: |
         python -m pip install --upgrade pip
@@ -16,9 +21,7 @@ runs:
       shell: bash
 
     - name: Install project dependencies
-      run: |
-        poetry env use ${{ inputs.python-version }}
-        poetry install
+      run: poetry install
       shell: bash
 
     - name: Install additional dependencies for testing
