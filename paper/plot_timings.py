@@ -1,3 +1,23 @@
+"""
+Plot the benchmarks stored in timings/timings.csv. The plot is saved as
+timings/timings.png.
+
+The timings.csv file contains the following columns:
+- model: The model name.
+- n_components: The number of components.
+- n_splits: The number of splits in the cross-validation.
+- n: The number of samples.
+- k: The number of X features.
+- m: The number of Y targets.
+- time: The time taken to fit the model.
+- inferred: Whether the time was inferred by preemptively stopping the benchmark once
+    the time per iteration was stable or by running the benchmark to completion.
+- n_jobs: This column is unused. It contains only a single non-empty entry which was
+    manually entered. The scikit-learn implementation of NIPALS uses a lot of memory
+    when cross-validating and the machine had to use 8 cores instead of 32 to avoid
+    running out of memory.
+"""
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
@@ -7,11 +27,40 @@ from matplotlib.transforms import blended_transform_factory
 
 
 def remove_rows_where_all_values_except_time_are_same(df):
+    """
+    Remove rows from a DataFrame where all values except the 'time' column are the same.
+
+    Paramters
+    ---------
+    df : pd.DataFrame
+        The input DataFrame.
+        
+    Returns:
+        pd.DataFrame: The DataFrame with duplicate rows removed.
+    """
     df = df.drop_duplicates(subset=df.columns[:-1])
     return df
 
 
 def get_name_x_t_dict(df, x_name, constants_dict, single_fit_or_loocv):
+    """
+    Get a dictionary containing the x, t, and inferred values for each model name.
+
+    Paramters
+    ---------
+    df : pd.DataFrame
+        The input DataFrame.
+    x_name : str
+        The name of the x column.
+    constants_dict : dict
+        A dictionary containing the constant values for the plot.
+    single_fit_or_loocv : str
+        The type of fit to consider. Must be 'single_fit' or 'loocv'.
+
+    Returns:
+        dict: A dictionary containing the x, t, and inferred values for each model
+        name.
+    """
     model_names = ["sk", "np1", "np2", "fastnp1", "fastnp2", "jax1", "jax2"]
     for name, value in constants_dict.items():
         df = df[df[name] == value]
@@ -24,7 +73,8 @@ def get_name_x_t_dict(df, x_name, constants_dict, single_fit_or_loocv):
             sub_df = sub_df[sub_df["n_splits"] != 1]
         else:
             raise ValueError(
-                f"single_fit_or_loocv must be 'single_fit' or 'loocv'. but got: {single_fit_or_loocv}"
+                f"single_fit_or_loocv must be 'single_fit' or 'loocv'. but got: "
+                f"{single_fit_or_loocv}"
             )
         x = sub_df[x_name].values
         t = sub_df["time"].values
@@ -53,6 +103,23 @@ def plot_timings(
     xlabel,
     constants_dict,
 ):
+    """
+    Plot the timings on a given axis.
+
+    Paramters
+    ---------
+    ax : plt.Axes
+        The axis to plot on.
+    name_x_t_dict : dict
+        A dictionary containing the x, t, and inferred values for each model name.
+    xlabel : str
+        The x-axis label.
+    constants_dict : dict
+        A dictionary containing the constant values for the plot.
+
+    Returns:
+        None
+    """
     fixed_points = [1, 60, 3600, 86400, 604800, 2592000, 31536000, 315360000]
     fixed_points_labels = [
         "1 second",
@@ -117,7 +184,6 @@ def plot_timings(
     if xlabel == "n_components":
         xlabel = "a"
     xlabel = xlabel.upper()
-    # title_str = f"Time vs. {xlabel} for "
     title_str = ""
     f = mticker.ScalarFormatter(useMathText=True)
     for name, value in constants_dict.items():
@@ -284,12 +350,6 @@ if __name__ == "__main__":
         + space
         + "$A$ (no. components)"
     )
-    # axs[0, 0].twiny().set_xlabel("Time vs. N")
-    # axs[0, 1].twiny().set_xlabel("Time vs. K")
-    # axs[0, 2].twiny().set_xlabel("Time vs. A")
-    # axs[3, 0].set_xlabel("$N$")
-    # axs[3, 1].set_xlabel("$K$")
-    # axs[3, 2].set_xlabel("$A$")
     handles, labels = axs[3, 0].get_legend_handles_labels()
     sk_handle = handles[0]
     sk_label = labels[0]
