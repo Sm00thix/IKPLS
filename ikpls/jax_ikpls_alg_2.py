@@ -70,7 +70,6 @@ class PLS(PLSBase):
         reverse_differentiable: bool = False,
         verbose: bool = False,
     ) -> None:
-        self.name = "Improved Kernel PLS Algorithm #2"
         super().__init__(
             center=center,
             scale=scale,
@@ -79,9 +78,10 @@ class PLS(PLSBase):
             reverse_differentiable=reverse_differentiable,
             verbose=verbose,
         )
+        self.name += " #2"
 
     def _get_initial_matrices(
-        self, X: ArrayLike, Y: ArrayLike, A: int
+        self, A: int, K: int, M: int
     ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
         Initialize the matrices and arrays needed for the PLS algorithm. This method is
@@ -97,9 +97,6 @@ class PLS(PLSBase):
 
         M : int
             Number of response variables.
-
-        N : int
-            Number of samples.
 
         Returns
         -------
@@ -120,7 +117,7 @@ class PLS(PLSBase):
         """
         if self.verbose:
             print(f"_get_initial_matrices for {self.name} will be JIT compiled...")
-        return super()._get_initial_matrices(X, Y, A)
+        return super()._get_initial_matrices(A, K, M)
 
     @partial(jax.jit, static_argnums=(0,))
     def _step_1(self, X: ArrayLike, Y: ArrayLike) -> Tuple[jax.Array, jax.Array]:
@@ -415,7 +412,7 @@ class PLS(PLSBase):
         )
 
         # Get shapes
-        N, K = X.shape
+        _N, K = X.shape
         M = Y.shape[1]
 
         # Initialize matrices

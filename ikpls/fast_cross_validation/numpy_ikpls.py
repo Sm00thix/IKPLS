@@ -76,6 +76,20 @@ class PLS:
             raise ValueError(
                 f"Invalid algorithm: {self.algorithm}. Algorithm must be 1 or 2."
             )
+        self.X = None
+        self.Y = None
+        self.A = None
+        self.N = None
+        self.K = None
+        self.M = None
+        self.X_mean = None
+        self.Y_mean = None
+        self.sum_X = None
+        self.sum_Y = None
+        self.sum_sq_X = None
+        self.sum_sq_Y = None
+        self.XTX = None
+        self.XTY = None
 
     def _stateless_fit(
         self,

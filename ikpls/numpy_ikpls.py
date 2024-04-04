@@ -75,6 +75,20 @@ class PLS(BaseEstimator):
             raise ValueError(
                 f"Invalid algorithm: {self.algorithm}. Algorithm must be 1 or 2."
             )
+        self.A = None
+        self.N = None
+        self.K = None
+        self.M = None
+        self.B = None
+        self.W = None
+        self.P = None
+        self.Q = None
+        self.R = None
+        self.T = None
+        self.X_mean = None
+        self.Y_mean = None
+        self.X_std = None
+        self.Y_std = None
 
     def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
         """
@@ -110,7 +124,7 @@ class PLS(BaseEstimator):
 
         T : Array of shape (N, A)
             PLS scores matrix of X. Only assigned for Improved Kernel PLS Algorithm #1.
-        
+
         X_mean : Array of shape (1, K) or None
             Mean of X. If centering is not performed, this is None.
 
@@ -191,7 +205,7 @@ class PLS(BaseEstimator):
                 if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
                     warnings.warn(
                         f"Weight is close to zero. Stopping fitting after A = {i}"
-                         "component(s)."
+                        "component(s)."
                     )
                     break
                 w = XTY / norm

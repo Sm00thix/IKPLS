@@ -84,8 +84,18 @@ class PLSBase(abc.ABC):
         self.dtype = dtype
         self.reverse_differentiable = reverse_differentiable
         self.verbose = verbose
+        self.name = "Improved Kernel PLS Algorithm"
+        self.B = None
+        self.W = None
+        self.P = None
+        self.Q = None
+        self.R = None
+        self.X_mean = None
+        self.Y_mean = None
+        self.X_std = None
+        self.Y_std = None
 
-    def _weight_warning(self, arg, *args):
+    def _weight_warning(self, arg, *_args):
         """
         Display a warning message if the weight is close to zero.
 
@@ -113,7 +123,7 @@ class PLSBase(abc.ABC):
         if np.isclose(norm, 0, atol=np.finfo(self.dtype).eps, rtol=0):
             warnings.warn(
                 f"Weight is close to zero. Results with A = {i} component(s) or higher"
-                  " may be unstable."
+                " may be unstable."
             )
 
     @partial(jax.jit, static_argnums=0)
@@ -256,8 +266,7 @@ class PLSBase(abc.ABC):
             Potentially centered and potentially scaled response variables matrix.
         """
         if self.verbose:
-            print(f"_preprocess_input_matrices for {self.name} will be JIT compiled..."
-                 )
+            print(f"_preprocess_input_matrices for {self.name} will be JIT compiled...")
 
         if (center or scale) and copy:
             X = X.copy()
@@ -408,7 +417,7 @@ class PLSBase(abc.ABC):
 
     @abc.abstractmethod
     @partial(jax.jit, static_argnums=0)
-    def _step_1(self):
+    def _step_1(self, X: jax.Array, Y: jax.Array):
         """
         Abstract method representing the first step in the PLS algorithm. This step
         should be implemented in concrete PLS classes.
@@ -826,8 +835,7 @@ class PLSBase(abc.ABC):
             Y_pred = Y_pred + Y_mean
         return Y_pred
 
-    def predict(self, X: ArrayLike, n_components: Union[None, int] = None
-    ) -> jax.Array:
+    def predict(self, X: ArrayLike, n_components: Union[None, int] = None) -> jax.Array:
         """
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
         `n_components` components. If `n_components` is None, then predictions are
@@ -930,8 +938,7 @@ class PLSBase(abc.ABC):
         regression tensor `B` and optionally `A` components.
         """
         if self.verbose:
-            print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled..."
-                 )
+            print(f"stateless_fit_predict_eval for {self.name} will be JIT compiled...")
 
         X_train, Y_train = self._initialize_input_matrices(X=X_train, Y=Y_train)
         X_test, Y_test = self._initialize_input_matrices(X=X_test, Y=Y_test)

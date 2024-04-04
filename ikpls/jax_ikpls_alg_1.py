@@ -79,6 +79,8 @@ class PLS(PLSBase):
             reverse_differentiable=reverse_differentiable,
             verbose=verbose,
         )
+        self.name += " #1"
+        self.T = None
 
     @partial(jax.jit, static_argnums=(0, 1, 2, 3, 4))
     def _get_initial_matrices(
