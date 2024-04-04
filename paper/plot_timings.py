@@ -161,7 +161,7 @@ def plot_timings(
         elif "NumPy IKPLS #2" in name and np2_color is None:
             np2_color = color
         for point_x, point_t, point_inferred in zip(x, t, inferred):
-            if np.isnan(point_inferred):
+            if np.isnan(point_inferred) or not point_inferred:
                 ax.loglog(point_x, point_t, "o", color=color)
             else:
                 ax.loglog(point_x, point_t, "s", color=color)
@@ -200,7 +200,7 @@ def plot_timings(
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("timings/timings.csv")
+    df = pd.read_csv("timings/user_timings.csv")
     df = remove_rows_where_all_values_except_time_are_same(df)
 
     plt.rcParams.update({"font.size": 10})
@@ -442,4 +442,4 @@ if __name__ == "__main__":
     fig.patches.extend([rect1, rect2, rect11, rect12, rect21, rect22])
     # fig.tight_layout()
     plt.subplots_adjust(bottom=0.06, hspace=0.3, wspace=0.2, left=0.1, right=0.95)
-    plt.savefig(f"timings/timings.png")
+    plt.savefig(f"timings/user_timings.png")
