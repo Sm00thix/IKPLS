@@ -23,6 +23,7 @@ import jax.numpy as jnp
 import jax.numpy.linalg as jla
 import numpy as np
 from jax.typing import ArrayLike, DTypeLike
+from numpy import typing as npt
 from tqdm import tqdm
 
 
@@ -95,7 +96,7 @@ class PLSBase(abc.ABC):
         self.X_std = None
         self.Y_std = None
 
-    def _weight_warning(self, arg, *_args):
+    def _weight_warning(self, arg: Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]]):
         """
         Display a warning message if the weight is close to zero.
 
@@ -103,9 +104,6 @@ class PLSBase(abc.ABC):
         ----------
         arg : tuple
             A tuple containing the component index and the weight norm.
-
-        *args : Any
-            Placeholder for unused arguments.
 
         Warns
         -----
@@ -121,10 +119,12 @@ class PLSBase(abc.ABC):
         """
         i, norm = arg
         if np.isclose(norm, 0, atol=np.finfo(self.dtype).eps, rtol=0):
-            warnings.warn(
-                f"Weight is close to zero. Results with A = {i} component(s) or higher"
-                " may be unstable."
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("always", UserWarning)
+                warnings.warn(
+                    f"Weight is close to zero. Results with A = {i} component(s) or "
+                    "higher may be unstable."
+                )
 
     @partial(jax.jit, static_argnums=0)
     def _compute_regression_coefficients(

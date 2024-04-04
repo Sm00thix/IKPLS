@@ -15,7 +15,6 @@ from typing import Tuple
 
 import jax
 import jax.numpy as jnp
-from jax.experimental import host_callback
 from jax.typing import ArrayLike, DTypeLike
 
 from ikpls.jax_ikpls_base import PLSBase
@@ -272,7 +271,7 @@ class PLS(PLSBase):
             print(f"_main_loop_body for {self.name} will be JIT compiled...")
         # step 2
         w, norm = self._step_2(XTY, M, K)
-        host_callback.id_tap(self._weight_warning, [i, norm])
+        jax.debug.callback(self._weight_warning, (i, norm))
         # step 3
         if reverse_differentiable:
             r = self._step_3(A, w, P, R)

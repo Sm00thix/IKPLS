@@ -91,6 +91,25 @@ class PLS:
         self.XTX = None
         self.XTY = None
 
+    def _weight_warning(self, i: int) -> None:
+        """
+        Raises a warning if the weight is close to zero.
+
+        Parameters
+        ----------
+        norm : float
+            The norm of the weight vector.
+
+        i : int
+            The current number of components.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter("always", UserWarning)
+            warnings.warn(
+                f"Weight is close to zero. Results with A = {i} component(s) or higher"
+                " may be unstable."
+            )
+
     def _stateless_fit(
         self,
         validation_indices: npt.ArrayLike,
@@ -275,10 +294,7 @@ class PLS:
             if self.M == 1:
                 norm = la.norm(training_XTY, ord=2)
                 if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
-                    warnings.warn(
-                        f"Weight is close to zero. Stopping fitting after A = {i}"
-                        "component(s)."
-                    )
+                    self._weight_warning(i)
                     break
                 w = training_XTY / norm
             else:
@@ -289,10 +305,7 @@ class PLS:
                     w = training_XTY @ q
                     norm = la.norm(w)
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
-                        warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i}"
-                            "component(s)."
-                        )
+                        self._weight_warning(i)
                         break
                     w = w / norm
                 else:
@@ -300,10 +313,7 @@ class PLS:
                     eig_vals, eig_vecs = la.eigh(training_XTYYTX)
                     norm = eig_vals[-1]
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
-                        warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i}"
-                            "component(s)."
-                        )
+                        self._weight_warning(i)
                         break
                     w = eig_vecs[:, -1:]
             WT[i] = w.squeeze()

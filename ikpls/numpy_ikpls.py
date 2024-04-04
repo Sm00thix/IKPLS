@@ -90,6 +90,26 @@ class PLS(BaseEstimator):
         self.X_std = None
         self.Y_std = None
 
+    def _weight_warning(self, i: int) -> None:
+        """
+        Warns the user that the weight is close to zero.
+
+        Parameters
+        ----------
+        i : int
+            Number of components.
+
+        Returns
+        -------
+        None.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter("always", UserWarning)
+            warnings.warn(
+                f"Weight is close to zero. Results with A = {i} component(s) or higher"
+                " may be unstable."
+            )
+
     def fit(self, X: npt.ArrayLike, Y: npt.ArrayLike, A: int) -> None:
         """
         Fits Improved Kernel PLS Algorithm #1 on `X` and `Y` using `A` components.
@@ -203,10 +223,7 @@ class PLS(BaseEstimator):
             if M == 1:
                 norm = la.norm(XTY, ord=2)
                 if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
-                    warnings.warn(
-                        f"Weight is close to zero. Stopping fitting after A = {i}"
-                        "component(s)."
-                    )
+                    self._weight_warning(i)
                     break
                 w = XTY / norm
             else:
@@ -217,10 +234,7 @@ class PLS(BaseEstimator):
                     w = XTY @ q
                     norm = la.norm(w)
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
-                        warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i}"
-                            "component(s)."
-                        )
+                        self._weight_warning(i)
                         break
                     w = w / norm
                 else:
@@ -228,10 +242,7 @@ class PLS(BaseEstimator):
                     eig_vals, eig_vecs = la.eigh(XTYYTX)
                     norm = eig_vals[-1]
                     if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
-                        warnings.warn(
-                            f"Weight is close to zero. Stopping fitting after A = {i}"
-                            "component(s)."
-                        )
+                        self._weight_warning(i)
                         break
                     w = eig_vecs[:, -1:]
             W[i] = w.squeeze()

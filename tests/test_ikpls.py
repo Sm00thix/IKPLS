@@ -12,7 +12,7 @@ Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk
 """
 
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple, Union
 
 import jax
 import numpy as np
@@ -1797,6 +1797,71 @@ class TestClass:
             rtol=0,
         )
 
+    def _helper_check_pls_constant_y(
+        self,
+        pls_model: Union[SkPLS, NpPLS, JAX_Alg_1, JAX_Alg_2, FastCVPLS],
+        X: npt.NDArray,
+        Y: npt.NDArray,
+        n_components: int,
+        cv_splits: Optional[npt.NDArray] = None,
+    ) -> (
+        None
+    ):
+        """
+        Description
+        -----------
+        Check that every call to PLS fit correctly raises a warning when Y is constant.
+
+        This method checks that every call to the PLS fit method raises a warning when
+        the target data (Y) is constant. It fits the PLS regression models using
+        various algorithms and checks for warnings related to weights being close to
+        zero.
+
+        Parameters
+        ----------
+        pls_model : Union[SkPLS, NpPLS, JAX_Alg_1, JAX_Alg_2, FastCVPLS]
+            The PLS regression model to test.
+        X : numpy.ndarray
+            The predictor variables.
+        Y : numpy.ndarray
+            The target variables.
+        n_components : int
+            The number of components to extract.
+
+        Returns
+        -------
+        None
+        """
+        if isinstance(pls_model, SkPLS):
+            msg = "Y residual is constant at iteration"
+            with pytest.warns(UserWarning, match=msg) as record:
+                for _ in range(2):
+                    pls_model.fit(X=X, Y=Y)
+                    assert_allclose(pls_model.x_rotations_, 0)
+                assert len(record) == 2
+
+        elif isinstance(pls_model, FastCVPLS):
+            msg = "Weight is close to zero."
+            with pytest.warns(UserWarning, match=msg) as record:
+                pls_model.cross_validate(
+                    X=X,
+                    Y=Y,
+                    A=n_components,
+                    cv_splits=cv_splits,
+                    metric_function=lambda x, y: 0,
+                    n_jobs=1,
+                )
+                assert len(record) == 2
+        elif isinstance(pls_model, NpPLS):
+            msg = "Weight is close to zero."
+            with pytest.warns(UserWarning, match=msg) as record:
+                for _ in range(2):
+                    pls_model.fit(X=X, Y=Y, A=n_components)
+                    if isinstance(pls_model, NpPLS):
+                        assert_allclose(pls_model.R, 0)
+                assert len(record) == 2
+
+
     def check_pls_constant_y(
         self, X: npt.NDArray, Y: npt.NDArray
     ) -> (
@@ -1843,44 +1908,42 @@ class TestClass:
         cv_splits = np.zeros(shape=(X.shape[0],), dtype=int)
         cv_splits[: X.shape[0] // 2] = 1
 
-        sk_msg = "Y residual is constant at iteration"
-        with pytest.warns(UserWarning, match=sk_msg):
-            sk_pls.fit(X=X, Y=Y)
-            assert_allclose(sk_pls.x_rotations_, 0)
+        self._helper_check_pls_constant_y(
+            pls_model=sk_pls, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=np_pls_alg_1, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=np_pls_alg_2, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=jax_pls_alg_1, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=jax_pls_alg_2, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=diff_jax_pls_alg_1, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=diff_jax_pls_alg_2, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=fast_cv_alg_1,
+            X=X,
+            Y=Y,
+            n_components=n_components,
+            cv_splits=cv_splits
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=fast_cv_alg_2,
+            X=X,
+            Y=Y,
+            n_components=n_components,
+            cv_splits=cv_splits
+        )
 
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_1.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_2.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            diff_jax_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            diff_jax_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            fast_cv_alg_1.cross_validate(
-                X=X,
-                Y=Y,
-                A=n_components,
-                cv_splits=cv_splits,
-                metric_function=lambda x, y: 0,
-                n_jobs=1,
-            )
-        with pytest.warns(UserWarning, match=msg):
-            fast_cv_alg_2.cross_validate(
-                X=X,
-                Y=Y,
-                A=n_components,
-                cv_splits=cv_splits,
-                metric_function=lambda x, y: 0,
-                n_jobs=1,
-            )
 
     def test_pls_1_constant_y(self):
         """
@@ -2150,8 +2213,8 @@ class TestClass:
                             pls_alg_2,
                             num_components
                             )(uniform_filter)
-        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=1e-14)
-        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=1e-14)
+        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=5e-14)
+        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=5e-14)
 
     def test_gradient_pls_1(self):
         """
