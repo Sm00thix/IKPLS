@@ -3144,6 +3144,17 @@ class TestClass:
             rtol=rtol,
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_fast_cross_val_pls_1(self):
         """
         Description
@@ -3183,6 +3194,17 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_fast_cross_val_pls_2_m_less_k(self):
         """
         Description
@@ -3223,6 +3245,17 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-7
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_fast_cross_val_pls_2_m_eq_k(self):
         """
         Description
@@ -3264,6 +3297,17 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_fast_cross_val_pls_2_m_greater_k(self):
         """
         Description
@@ -3305,6 +3349,17 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_fast_cross_val_pls_1_loocv(self):
         """
         Description
