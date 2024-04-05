@@ -87,14 +87,14 @@ if __name__ == "__main__":
     # Centering and scaling are enabled by default and computed over the
     # training splits only to avoid data leakage from the validation splits.
     np_pls_alg_1 = PLS(algorithm=1)
-    fit_params = {"A": A}
+    params = {"A": A}
     np_pls_alg_1_results = cross_validate(
         np_pls_alg_1,
         X,
         Y,
         cv=cv_splitter(splits),
         scoring=mse_for_each_target,
-        fit_params=fit_params,
+        params=params,
         return_estimator=False,
         n_jobs=-1,
     )

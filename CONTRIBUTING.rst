@@ -1,7 +1,7 @@
 .. This file is heavily inspired by the equivalent in https://github.com/NLESC-JCER/QMCTorch
 
 ############################
-Contribution guidelines
+Contribution Guidelines
 ############################
 
 We welcome any kind of contribution to our software, from a simple comment or question to a full-fledged `pull request <https://help.github.com/articles/about-pull-requests/>`_.

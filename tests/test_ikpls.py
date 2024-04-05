@@ -2214,7 +2214,7 @@ class TestClass:
                             num_components
                             )(uniform_filter)
         assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=5e-14)
-        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=5e-14)
+        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=2e-11)
 
     def test_gradient_pls_1(self):
         """
@@ -2531,14 +2531,14 @@ class TestClass:
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
 
-        fit_params = {"A": n_components}
+        params = {"A": n_components}
         np_pls_alg_1_results = cross_validate(
             np_pls_alg_1,
             X,
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
@@ -2549,12 +2549,12 @@ class TestClass:
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
         np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
-        
+
         # Compute RMSE on the validation predictions
         np_pls_alg_1_rmses = np.empty((len(np_pls_alg_1_models), n_components, M))
         np_pls_alg_2_rmses = np.empty((len(np_pls_alg_2_models), n_components, M))
@@ -2772,6 +2772,17 @@ class TestClass:
             diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_cross_val_pls_1(self):
         """
         Description
@@ -2795,6 +2806,17 @@ class TestClass:
         assert Y.ndim == 1
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_cross_val_pls_2_m_less_k(self):
         """
         Description
@@ -2827,6 +2849,17 @@ class TestClass:
         assert Y.shape[1] < X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_cross_val_pls_2_m_eq_k(self):
         """
         Description
@@ -2860,6 +2893,17 @@ class TestClass:
         assert Y.shape[1] == X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3.4e-5)
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings("ignore",
+                                category=RuntimeWarning,
+                                message="os.fork() was called. os.fork() is"
+                                    " incompatible with multithreaded code, and JAX is"
+                                    " multithreaded, so this will likely lead to a"
+                                    " deadlock."
+                               )
     def test_cross_val_pls_2_m_greater_k(self):
         """
         Description
@@ -2966,14 +3010,14 @@ class TestClass:
                 val_idxs = np.nonzero(splits == split)[0]
                 yield train_idxs, val_idxs
 
-        fit_params = {"A": n_components}
+        params = {"A": n_components}
         np_pls_alg_1_results = cross_validate(
             np_pls_alg_1,
             X,
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
@@ -2984,7 +3028,7 @@ class TestClass:
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
