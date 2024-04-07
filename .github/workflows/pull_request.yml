@@ -6,10 +6,13 @@ name: Python package
 on:
   pull_request:
     branches: ["main"]
+    paths:
+      - 'ikpls/**'
+      - 'pyproject.toml'
+      - 'tests/**'
 
 jobs:
   test_package:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (github.event.paths == null || contains(github.event.paths, 'ikpls/') || contains(github.event.paths, 'pyproject.toml'))
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
