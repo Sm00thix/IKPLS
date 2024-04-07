@@ -6,13 +6,10 @@ name: Python package
 on:
   pull_request:
     branches: ["main"]
-    paths:
-      - 'ikpls/**'
-      - 'pyproject.toml'
-      - 'tests/**'
 
 jobs:
   test_package:
+    if: github.event.paths == null || contains(github.event.paths, 'ikpls/') || contains(github.event.paths, 'pyproject.toml') || contains(github.event.paths, 'tests/')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -26,6 +23,7 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
 
   build_package:
+    if: github.event.paths == null || contains(github.event.paths, 'ikpls/') || contains(github.event.paths, 'pyproject.toml') || contains(github.event.paths, 'tests/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
