@@ -1,5 +1,5 @@
 name: Build
-description: Test
+description: Build the package
 
 runs:
    using: "composite"

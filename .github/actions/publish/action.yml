@@ -1,4 +1,5 @@
 name: Publish
+description: Publish the package to PyPI
 
 runs:
     using: "composite"

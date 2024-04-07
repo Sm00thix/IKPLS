@@ -1,5 +1,5 @@
 name: Test
-description: Test
+description: Test the package
 
 inputs:
   PYTHON_VERSION:
