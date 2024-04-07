@@ -1,7 +1,4 @@
-on:
-  push:
-    paths:
-      - 'paper/**'
+on: [push]
 
 jobs:
   paper:
