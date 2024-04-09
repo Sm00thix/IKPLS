@@ -91,6 +91,8 @@ class PLS:
         self.sum_sq_Y = None
         self.XTX = None
         self.XTY = None
+        if self.algorithm == 1:
+            self.all_indices_set = None
 
     def _weight_warning(self, i: int) -> None:
         """
@@ -269,8 +271,9 @@ class PLS:
                 # Apply the training set scaling
                 training_XTY = training_XTY / (training_X_std.T @ training_Y_std)
         if self.algorithm == 1:
-            training_indices = np.ones(self.N, dtype=bool)
-            training_indices[validation_indices] = False
+            validation_indices_set = set(validation_indices)
+            training_indices_set = self.all_indices_set - validation_indices_set
+            training_indices = np.array(list(training_indices_set))
             training_X = self.X[training_indices]
             if self.center:
                 # Apply the training set centering
@@ -561,7 +564,8 @@ class PLS:
 
         Notes:
         ------
-        `metrics` is sorted according to the order of the unique values in `cv_splits`.
+        The order of cross-validation folds is determined by the order of the unique
+        values in `cv_splits`. `metrics` will be sorted in the same order.
         """
 
         self.X = np.asarray(X, dtype=self.dtype)
@@ -573,6 +577,9 @@ class PLS:
         self.M = self.Y.shape[1]
         validation_indices_list = self._generate_validation_indices_list(cv_splits)
         num_splits = len(validation_indices_list)
+
+        if self.algorithm == 1:
+            self.all_indices_set = set(np.arange(self.N, dtype=int))
 
         if n_jobs == -1:
             n_jobs = min(joblib.cpu_count(), num_splits)
