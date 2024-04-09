@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ikpls"
-version = "1.1.4"
+version = "1.2.0"
 description = ""
 authors = ["Sm00thix <oleemail@icloud.com>"]
 maintainers = ["Sm00thix <oleemail@icloud.com>"]

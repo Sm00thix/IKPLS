@@ -12,7 +12,8 @@ E-mail: ole.e@di.ku.dk
 """
 
 import warnings
-from typing import Any, Callable, Union
+from collections import defaultdict
+from typing import Any, Callable, Hashable, Iterable, Union
 
 import joblib
 import numpy as np
@@ -112,7 +113,7 @@ class PLS:
 
     def _stateless_fit(
         self,
-        validation_indices: npt.ArrayLike,
+        validation_indices: list[int],
     ) -> Union[
         tuple[
             npt.NDArray[np.float_],
@@ -143,8 +144,8 @@ class PLS:
 
         Parameters
         ----------
-        validation_indices : Array of shape (N,)
-            Boolean array defining indices into X and Y corresponding to validation
+        validation_indices : List of length N_val
+            Integer list defining indices into X and Y corresponding to validation
             samples.
 
         Returns
@@ -164,7 +165,7 @@ class PLS:
         R : Array of shape (A, K)
             PLS weights matrix to compute scores T directly from original X.
 
-        T : Array of shape (A, N)
+        T : Array of shape (A, N_train)
             PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
 
         training_X_mean : Array of shape (1, K)
@@ -201,17 +202,16 @@ class PLS:
         P = PT.T
         Q = QT.T
         R = RT.T
+
+        validation_size = len(validation_indices)
         if self.algorithm == 1:
-            TT = np.zeros(
-                shape=(self.A, self.N - np.sum(validation_indices)), dtype=self.dtype
-            )
+            TT = np.zeros(shape=(self.A, self.N - validation_size), dtype=self.dtype)
             T = TT.T
 
         # Extract training XTY
         validation_X = self.X[validation_indices]
         validation_Y = self.Y[validation_indices]
         if self.center:
-            validation_size = np.einsum("i->", validation_indices, dtype=int)
             training_size = self.N - validation_size
             N_total_over_N_train = self.N / training_size
             N_val_over_N_train = validation_size / training_size
@@ -269,7 +269,9 @@ class PLS:
                 # Apply the training set scaling
                 training_XTY = training_XTY / (training_X_std.T @ training_Y_std)
         if self.algorithm == 1:
-            training_X = self.X[~validation_indices]
+            training_indices = np.ones(self.N, dtype=bool)
+            training_indices[validation_indices] = False
+            training_X = self.X[training_indices]
             if self.center:
                 # Apply the training set centering
                 training_X = training_X - training_X_mean
@@ -376,7 +378,7 @@ class PLS:
 
     def _stateless_predict(
         self,
-        indices: npt.NDArray[np.float_],
+        indices: list[int],
         B: npt.NDArray[np.float_],
         training_X_mean: npt.NDArray[np.float_],
         training_Y_mean: npt.NDArray[np.float_],
@@ -391,7 +393,7 @@ class PLS:
 
         Parameters
         ----------
-        indices : Array of shape (N,)
+        indices : Array of shape (N_pred,)
             Boolean array defining indices into X and Y corresponding to samples on
             which to predict.
 
@@ -441,7 +443,7 @@ class PLS:
 
     def _stateless_fit_predict_eval(
         self,
-        validation_indices: npt.NDArray[np.float_],
+        validation_indices: list[int],
         metric_function: Callable[
             [npt.NDArray[np.float_], npt.NDArray[np.float_]], Any
         ],
@@ -455,8 +457,8 @@ class PLS:
 
         Parameters
         ----------
-        validation_indices : Array of shape (N,)
-            Boolean array defining indices into X and Y corresponding to validation
+        validation_indices : List of length N_val
+            Integer list defining indices into X and Y corresponding to validation
             samples.
 
         metric_function : Callable receiving arrays `Y_true` and `Y_pred` and returning
@@ -483,12 +485,34 @@ class PLS:
         )
         return metric_function(self.Y[validation_indices], Y_pred)
 
+    def _generate_validation_indices_list(
+        self, cv_splits: Iterable[Hashable]
+    ) -> list[list[int]]:
+        """
+        Generates a list of validation indices for each fold in `cv_splits`.
+
+        Parameters
+        ----------
+        cv_splits : Iterable of Hashable with N elements
+            An iterable defining cross-validation splits. Each unique value in
+            `cv_splits` corresponds to a different fold.
+
+        Returns
+        -------
+        validation_indices_list : list of list of int
+            A list of validation indices for each fold.
+        """
+        index_dict = defaultdict(list)
+        for i, num in enumerate(cv_splits):
+            index_dict[num].append(i)
+        return list(index_dict.values())
+
     def cross_validate(
         self,
         X: npt.ArrayLike,
         Y: npt.ArrayLike,
         A: int,
-        cv_splits: npt.ArrayLike,
+        cv_splits: Iterable[Hashable],
         metric_function: Callable[[npt.ArrayLike, npt.ArrayLike], Any],
         n_jobs=-1,
         verbose=10,
@@ -508,9 +532,9 @@ class PLS:
         A : int
             Number of components in the PLS model.
 
-        cv_splits : Array of shape (N,)
-            An array defining cross-validation splits. Each unique value in `cv_splits`
-            corresponds to a different fold.
+        cv_splits : Iterable of Hashable with N elements
+            An iterable defining cross-validation splits. Each unique value in
+            `cv_splits` corresponds to a different fold.
 
         metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning
         Any
@@ -534,6 +558,10 @@ class PLS:
         -------
         metrics : list of Any
             A list of the results of evaluating `metric_function` on each fold.
+
+        Notes:
+        ------
+        `metrics` is sorted according to the order of the unique values in `cv_splits`.
         """
 
         self.X = np.asarray(X, dtype=self.dtype)
@@ -543,14 +571,15 @@ class PLS:
         self.A = A
         self.N, self.K = X.shape
         self.M = self.Y.shape[1]
-        unique_splits = np.unique(cv_splits)
+        validation_indices_list = self._generate_validation_indices_list(cv_splits)
+        num_splits = len(validation_indices_list)
 
         if n_jobs == -1:
-            n_jobs = min(joblib.cpu_count(), unique_splits.size)
+            n_jobs = min(joblib.cpu_count(), num_splits)
 
         print(
             f"Cross-validating Improved Kernel PLS Algorithm {self.algorithm} with {A}"
-            f" components on {len(unique_splits)} unique splits using {n_jobs} "
+            f" components on {num_splits} unique splits using {n_jobs} "
             f"parallel processes."
         )
 
@@ -581,12 +610,15 @@ class PLS:
             if verbose > 0:
                 print("Done!")
 
-        def worker(split):
-            validation_indices = cv_splits == split
-            return self._stateless_fit_predict_eval(validation_indices, metric_function)
+        def worker(validation_indices: list[int]):
+            return self._stateless_fit_predict_eval(
+                    validation_indices,
+                    metric_function
+                   )
 
         metrics = Parallel(n_jobs=n_jobs, verbose=verbose)(
-            delayed(worker)(split) for split in unique_splits
+            delayed(worker)(validation_indices)
+            for validation_indices in validation_indices_list
         )
 
         return metrics

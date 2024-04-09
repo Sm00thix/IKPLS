@@ -1432,9 +1432,7 @@ class TestClass:
         sk_x_loadings_sign_flip = np.sign(sk_pls.x_loadings_ / expected_x_loadings)
         sk_x_weights_sign_flip = np.sign(sk_pls.x_weights_ / expected_x_weights)
         sk_y_loadings_sign_flip = np.sign(sk_pls.y_loadings_ / expected_y_loadings)
-        assert_allclose(
-            sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0
-        )
+        assert_allclose(sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0)
         assert_allclose(
             sk_x_loadings_sign_flip, sk_y_loadings_sign_flip, atol=0, rtol=0
         )
@@ -1446,10 +1444,7 @@ class TestClass:
             np_alg_1_x_loadings_sign_flip, np_alg_1_x_weights_sign_flip, atol=0, rtol=0
         )
         assert_allclose(
-            np_alg_1_x_loadings_sign_flip,
-            np_alg_1_y_loadings_sign_flip,
-            atol=0,
-            rtol=0
+            np_alg_1_x_loadings_sign_flip, np_alg_1_y_loadings_sign_flip, atol=0, rtol=0
         )
 
         np_alg_2_x_loadings_sign_flip = np.sign(np_pls_alg_2.P / expected_x_loadings)
@@ -1459,10 +1454,7 @@ class TestClass:
             np_alg_2_x_loadings_sign_flip, np_alg_2_x_weights_sign_flip, atol=0, rtol=0
         )
         assert_allclose(
-            np_alg_2_x_loadings_sign_flip,
-            np_alg_2_y_loadings_sign_flip,
-            atol=0,
-            rtol=0
+            np_alg_2_x_loadings_sign_flip, np_alg_2_y_loadings_sign_flip, atol=0, rtol=0
         )
 
         jax_alg_1_x_loadings_sign_flip = np.sign(jax_pls_alg_1.P / expected_x_loadings)
@@ -1614,16 +1606,10 @@ class TestClass:
             np.abs(jax_pls_alg_2.P), np.abs(expected_x_loadings), atol=3e-6, rtol=0
         )
         assert_allclose(
-            np.abs(diff_jax_pls_alg_1.P),
-            np.abs(expected_x_loadings),
-            atol=3e-6,
-            rtol=0
+            np.abs(diff_jax_pls_alg_1.P), np.abs(expected_x_loadings), atol=3e-6, rtol=0
         )
         assert_allclose(
-            np.abs(diff_jax_pls_alg_2.P),
-            np.abs(expected_x_loadings),
-            atol=3e-6,
-            rtol=0
+            np.abs(diff_jax_pls_alg_2.P), np.abs(expected_x_loadings), atol=3e-6, rtol=0
         )
 
         # Check for expected Y loadings
@@ -1643,16 +1629,10 @@ class TestClass:
             np.abs(jax_pls_alg_2.Q), np.abs(expected_y_loadings), atol=3e-6, rtol=0
         )
         assert_allclose(
-            np.abs(diff_jax_pls_alg_1.Q),
-            np.abs(expected_y_loadings),
-            atol=3e-6,
-            rtol=0
+            np.abs(diff_jax_pls_alg_1.Q), np.abs(expected_y_loadings), atol=3e-6, rtol=0
         )
         assert_allclose(
-            np.abs(diff_jax_pls_alg_2.Q),
-            np.abs(expected_y_loadings),
-            atol=3e-6,
-            rtol=0
+            np.abs(diff_jax_pls_alg_2.Q), np.abs(expected_y_loadings), atol=3e-6, rtol=0
         )
 
         # Check for orthogonal X weights.
@@ -1678,11 +1658,7 @@ class TestClass:
         sk_y_loadings_sign_flip = np.sign(
             sk_pls.y_loadings_[1:] / expected_y_loadings[1:]
         )
-        assert_allclose(sk_x_loadings_sign_flip,
-                        sk_x_weights_sign_flip,
-                        atol=0,
-                        rtol=0
-        )
+        assert_allclose(sk_x_loadings_sign_flip, sk_x_weights_sign_flip, atol=0, rtol=0)
         assert_allclose(
             sk_x_loadings_sign_flip[1:], sk_y_loadings_sign_flip, atol=0, rtol=0
         )
@@ -1804,9 +1780,7 @@ class TestClass:
         Y: npt.NDArray,
         n_components: int,
         cv_splits: Optional[npt.NDArray] = None,
-    ) -> (
-        None
-    ):
+    ) -> None:
         """
         Description
         -----------
@@ -1860,7 +1834,6 @@ class TestClass:
                     if isinstance(pls_model, NpPLS):
                         assert_allclose(pls_model.R, 0)
                 assert len(record) == 2
-
 
     def check_pls_constant_y(
         self, X: npt.NDArray, Y: npt.NDArray
@@ -1934,16 +1907,15 @@ class TestClass:
             X=X,
             Y=Y,
             n_components=n_components,
-            cv_splits=cv_splits
+            cv_splits=cv_splits,
         )
         self._helper_check_pls_constant_y(
             pls_model=fast_cv_alg_2,
             X=X,
             Y=Y,
             n_components=n_components,
-            cv_splits=cv_splits
+            cv_splits=cv_splits,
         )
-
 
     def test_pls_1_constant_y(self):
         """
@@ -2138,25 +2110,13 @@ class TestClass:
 
         # Compute values and gradients for algorithm #1
         grad_fun = jax.value_and_grad(
-            preprocess_fit_rmse(
-                jnp_X,
-                jnp_Y,
-                diff_pls_alg_1,
-                num_components
-            ),
-            argnums=0
+            preprocess_fit_rmse(jnp_X, jnp_Y, diff_pls_alg_1, num_components), argnums=0
         )
         output_val_diff_alg_1, grad_alg_1 = grad_fun(uniform_filter)
 
         # Compute the gradient and output value for a single number of components
         grad_fun = jax.value_and_grad(
-            preprocess_fit_rmse(
-                jnp_X,
-                jnp_Y,
-                diff_pls_alg_2,
-                num_components
-            ),
-            argnums=0
+            preprocess_fit_rmse(jnp_X, jnp_Y, diff_pls_alg_2, num_components), argnums=0
         )
         output_val_diff_alg_2, grad_alg_2 = grad_fun(uniform_filter)
 
@@ -2185,8 +2145,10 @@ class TestClass:
         # reverse_differentiable=True
         pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
         pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
-        msg = "Reverse-mode differentiation does not work for lax.while_loop or "\
-              "lax.fori_loop with dynamic start/stop values."
+        msg = (
+            "Reverse-mode differentiation does not work for lax.while_loop or "
+            "lax.fori_loop with dynamic start/stop values."
+        )
         with pytest.raises(ValueError, match=msg):
             grad_fun = jax.value_and_grad(
                 preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
@@ -2201,18 +2163,12 @@ class TestClass:
 
         # For good measure, let's assure ourselves that the results are equivalent
         # across reverse differentiable and non reverse differentiable versions:
-        output_val_alg_1 = preprocess_fit_rmse(
-                            jnp_X,
-                            jnp_Y,
-                            pls_alg_1,
-                            num_components
-                           )(uniform_filter)
-        output_val_alg_2 = preprocess_fit_rmse(
-                            jnp_X,
-                            jnp_Y,
-                            pls_alg_2,
-                            num_components
-                            )(uniform_filter)
+        output_val_alg_1 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components)(
+            uniform_filter
+        )
+        output_val_alg_2 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components)(
+            uniform_filter
+        )
         assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=5e-14)
         assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=2e-11)
 
@@ -2461,10 +2417,7 @@ class TestClass:
                 val_idxs = np.nonzero(splits == split)[0]
                 yield train_idxs, val_idxs
 
-        def rmse_per_component(
-                Y_true: npt.NDArray,
-                Y_pred: npt.NDArray
-            ) -> npt.NDArray:
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
             if Y_true.ndim == 1:
                 Y_true = Y_true.reshape(-1, 1)
             e = Y_true - Y_pred
@@ -2580,6 +2533,19 @@ class TestClass:
             X, Y, n_components, splits.flatten(), rmse_per_component
         )
 
+        # Sort fast cv results according to the unique splits for comparison with the
+        # other algorithms
+        unique_splits, sort_indices = np.unique(splits, return_index=True)
+        unique_splits = unique_splits.astype(int)
+        fast_cv_order = np.argsort(sort_indices)
+        other_alg_order = np.argsort(fast_cv_order)
+        fast_cv_np_pls_alg_1_results = np.array(
+            fast_cv_np_pls_alg_1_results
+            )[other_alg_order]
+        fast_cv_np_pls_alg_2_results = np.array(
+            fast_cv_np_pls_alg_2_results
+            )[other_alg_order]
+
         # Calibrate JAX PLS
         jax_pls_alg_1_results = jax_pls_alg_1.cross_validate(
             X,
@@ -2686,16 +2652,14 @@ class TestClass:
         ]
         np_pls_alg_1_best_rmses = [
             [
-                np_pls_alg_1_rmses[split][np_pls_alg_1_best_num_components[i]
-                                          [split], i]
+                np_pls_alg_1_rmses[split][np_pls_alg_1_best_num_components[i][split], i]
                 for split in unique_splits
             ]
             for i in range(M)
         ]
         np_pls_alg_2_best_rmses = [
             [
-                np_pls_alg_2_rmses[split][np_pls_alg_2_best_num_components[i]
-                                          [split], i]
+                np_pls_alg_2_rmses[split][np_pls_alg_2_best_num_components[i][split], i]
                 for split in unique_splits
             ]
             for i in range(M)
@@ -2776,13 +2740,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_1(self):
         """
         Description
@@ -2810,13 +2775,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_2_m_less_k(self):
         """
         Description
@@ -2853,13 +2819,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_2_m_eq_k(self):
         """
         Description
@@ -2897,13 +2864,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_2_m_greater_k(self):
         """
         Description
@@ -2991,10 +2959,7 @@ class TestClass:
 
         n_components = X.shape[1]
 
-        def rmse_per_component(
-                Y_true: npt.NDArray,
-                Y_pred: npt.NDArray
-            ) -> npt.NDArray:
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
             if Y_true.ndim == 1:
                 Y_true = np.expand_dims(Y_true, axis=-1)
             e = Y_true - Y_pred
@@ -3070,9 +3035,21 @@ class TestClass:
             verbose=0,
         )
 
+        # Sort fast cv results according to the unique splits for comparison with the
+        # other algorithms
+        unique_splits, sort_indices = np.unique(splits, return_index=True)
+        unique_splits = unique_splits.astype(int)
+        fast_cv_order = np.argsort(sort_indices)
+        other_alg_order = np.argsort(fast_cv_order)
+        fast_cv_np_pls_alg_1_results = np.array(
+            fast_cv_np_pls_alg_1_results
+            )[other_alg_order]
+        fast_cv_np_pls_alg_2_results = np.array(
+            fast_cv_np_pls_alg_2_results
+            )[other_alg_order]
+
         # Check that best number of components in terms of minimizing validation RMSE
         # for each split is equal among all algorithms
-        unique_splits = np.unique(splits).astype(int)
         np_pls_alg_1_best_num_components = [
             [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
             for i in range(M)
@@ -3148,13 +3125,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_1(self):
         """
         Description
@@ -3198,13 +3176,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_2_m_less_k(self):
         """
         Description
@@ -3249,13 +3228,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_2_m_eq_k(self):
         """
         Description
@@ -3301,13 +3281,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_2_m_greater_k(self):
         """
         Description
@@ -3353,13 +3334,14 @@ class TestClass:
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
     # algorithms, so we can safely ignore this warning.
-    @pytest.mark.filterwarnings("ignore",
-                                category=RuntimeWarning,
-                                message="os.fork() was called. os.fork() is"
-                                    " incompatible with multithreaded code, and JAX is"
-                                    " multithreaded, so this will likely lead to a"
-                                    " deadlock."
-                               )
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_1_loocv(self):
         """
         Description
