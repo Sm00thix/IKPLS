@@ -92,7 +92,7 @@ class PLS:
         self.XTX = None
         self.XTY = None
         if self.algorithm == 1:
-            self.all_indices_set = None
+            self.all_indices = None
 
     def _weight_warning(self, i: int) -> None:
         """
@@ -271,9 +271,9 @@ class PLS:
                 # Apply the training set scaling
                 training_XTY = training_XTY / (training_X_std.T @ training_Y_std)
         if self.algorithm == 1:
-            validation_indices_set = set(validation_indices)
-            training_indices_set = self.all_indices_set - validation_indices_set
-            training_indices = np.array(list(training_indices_set))
+            training_indices = np.setdiff1d(self.all_indices,
+                                            validation_indices,
+                                            assume_unique=True)
             training_X = self.X[training_indices]
             if self.center:
                 # Apply the training set centering
@@ -579,7 +579,7 @@ class PLS:
         num_splits = len(validation_indices_list)
 
         if self.algorithm == 1:
-            self.all_indices_set = set(np.arange(self.N, dtype=int))
+            self.all_indices = np.arange(self.N, dtype=int)
 
         if n_jobs == -1:
             n_jobs = min(joblib.cpu_count(), num_splits)
