@@ -617,14 +617,16 @@ class PLS:
             if verbose > 0:
                 print("Done!")
 
-        def worker(validation_indices: list[int]):
+        def worker(validation_indices: list[int],
+                   metric_function: Callable[[npt.ArrayLike, npt.ArrayLike], Any]
+                   ) -> Any:
             return self._stateless_fit_predict_eval(
                     validation_indices,
                     metric_function
                    )
 
         metrics = Parallel(n_jobs=n_jobs, verbose=verbose)(
-            delayed(worker)(validation_indices)
+            delayed(worker)(validation_indices, metric_function)
             for validation_indices in validation_indices_list
         )
 
