@@ -115,7 +115,7 @@ class PLS:
 
     def _stateless_fit(
         self,
-        validation_indices: list[int],
+        validation_indices: npt.NDArray[np.int_],
     ) -> Union[
         tuple[
             npt.NDArray[np.float_],
@@ -146,8 +146,8 @@ class PLS:
 
         Parameters
         ----------
-        validation_indices : List of length N_val
-            Integer list defining indices into X and Y corresponding to validation
+        validation_indices : Array of shape (N_val,)
+            Integer array defining indices into X and Y corresponding to validation
             samples.
 
         Returns
@@ -205,7 +205,7 @@ class PLS:
         Q = QT.T
         R = RT.T
 
-        validation_size = len(validation_indices)
+        validation_size = validation_indices.size
         if self.algorithm == 1:
             TT = np.zeros(shape=(self.A, self.N - validation_size), dtype=self.dtype)
             T = TT.T
@@ -381,7 +381,7 @@ class PLS:
 
     def _stateless_predict(
         self,
-        indices: list[int],
+        indices: npt.NDArray[np.int_],
         B: npt.NDArray[np.float_],
         training_X_mean: npt.NDArray[np.float_],
         training_Y_mean: npt.NDArray[np.float_],
@@ -396,8 +396,8 @@ class PLS:
 
         Parameters
         ----------
-        indices : Array of shape (N_pred,)
-            Boolean array defining indices into X and Y corresponding to samples on
+        indices : Array of shape (N_val,)
+            Integer array defining indices into X and Y corresponding to samples on
             which to predict.
 
         B : Array of shape (A, K, M)
@@ -446,7 +446,7 @@ class PLS:
 
     def _stateless_fit_predict_eval(
         self,
-        validation_indices: list[int],
+        validation_indices: npt.NDArray[np.int_],
         metric_function: Callable[
             [npt.NDArray[np.float_], npt.NDArray[np.float_]], Any
         ],
@@ -455,13 +455,13 @@ class PLS:
         Fits Improved Kernel PLS Algorithm #1 or #2 on `X` or `XTX`, `XTY` and `Y`
         using `A` components, predicts on `X` and evaluates predictions using
         `metric_function`. The fit is performed on the training set defined by
-        `validation_indices`. The prediction is performed on the validation set defined
-        by `validation_indices`.
+        all samples not in `validation_indices`. The prediction is performed on the
+        validation set defined by all samples in `validation_indices`.
 
         Parameters
         ----------
-        validation_indices : List of length N_val
-            Integer list defining indices into X and Y corresponding to validation
+        validation_indices : Array of shape (N_val,)
+            Integer array defining indices into X and Y corresponding to validation
             samples.
 
         metric_function : Callable receiving arrays `Y_true` and `Y_pred` and returning
@@ -490,7 +490,7 @@ class PLS:
 
     def _generate_validation_indices_list(
         self, cv_splits: Iterable[Hashable]
-    ) -> list[list[int]]:
+    ) -> list[npt.NDArray[np.int_]]:
         """
         Generates a list of validation indices for each fold in `cv_splits`.
 
@@ -502,13 +502,14 @@ class PLS:
 
         Returns
         -------
-        validation_indices_list : list of list of int
+        validation_indices_list : list of array of int
             A list of validation indices for each fold.
         """
         index_dict = defaultdict(list)
         for i, num in enumerate(cv_splits):
             index_dict[num].append(i)
-        return list(index_dict.values())
+        validation_indices_list = list(index_dict.values())
+        return [np.asarray(indices) for indices in validation_indices_list]
 
     def cross_validate(
         self,
@@ -617,7 +618,7 @@ class PLS:
             if verbose > 0:
                 print("Done!")
 
-        def worker(validation_indices: list[int],
+        def worker(validation_indices: npt.NDArray[np.int_],
                    metric_function: Callable[[npt.ArrayLike, npt.ArrayLike], Any]
                    ) -> Any:
             return self._stateless_fit_predict_eval(
