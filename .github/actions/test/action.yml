@@ -1,5 +1,5 @@
 name: Test
-description: Test
+description: Test the package
 
 inputs:
   PYTHON_VERSION:
@@ -7,18 +7,29 @@ inputs:
     required: true
 
 runs:
-    using: "composite"
-    steps:
-    - name: Test
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.PYTHON_VERSION }}
+
+    - name: Install Poetry
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install --upgrade pandas
-        python3 -m pip install --upgrade numpy
-        python3 -m pip install --upgrade tqdm
-        python3 -m pip install --upgrade scikit-learn
-        python3 -m pip install flake8 pytest
-        python3 -m pip install build --user
-        pip3 install -U "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-        pip3 install pytest pytest-cov typeguard
-        python3 -m pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
-      shell: bash 
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+      shell: bash
+
+    - name: Install project dependencies
+      run: poetry install
+      shell: bash
+
+    - name: Install additional dependencies for testing
+      run: |
+        poetry add --group dev pandas pytest flake8 pytest-cov typeguard
+      shell: bash
+
+    - name: Run tests
+      run: |
+        poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
+      shell: bash

@@ -4,6 +4,9 @@ Improved Kernel Partial Least Squares (IKPLS) and Fast Cross-Validation
 .. image:: https://img.shields.io/pypi/v/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: PyPI Version
+.. image:: https://img.shields.io/pypi/dm/ikpls
+   :target: https://pypi.python.org/pypi/ikpls/
+   :alt: PyPI - Downloads
 .. image:: https://img.shields.io/pypi/pyversions/ikpls.svg
    :target: https://pypi.python.org/pypi/ikpls/
    :alt: Python Versions
@@ -40,13 +43,15 @@ The documentation is available at https://ikpls.readthedocs.io/en/latest/; examp
 .. _scikit-learn: https://scikit-learn.org/stable/
 .. _JAX: https://jax.readthedocs.io/en/latest/
 
-Extremely Fast Cross-Validation
+Fast Cross-Validation
 -------------------------------
 In addition to the implementations mentioned above, this package contains the novel, fast cross-validation algorithms mentioned in [7]_ using both IKPLS algorithms.
 The fast cross-validation algorithms benefit both IKPLS Algorithms and especially Algorithm #2.
 The fast cross-validation algorithms are mathematically equivalent to the classical cross-validation algorithm. Still, they are much quicker if cross-validation splits exceed 3.
 The fast cross-validation algorithms correctly handle (column-wise) centering and scaling of the X and Y input matrices using training set means and standard deviations to avoid data leakage from the validation set.
 This centering and scaling can be enabled by setting the center parameter to True and the scale parameter to True, respectively.
+The fast cross-validation algorithms correctly handle row-wise preprocessing such as (row-wise) centering and scaling of the X and Y input matrices, convolution, or other preprocessing.
+Row-wise preprocessing can safely be applied before passing the data to the fast cross-validation algorithms.
 
 .. [7] `Engstrøm, O.-C. G. (2024). Shortcutting Cross-Validation: Efficiently Deriving Column-Wise Centered and Scaled Training Set $\\mathbf{X}^\\mathbf{T}\\mathbf{X}$ and $\\mathbf{X}^\\mathbf{T}\\mathbf{Y}$ Without Full Recomputation of Matrix Products or Statistical Moments`_.
 
@@ -80,33 +85,54 @@ Use the ikpls package for PLS modeling
 
   .. code:: python
 
-    import numpy as np
+   import numpy as np
 
-    from ikpls.numpy_ikpls import PLS
+   from ikpls.numpy_ikpls import PLS
+
 
     N = 100  # Number of samples.
     K = 50  # Number of features.
     M = 10  # Number of targets.
     A = 20  # Number of latent variables (PLS components).
 
+    # Using float64 is important for numerical stability.
     X = np.random.uniform(size=(N, K)).astype(np.float64)
     Y = np.random.uniform(size=(N, M)).astype(np.float64)
 
-    # The other PLS algorithms and implementations, except for NpPLS_FastCV, have the same interface for fit() and predict().
+    # The other PLS algorithms and implementations have the same interface for fit()
+    # and predict(). The fast cross-validation implementation with IKPLS has a
+    # different interface.
     np_ikpls_alg_1 = PLS(algorithm=1)
     np_ikpls_alg_1.fit(X, Y, A)
 
-    y_pred = np_ikpls_alg_1.predict(X) # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible numbers of components up to and including A.
-    y_pred_20_components = np_ikpls_alg_1.predict(X, n_components=20) # Has shape (N, M) = (100, 10).
-    (y_pred_20_components == y_pred[19]).all() # True
+    # Has shape (A, N, M) = (20, 100, 10). Contains a prediction for all possible
+    # numbers of components up to and including A.
+    y_pred = np_ikpls_alg_1.predict(X)
+
+    # Has shape (N, M) = (100, 10).
+    y_pred_20_components = np_ikpls_alg_1.predict(X, n_components=20)
+    (y_pred_20_components == y_pred[19]).all()  # True
 
     # The internal model parameters can be accessed as follows:
-    np_ikpls_alg_1.B  # Regression coefficients tensor of shape (A, K, M) = (20, 50, 10).
-    np_ikpls_alg_1.W  # X weights matrix of shape (K, A) = (50, 20).
-    np_ikpls_alg_1.P  # X loadings matrix of shape (K, A) = (50, 20).
-    np_ikpls_alg_1.Q  # Y loadings matrix of shape (M, A) = (10, 20).
-    np_ikpls_alg_1.R  # X rotations matrix of shape (K, A) = (50, 20).
-    np_ikpls_alg_1.T  # X scores matrix of shape (N, A) = (100, 20). This is only computed for IKPLS Algorithm #1.
+
+    # Regression coefficients tensor of shape (A, K, M) = (20, 50, 10).
+    np_ikpls_alg_1.B
+
+    # X weights matrix of shape (K, A) = (50, 20).
+    np_ikpls_alg_1.W
+
+    # X loadings matrix of shape (K, A) = (50, 20).
+    np_ikpls_alg_1.P
+
+    # Y loadings matrix of shape (M, A) = (10, 20).
+    np_ikpls_alg_1.Q
+
+    # X rotations matrix of shape (K, A) = (50, 20).
+    np_ikpls_alg_1.R
+
+    # X scores matrix of shape (N, A) = (100, 20).
+    # This is only computed for IKPLS Algorithm #1.
+    np_ikpls_alg_1.T
 
 Examples
 ~~~~~~~~
@@ -125,3 +151,7 @@ In `examples <https://github.com/Sm00thix/IKPLS/tree/main/examples>`_ you will f
 
 - `Compute the gradient of a preprocessing convolution filter with respect to the RMSE between the target value and the value predicted by PLS after fitting with JAX. <https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py>`_
 
+Contribute
+----------
+
+To contribute, please read the `Contribution Guidelines <https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.rst>`_.

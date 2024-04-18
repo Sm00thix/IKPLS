@@ -6,25 +6,27 @@ name: Python package
 on:
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'ikpls/**'
+      - 'tests/**'
+      - 'pyproject.toml'
 
 jobs:
   test_package:
-    runs-on: ${{ matrix.os }}  
+    runs-on: ${{ matrix.os }}
     strategy:  
       fail-fast: false  
       matrix:  
         os: [ubuntu-latest, windows-latest, macos-latest] 
-        python-version: ["3.9", "3.10", "3.11", "3.12"]  
-    env:  
-      JAX_ENABLE_X64: True  
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/test
+        with:
+          PYTHON_VERSION: ${{ matrix.python-version }}
 
   build_package:
-    runs-on: ubuntu-latest  
-    env:
-      JAX_ENABLE_X64: True
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/build

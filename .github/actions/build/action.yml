@@ -1,5 +1,5 @@
 name: Build
-description: Test
+description: Build the package
 
 runs:
    using: "composite"
@@ -15,8 +15,8 @@ runs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install flake8 pytest
-        python3 -m pip install build --user
-        pip3 install -U "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+        python3 -m pip install poetry
+        python3 -m pip install twine
       shell: bash  
 
     - name: Lint with flake8
@@ -26,9 +26,17 @@ runs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       shell: bash
+
+    - name: Install IKPLS dependencies
+      run: poetry install
+      shell: bash
       
     - name: Build a binary wheel and a source tarball
-      run: python3 -m build
+      run: poetry build
+      shell: bash
+    
+    - name: Check the distribution with twine
+      run: twine check dist/*
       shell: bash
       
     - name: Store the distribution packages

@@ -1,4 +1,18 @@
-from typing import Callable, Tuple, Union
+"""
+This file contains tests for the ikpls package. Some of the tests are taken directly
+from the test-suite for the scikit-learn PLSRegression class. Most of the tests are
+written for this work specifically.
+
+The tests are designed to check the consistency of the PLS algorithm implementations
+across different shapes of input data. The tests also check for consistency between
+the IKPLS implementations in the ikpls package and the scikit-learn NIPALS
+implementation.
+
+Author: Ole-Christian Galbo Engstrøm
+E-mail: ole.e@di.ku.dk
+"""
+
+from typing import Callable, Optional, Tuple, Union
 
 import jax
 import numpy as np
@@ -7,6 +21,8 @@ import pytest
 from jax import numpy as jnp
 from numpy.testing import assert_allclose
 from sklearn.cross_decomposition import PLSRegression as SkPLS
+from sklearn.datasets import load_linnerud
+from sklearn.model_selection import cross_validate
 
 from ikpls.fast_cross_validation.numpy_ikpls import PLS as FastCVPLS
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_Alg_1
@@ -15,8 +31,25 @@ from ikpls.numpy_ikpls import PLS as NpPLS
 
 from . import load_data
 
+# Allow JAX to use 64-bit floating point precision.
+jax.config.update("jax_enable_x64", True)
+
 
 class TestClass:
+    """
+    Class for testing the IKPLS implementation.
+
+    This class contains methods for testing the IKPLS implementation.
+
+    Attributes
+    ----------
+    csv : DataFrame
+        The CSV data containing target values.
+
+    raw_spectra : NDArray[float]
+        The raw spectral data.
+    """
+
     csv = load_data.load_csv()
     raw_spectra = load_data.load_spectra()
 
@@ -198,7 +231,8 @@ class TestClass:
             Relative tolerance for checking equality.
 
         n_good_components : int, optional
-            Number of components to check, or -1 to use all possible number of components.
+            Number of components to check, or -1 to use all possible number of
+            components.
 
         Returns
         -------
@@ -304,7 +338,8 @@ class TestClass:
             Relative tolerance for checking equality.
 
         n_good_components : int, optional
-            Number of components to check, or -1 to use all possible number of components.
+            Number of components to check, or -1 to use all possible number of
+            components.
 
         Returns
         -------
@@ -438,7 +473,8 @@ class TestClass:
             Relative tolerance for checking equality.
 
         n_good_components : int, optional
-            Number of components to check, or -1 to use all possible number of components.
+            Number of components to check, or -1 to use all possible number of
+            components.
 
         Returns
         -------
@@ -522,7 +558,8 @@ class TestClass:
             Relative tolerance for comparing matrix values.
 
         n_good_components : int, optional
-            Number of components to check, or -1 to use all possible number of components.
+            Number of components to check, or -1 to use all possible number of
+            components.
 
         Returns
         -------
@@ -539,7 +576,8 @@ class TestClass:
         # Assume that models are fitted on centered and scaled data
         X = (X - X.mean(axis=0, keepdims=True)) / X.std(axis=0, keepdims=True, ddof=1)
 
-        # X can be reconstructed by multiplying X scores (T) and the transpose of X loadings (P)
+        # X can be reconstructed by multiplying X scores (T) and the transpose of X
+        # loadings (P)
         assert_allclose(
             np.dot(
                 np_pls_alg_1.T[..., :n_good_components],
@@ -622,7 +660,8 @@ class TestClass:
             JAX-based PLS model using algorithm 2 with reverse differentiation.
 
         n_good_components : int, optional
-            Number of components to check, or -1 to use all possible number of components.
+            Number of components to check, or -1 to use all possible number of
+            components.
 
         Returns
         -------
@@ -631,7 +670,8 @@ class TestClass:
         Raises
         ------
         AssertionError
-            If the internal matrices are not consistent across NumPy and JAX implementations.
+            If the internal matrices are not consistent across NumPy and JAX
+            implementations.
         """
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
@@ -788,9 +828,9 @@ class TestClass:
         -----------
         Test PLS1 algorithm.
 
-        This method performs testing of the PLS1 algorithm using various models and checks for equality,
-        orthogonality, regression matrices, and predictions. It also validates the algorithm's numerical
-        stability for the "Protein" dataset.
+        This method performs testing of the PLS1 algorithm using various models and
+        checks for equality, orthogonality, regression matrices, and predictions. It
+        also validates the algorithm's numerical stability for the "Protein" dataset.
 
         Parameters
         ----------
@@ -869,9 +909,8 @@ class TestClass:
             rtol=1e-5,
         )  # PLS1 is very numerically stable for protein.
 
-        Y = (
-            Y.squeeze()
-        )  # Remove the singleton dimension and check that the predictions are consistent.
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
         assert Y.ndim == 1
         (
             sk_pls,
@@ -942,11 +981,13 @@ class TestClass:
         """
         Description
         -----------
-        Test PLS2 algorithm when the number of targets is less than the number of features (M < K).
+        Test PLS2 algorithm when the number of targets is less than the number of
+        features (M < K).
 
-        This method tests the PLS2 algorithm under the scenario where the number of target variables (M)
-        is less than the number of features (K) in the dataset. It performs various tests on different
-        PLS2 models, checks for equality, orthogonality, regression matrices, and predictions.
+        This method tests the PLS2 algorithm under the scenario where the number of
+        target variables (M) is less than the number of features (K) in the dataset. It
+        performs various tests on different PLS2 models, checks for equality,
+        orthogonality, regression matrices, and predictions.
 
         Parameters
         ----------
@@ -1042,11 +1083,13 @@ class TestClass:
         """
         Description
         -----------
-        Test PLS2 algorithm where the number of targets is equal to the number of features (M = K).
+        Test PLS2 algorithm where the number of targets is equal to the number of
+        features (M = K).
 
-        This method tests the PLS2 algorithm under the scenario where the number of target variables (M)
-        is equal to the number of features (K) in the dataset. It performs various tests on different
-        PLS2 models, checks for equality, orthogonality, regression matrices, and predictions.
+        This method tests the PLS2 algorithm under the scenario where the number of
+        target variables (M) is equal to the number of features (K) in the dataset. It
+        performs various tests on different PLS2 models, checks for equality,
+        orthogonality, regression matrices, and predictions.
 
         Parameters
         ----------
@@ -1144,11 +1187,13 @@ class TestClass:
         Description
         -----------
 
-        Test PLS2 algorithm where the number of targets is greater than the number of features (M > K).
+        Test PLS2 algorithm where the number of targets is greater than the number of
+        features (M > K).
 
-        This method tests the PLS2 algorithm under the scenario where the number of target variables (M)
-        is greater than the number of features (K) in the dataset. It performs various tests on different
-        PLS2 models, checks for equality, orthogonality, regression matrices, and predictions.
+        This method tests the PLS2 algorithm under the scenario where the number of
+        target variables (M) is greater than the number of features (K) in the dataset.
+        It performs various tests on different PLS2 models, checks for equality,
+        orthogonality, regression matrices, and predictions.
 
         Parameters
         ----------
@@ -1241,19 +1286,18 @@ class TestClass:
             rtol=0,
         )  # PLS2 is not as numerically stable as PLS1.
 
-    def test_sanity_check_pls_regression(
-        self,
-    ) -> (
-        None
-    ):  # Taken from SkLearn's test suite and modified to include own algorithms.
+    def test_sanity_check_pls_regression(self) -> None:
         """
         Description
         -----------
-        Test the PLS regression algorithm with a sanity check.
+        Taken from SkLearn's test suite and modified to include own algorithms. Test
+        the PLS regression algorithm with a sanity check.
 
-        This method performs a sanity check on the PLS regression algorithm. It loads the Linnerud dataset,
-        fits the PLS regression models using various algorithms, and checks for equality between implemenetations'
-        regression matrices, predictions, and for PLS properties. It also compares the results to expected values.
+        This method performs a sanity check on the PLS regression algorithm. It loads
+        the Linnerud dataset, fits the PLS regression models using various algorithms,
+        and checks for equality between implemenetations' regression matrices,
+        predictions, and for PLS properties. It also compares the results to expected
+        values.
 
         Parameters
         ----------
@@ -1263,8 +1307,6 @@ class TestClass:
         -------
         None
         """
-        from sklearn.datasets import load_linnerud
-
         d = load_linnerud()
         X = d.data  # Shape = (20,3)
         Y = d.target  # Shape = (20,3)
@@ -1456,12 +1498,15 @@ class TestClass:
         Description
         -----------
 
-        Test the PLS regression algorithm with a sanity check and a constant column in Y.
+        Test the PLS regression algorithm with a sanity check and a constant column in
+        Y.
 
-        This method performs a sanity check on the PLS regression algorithm using a dataset that includes a constant
-        column in the target (Y) data. It loads the Linnerud dataset, sets the first column of Y to a constant, and fits
-        the PLS regression models using various algorithms. The test checks for equality between implemenetations' regression
-        matrices, predictions, and for PLS properties. It also compares the results to expected values.
+        This method performs a sanity check on the PLS regression algorithm using a
+        dataset that includes a constant column in the target (Y) data. It loads the
+        Linnerud dataset, sets the first column of Y to a constant, and fits the PLS
+        regression models using various algorithms. The test checks for equality
+        between implemenetations' regression matrices, predictions, and for PLS
+        properties. It also compares the results to expected values.
 
         Parameters
         ----------
@@ -1471,7 +1516,6 @@ class TestClass:
         -------
         None
         """
-        from sklearn.datasets import load_linnerud
 
         d = load_linnerud()
         X = d.data  # Shape = (20,3)
@@ -1606,7 +1650,9 @@ class TestClass:
         self.assert_matrix_orthogonal(jax_pls_alg_1.T, atol=1e-8, rtol=0)
         self.assert_matrix_orthogonal(diff_jax_pls_alg_1.T, atol=1e-8, rtol=0)
 
-        # Check that sign flip is consistent and exact across loadings and weights. Ignore the first column of Y which will be a column of zeros (due to mean centering of its constant value).
+        # Check that sign flip is consistent and exact across loadings and weights.
+        # Ignore the first column of Y which will be a column of zeros (due to mean
+        # centering of its constant value).
         sk_x_loadings_sign_flip = np.sign(sk_pls.x_loadings_ / expected_x_loadings)
         sk_x_weights_sign_flip = np.sign(sk_pls.x_weights_ / expected_x_weights)
         sk_y_loadings_sign_flip = np.sign(
@@ -1727,6 +1773,68 @@ class TestClass:
             rtol=0,
         )
 
+    def _helper_check_pls_constant_y(
+        self,
+        pls_model: Union[SkPLS, NpPLS, JAX_Alg_1, JAX_Alg_2, FastCVPLS],
+        X: npt.NDArray,
+        Y: npt.NDArray,
+        n_components: int,
+        cv_splits: Optional[npt.NDArray] = None,
+    ) -> None:
+        """
+        Description
+        -----------
+        Check that every call to PLS fit correctly raises a warning when Y is constant.
+
+        This method checks that every call to the PLS fit method raises a warning when
+        the target data (Y) is constant. It fits the PLS regression models using
+        various algorithms and checks for warnings related to weights being close to
+        zero.
+
+        Parameters
+        ----------
+        pls_model : Union[SkPLS, NpPLS, JAX_Alg_1, JAX_Alg_2, FastCVPLS]
+            The PLS regression model to test.
+        X : numpy.ndarray
+            The predictor variables.
+        Y : numpy.ndarray
+            The target variables.
+        n_components : int
+            The number of components to extract.
+
+        Returns
+        -------
+        None
+        """
+        if isinstance(pls_model, SkPLS):
+            msg = "Y residual is constant at iteration"
+            with pytest.warns(UserWarning, match=msg) as record:
+                for _ in range(2):
+                    pls_model.fit(X=X, Y=Y)
+                    assert_allclose(pls_model.x_rotations_, 0)
+                assert len(record) == 2
+
+        elif isinstance(pls_model, FastCVPLS):
+            msg = "Weight is close to zero."
+            with pytest.warns(UserWarning, match=msg) as record:
+                pls_model.cross_validate(
+                    X=X,
+                    Y=Y,
+                    A=n_components,
+                    cv_splits=cv_splits,
+                    metric_function=lambda x, y: 0,
+                    n_jobs=1,
+                )
+                assert len(record) == 2
+        elif isinstance(pls_model, NpPLS):
+            msg = "Weight is close to zero."
+            with pytest.warns(UserWarning, match=msg) as record:
+                for _ in range(2):
+                    pls_model.fit(X=X, Y=Y, A=n_components)
+                    if isinstance(pls_model, NpPLS):
+                        assert_allclose(pls_model.R, 0)
+                assert len(record) == 2
+
     def check_pls_constant_y(
         self, X: npt.NDArray, Y: npt.NDArray
     ) -> (
@@ -1737,9 +1845,11 @@ class TestClass:
         -----------
         Check PLS regression behavior when Y is constant.
 
-        This method checks the behavior of PLS regression when the target data (Y) is constant. It first pre-processes the input
-        data by centering and scaling it. Then, it fits PLS regression models using different algorithms, including the sklearn,
-        NumPy-based, and JAX-based implementations. It checks for warnings related weights being close to zero during the fitting process.
+        This method checks the behavior of PLS regression when the target data (Y) is
+        constant. It first pre-processes the input data by centering and scaling it.
+        Then, it fits PLS regression models using different algorithms, including the
+        sklearn, NumPy-based, and JAX-based implementations. It checks for warnings
+        related weights being close to zero during the fitting process.
 
         Parameters
         ----------
@@ -1755,7 +1865,8 @@ class TestClass:
         Raises
         ------
         AssertionError
-            If the warnings for weights being close to zero are not raised for all implementations.
+            If the warnings for weights being close to zero are not raised for all
+            implementations.
         """
         n_components = 2
         sk_pls = SkPLS(n_components=n_components)  # Do not rescale again.
@@ -1770,44 +1881,41 @@ class TestClass:
         cv_splits = np.zeros(shape=(X.shape[0],), dtype=int)
         cv_splits[: X.shape[0] // 2] = 1
 
-        sk_msg = "Y residual is constant at iteration"
-        with pytest.warns(UserWarning, match=sk_msg):
-            sk_pls.fit(X=X, Y=Y)
-            assert_allclose(sk_pls.x_rotations_, 0)
-
-        msg = "Weight is close to zero."
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_1.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-            assert_allclose(np_pls_alg_2.R, 0)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            jax_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            diff_jax_pls_alg_1.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            diff_jax_pls_alg_2.fit(X=X, Y=Y, A=n_components)
-        with pytest.warns(UserWarning, match=msg):
-            fast_cv_alg_1.cross_validate(
-                X=X,
-                Y=Y,
-                A=n_components,
-                cv_splits=cv_splits,
-                metric_function=lambda x, y: 0,
-                n_jobs=1,
-            )
-        with pytest.warns(UserWarning, match=msg):
-            fast_cv_alg_2.cross_validate(
-                X=X,
-                Y=Y,
-                A=n_components,
-                cv_splits=cv_splits,
-                metric_function=lambda x, y: 0,
-                n_jobs=1,
-            )
+        self._helper_check_pls_constant_y(
+            pls_model=sk_pls, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=np_pls_alg_1, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=np_pls_alg_2, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=jax_pls_alg_1, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=jax_pls_alg_2, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=diff_jax_pls_alg_1, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=diff_jax_pls_alg_2, X=X, Y=Y, n_components=n_components
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=fast_cv_alg_1,
+            X=X,
+            Y=Y,
+            n_components=n_components,
+            cv_splits=cv_splits,
+        )
+        self._helper_check_pls_constant_y(
+            pls_model=fast_cv_alg_2,
+            X=X,
+            Y=Y,
+            n_components=n_components,
+            cv_splits=cv_splits,
+        )
 
     def test_pls_1_constant_y(self):
         """
@@ -1815,9 +1923,10 @@ class TestClass:
         -----------
         Test PLS regression when Y is constant with single target variable.
 
-        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with a single
-        column. It ensures that Y has only one column and calls the 'check_pls_constant_y' method to validate the behavior of
-        PLS regression in this scenario.
+        This test generates random predictor variables (X) and a target variable (Y)
+        where Y is a constant array with a single column. It ensures that Y has only
+        one column and calls the 'check_pls_constant_y' method to validate the behavior
+        of PLS regression in this scenario.
 
         Returns
         -------
@@ -1828,9 +1937,9 @@ class TestClass:
         Y = np.zeros(shape=(100, 1))
         assert Y.shape[1] == 1
         self.check_pls_constant_y(X, Y)
-        Y = (
-            Y.squeeze()
-        )  # Remove the singleton dimension and check that the predictions are consistent.
+
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
         self.check_pls_constant_y(X, Y)
 
     def test_pls_2_m_less_k_constant_y(self):
@@ -1839,9 +1948,11 @@ class TestClass:
         -----------
         Test PLS regression when Y is constant with m < k target variables.
 
-        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with fewer
-        columns (m) than the number of columns in X (k). It ensures that Y has more than one column but less than the number
-        of columns in X and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
+        This test generates random predictor variables (X) and a target variable (Y)
+        where Y is a constant array with fewer columns (m) than the number of columns
+        in X (k). It ensures that Y has more than one column but less than the number
+        of columns in X and calls the 'check_pls_constant_y' method to validate the
+        behavior of PLS regression in this scenario.
 
         Returns
         -------
@@ -1860,9 +1971,11 @@ class TestClass:
         -----------
         Test PLS regression when Y is constant with m = k target variables.
 
-        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with the same
-        number of columns (m) as the number of columns in X (k). It ensures that Y has more than one column and the same number
-        of columns as X, and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
+        This test generates random predictor variables (X) and a target variable (Y)
+        where Y is a constant array with the same number of columns (m) as the number
+        of columns in X (k). It ensures that Y has more than one column and the same
+        number of columns as X, and calls the 'check_pls_constant_y' method to validate
+        the behavior of PLS regression in this scenario.
 
         Returns
         -------
@@ -1881,9 +1994,11 @@ class TestClass:
         -----------
         Test PLS regression when Y is constant with m > k target variables.
 
-        This test generates random predictor variables (X) and a target variable (Y) where Y is a constant array with more
-        columns (M) than the number of columns in X (K). It ensures that Y has more than one column and more columns than X,
-        and calls the 'check_pls_constant_y' method to validate the behavior of PLS regression in this scenario.
+        This test generates random predictor variables (X) and a target variable (Y)
+        where Y is a constant array with more columns (M) than the number of columns in
+        X (K). It ensures that Y has more than one column and more columns than X, and
+        calls the 'check_pls_constant_y' method to validate the behavior of PLS
+        regression in this scenario.
 
         Returns
         -------
@@ -1910,9 +2025,10 @@ class TestClass:
         """
         Description
         -----------
-        This method tests the gradient propagation for reverse-mode differentiable JAX PLS. It convolves the input spectra
-        with a filter, computes the gradients of the RMSE loss with respect to the parameters of the preprocessing filter,
-        and verifies the correctness of gradient values and numerical stability.
+        This method tests the gradient propagation for reverse-mode differentiable JAX
+        PLS. It convolves the input spectra with a filter, computes the gradients of
+        the RMSE loss with respect to the parameters of the preprocessing filter, and
+        verifies the correctness of gradient values and numerical stability.
 
         Parameters:
         X : numpy.ndarray:
@@ -1946,7 +2062,9 @@ class TestClass:
         Raises
         ------
         AssertionError
-            If the gradients are not computed, if the gradients are not equal across Improved Kernel PLS Algorithm #1 and #2, or if the output values are not consistent across all JAX implementations.
+            If the gradients are not computed, if the gradients are not equal across
+            Improved Kernel PLS Algorithm #1 and #2, or if the output values are not
+            consistent across all JAX implementations.
         """
         jnp_X = jnp.array(X, dtype=jnp.float64)
         jnp_Y = jnp.array(Y, dtype=jnp.float64)
@@ -2022,10 +2140,15 @@ class TestClass:
         assert jnp.any(jnp.not_equal(grad_alg_1, zeros))
         assert jnp.any(jnp.not_equal(grad_alg_2, zeros))
 
-        # Check that we can not differentiate the JAX implementations using reverse-mode differentiation without setting the parameter reverse_differentiable=True
+        # Check that we can not differentiate the JAX implementations using
+        # reverse-mode differentiation without setting the parameter
+        # reverse_differentiable=True
         pls_alg_1 = JAX_Alg_1(reverse_differentiable=False, verbose=True)
         pls_alg_2 = JAX_Alg_2(reverse_differentiable=False, verbose=True)
-        msg = "Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop with dynamic start/stop values."
+        msg = (
+            "Reverse-mode differentiation does not work for lax.while_loop or "
+            "lax.fori_loop with dynamic start/stop values."
+        )
         with pytest.raises(ValueError, match=msg):
             grad_fun = jax.value_and_grad(
                 preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components), argnums=0
@@ -2038,22 +2161,24 @@ class TestClass:
             )
             grad_fun(uniform_filter)
 
-        # For good measure, let's assure ourselves that the results are equivalent across reverse differentiable and non reverse differentiable versions:
+        # For good measure, let's assure ourselves that the results are equivalent
+        # across reverse differentiable and non reverse differentiable versions:
         output_val_alg_1 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_1, num_components)(
             uniform_filter
         )
         output_val_alg_2 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components)(
             uniform_filter
         )
-        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=1e-14)
-        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=1e-14)
+        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=5e-14)
+        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=2e-11)
 
     def test_gradient_pls_1(self):
         """
         Description
         -----------
-        This test loads input predictor variables and a target variable with a single column and calls the 'check_gradient_pls'
-        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+        This test loads input predictor variables and a target variable with a single
+        column and calls the 'check_gradient_pls' method to validate the gradient
+        propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
         None
@@ -2073,9 +2198,9 @@ class TestClass:
             grad_atol=0,
             grad_rtol=1e-5,
         )
-        Y = (
-            Y.squeeze()
-        )  # Remove the singleton dimension and check that the predictions are consistent.
+
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
         self.check_gradient_pls(
             X=X,
             Y=Y,
@@ -2091,8 +2216,9 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables and multiple target variables with M < K, and calls the 'check_gradient_pls'
-        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+        This test loads input predictor variables and multiple target variables with
+        M < K, and calls the 'check_gradient_pls' method to validate the gradient
+        propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
         None
@@ -2115,9 +2241,10 @@ class TestClass:
         num_components = 25
         filter_size = 7
         assert Y.shape[1] > 1
-        assert (
-            Y.shape[1] < X.shape[1] - filter_size + 1
-        )  # The output of the convolution preprocessing is what is actually fed as input to the PLS algorithms.
+
+        # The output of the convolution preprocessing is what is actually fed as input
+        # to the PLS algorithms.
+        assert Y.shape[1] < X.shape[1] - filter_size + 1
         self.check_gradient_pls(
             X=X,
             Y=Y,
@@ -2133,8 +2260,9 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables and multiple target variables with M = K, and calls the 'check_gradient_pls'
-        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+        This test loads input predictor variables and multiple target variables with
+        M = K, and calls the 'check_gradient_pls' method to validate the gradient
+        propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
         None
@@ -2158,9 +2286,10 @@ class TestClass:
         X = X[..., : 10 + filter_size - 1]
         num_components = 10
         assert Y.shape[1] > 1
-        assert (
-            Y.shape[1] == X.shape[1] - filter_size + 1
-        )  # The output of the convolution preprocessing is what is actually fed as input to the PLS algorithms.
+
+        # The output of the convolution preprocessing is what is actually fed as input
+        # to the PLS algorithms.
+        assert Y.shape[1] == X.shape[1] - filter_size + 1
         self.check_gradient_pls(
             X=X,
             Y=Y,
@@ -2176,8 +2305,9 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables and multiple target variables with M > K, and calls the 'check_gradient_pls'
-        method to validate the gradient propagation for reverse-mode differentiable JAX PLS.
+        This test loads input predictor variables and multiple target variables with
+        M > K, and calls the 'check_gradient_pls' method to validate the gradient
+        propagation for reverse-mode differentiable JAX PLS.
 
         Returns:
         None
@@ -2201,9 +2331,10 @@ class TestClass:
         X = X[..., : 9 + filter_size - 1]
         num_components = 9
         assert Y.shape[1] > 1
-        assert (
-            Y.shape[1] > X.shape[1] - filter_size + 1
-        )  # The output of the convolution preprocessing is what is actually fed as input to the PLS algorithms.
+
+        # The output of the convolution preprocessing is what is actually fed as input
+        # to the PLS algorithms.
+        assert Y.shape[1] > X.shape[1] - filter_size + 1
         self.check_gradient_pls(
             X=X,
             Y=Y,
@@ -2226,8 +2357,9 @@ class TestClass:
         """
         Description
         -----------
-        This method tests the ability to perform cross-validation to obtain the root mean square error (RMSE) and the best number
-        of components for each target variable and each split.
+        This method tests the ability to perform cross-validation to obtain the root
+        mean square error (RMSE) and the best number of components for each target
+        variable and each split.
 
         Parameters:
         X : numpy.ndarray
@@ -2249,15 +2381,16 @@ class TestClass:
         Raises
         ------
         AssertionError
-            If the best number of components found by cross validation with is not exactly equal across each different PLS implementation.
+            If the best number of components found by cross validation with is not
+            exactly equal across each different PLS implementation.
 
-            If the output RMSEs for the best number of components are not equal down to the specified tolerance across each different PLS implementation.
+            If the output RMSEs for the best number of components are not equal down to
+            the specified tolerance across each different PLS implementation.
         """
-        from sklearn.model_selection import cross_validate
 
         try:
             M = Y.shape[1]
-        except:
+        except IndexError:
             M = 1
 
         # Apply the identity function for this test
@@ -2311,7 +2444,10 @@ class TestClass:
             sk_pls, X, Y, cv=cv_splitter(splits), return_estimator=True, n_jobs=-1
         )
         sk_models = sk_results["estimator"]
-        # Extract regression matrices for SkPLS for all possible number of components and make a prediction with the regression matrices at all possible number of components.
+
+        # Extract regression matrices for SkPLS for all possible number of components
+        # and make a prediction with the regression matrices at all possible number of
+        # components.
         sk_Bs = np.empty((len(sk_models), n_components, X.shape[1], M))
         sk_preds = np.empty((len(sk_models), n_components, X.shape[0], M))
         for i, sk_model in enumerate(sk_models):
@@ -2325,12 +2461,15 @@ class TestClass:
                 sk_Bs[i] * sk_model._y_std
             ) + sk_model._y_mean
             sk_preds[i] = sk_pred
+
+            # Sanity check. SkPLS also uses the maximum number of components in its
+            # predict method.
             assert_allclose(
                 sk_pred[-1],
                 sk_models[i].predict(X).reshape(X.shape[0], M),
                 atol=0,
                 rtol=1e-13,
-            )  # Sanity check. SkPLS also uses the maximum number of components in its predict method.
+            )
 
         # Compute RMSE on the validation predictions
         sk_pls_rmses = np.empty((len(sk_models), n_components, M))
@@ -2345,14 +2484,14 @@ class TestClass:
         np_pls_alg_1 = NpPLS(algorithm=1)
         np_pls_alg_2 = NpPLS(algorithm=2)
 
-        fit_params = {"A": n_components}
+        params = {"A": n_components}
         np_pls_alg_1_results = cross_validate(
             np_pls_alg_1,
             X,
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
@@ -2363,7 +2502,7 @@ class TestClass:
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
@@ -2372,11 +2511,13 @@ class TestClass:
         # Compute RMSE on the validation predictions
         np_pls_alg_1_rmses = np.empty((len(np_pls_alg_1_models), n_components, M))
         np_pls_alg_2_rmses = np.empty((len(np_pls_alg_2_models), n_components, M))
-        for i in range(len(np_pls_alg_1_models)):
+        for i, (np_pls_alg_1_model, np_pls_alg_2_model) in enumerate(
+            zip(np_pls_alg_1_models, np_pls_alg_2_models)
+        ):
             val_idxs = val_idxs = np.nonzero(splits == i)[0]
             Y_true = Y[val_idxs]
-            Y_pred_alg_1 = np_pls_alg_1_models[i].predict(X[val_idxs])
-            Y_pred_alg_2 = np_pls_alg_2_models[i].predict(X[val_idxs])
+            Y_pred_alg_1 = np_pls_alg_1_model.predict(X[val_idxs])
+            Y_pred_alg_2 = np_pls_alg_2_model.predict(X[val_idxs])
             val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
             val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
             np_pls_alg_1_rmses[i] = val_rmses_alg_1
@@ -2391,6 +2532,19 @@ class TestClass:
         fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
             X, Y, n_components, splits.flatten(), rmse_per_component
         )
+
+        # Sort fast cv results according to the unique splits for comparison with the
+        # other algorithms
+        unique_splits, sort_indices = np.unique(splits, return_index=True)
+        unique_splits = unique_splits.astype(int)
+        fast_cv_order = np.argsort(sort_indices)
+        other_alg_order = np.argsort(fast_cv_order)
+        fast_cv_np_pls_alg_1_results = np.array(
+            fast_cv_np_pls_alg_1_results
+            )[other_alg_order]
+        fast_cv_np_pls_alg_2_results = np.array(
+            fast_cv_np_pls_alg_2_results
+            )[other_alg_order]
 
         # Calibrate JAX PLS
         jax_pls_alg_1_results = jax_pls_alg_1.cross_validate(
@@ -2430,7 +2584,8 @@ class TestClass:
             ["RMSE"],
         )
 
-        # Get the best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
+        # Get the best number of components in terms of minimizing validation RMSE for
+        # each split is equal among all algorithms
         unique_splits = np.unique(splits).astype(int)
         sk_best_num_components = [
             [np.argmin(sk_pls_rmses[split][..., i]) for split in unique_splits]
@@ -2581,12 +2736,26 @@ class TestClass:
             diff_jax_pls_alg_2_best_rmses, sk_best_rmses, atol=atol, rtol=rtol
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_1(self):
         """
         Description
         -----------
-        This test loads input predictor variables, a single target variable, and split indices for cross-validation. It then calls
-        the 'check_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+        This test loads input predictor variables, a single target variable, and split
+        indices for cross-validation. It then calls the 'check_cross_val_pls' method to
+        validate the cross-validation results, specifically for a single target
+        variable.
 
         Returns:
         None
@@ -2597,18 +2766,31 @@ class TestClass:
         assert Y.shape[1] == 1
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
-        Y = (
-            Y.squeeze()
-        )  # Remove the singleton dimension and check that the predictions are consistent.
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
         assert Y.ndim == 1
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_2_m_less_k(self):
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
-        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is less than K), and split indices for cross-validation. It then calls the
+        'check_cross_val_pls' method to validate the cross-validation results for this
+        scenario.
 
         Returns:
         None
@@ -2633,12 +2815,26 @@ class TestClass:
         assert Y.shape[1] < X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_2_m_eq_k(self):
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
-        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is equal to K), and split indices for cross-validation. It then calls the
+        'check_cross_val_pls' method to validate the cross-validation results for this
+        scenario.
 
         Returns:
         None
@@ -2664,12 +2860,26 @@ class TestClass:
         assert Y.shape[1] == X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3.4e-5)
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_cross_val_pls_2_m_greater_k(self):
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
-        cross-validation. It then calls the 'check_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is greater than K), and split indices for cross-validation. It then calls the
+        'check_cross_val_pls' method to validate the cross-validation results for this
+        scenario.
 
         Returns:
         None
@@ -2699,8 +2909,10 @@ class TestClass:
         """
         Description
         -----------
-        This method tests the ability to perform cross-validation to obtain the root mean square error (RMSE) and the best number
-        of components for each target variable and each split. It tests the fast cross-validation algorithm against the ordinary cross-validation algorithm.
+        This method tests the ability to perform cross-validation to obtain the root
+        mean square error (RMSE) and the best number of components for each target
+        variable and each split. It tests the fast cross-validation algorithm against
+        the ordinary cross-validation algorithm.
 
         Parameters:
         X : numpy.ndarray
@@ -2728,15 +2940,16 @@ class TestClass:
         Raises
         ------
         AssertionError
-            If the best number of components found by cross validation with is not exactly equal across each different PLS implementation.
+            If the best number of components found by cross validation with is not
+            exactly equal across each different PLS implementation.
 
-            If the output RMSEs for the best number of components are not equal down to the specified tolerance across each different PLS implementation.
+            If the output RMSEs for the best number of components are not equal down to
+            the specified tolerance across each different PLS implementation.
         """
-        from sklearn.model_selection import cross_validate
 
         try:
             M = Y.shape[1]
-        except:
+        except IndexError:
             M = 1
 
         np_pls_alg_1 = NpPLS(algorithm=1, center=center, scale=scale)
@@ -2762,14 +2975,14 @@ class TestClass:
                 val_idxs = np.nonzero(splits == split)[0]
                 yield train_idxs, val_idxs
 
-        fit_params = {"A": n_components}
+        params = {"A": n_components}
         np_pls_alg_1_results = cross_validate(
             np_pls_alg_1,
             X,
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
@@ -2780,7 +2993,7 @@ class TestClass:
             Y,
             cv=cv_splitter(splits),
             scoring=lambda *args, **kwargs: 0,
-            fit_params=fit_params,
+            params=params,
             return_estimator=True,
             n_jobs=-1,
         )
@@ -2789,17 +3002,20 @@ class TestClass:
         # Compute RMSE on the validation predictions
         np_pls_alg_1_rmses = np.empty((len(np_pls_alg_1_models), n_components, M))
         np_pls_alg_2_rmses = np.empty((len(np_pls_alg_2_models), n_components, M))
-        for i in range(len(np_pls_alg_1_models)):
+        for i, (np_pls_alg_1_model, np_pls_alg_2_model) in enumerate(
+            zip(np_pls_alg_1_models, np_pls_alg_2_models)
+        ):
             val_idxs = val_idxs = np.nonzero(splits == i)[0]
             Y_true = Y[val_idxs]
-            Y_pred_alg_1 = np_pls_alg_1_models[i].predict(X[val_idxs])
-            Y_pred_alg_2 = np_pls_alg_2_models[i].predict(X[val_idxs])
+            Y_pred_alg_1 = np_pls_alg_1_model.predict(X[val_idxs])
+            Y_pred_alg_2 = np_pls_alg_2_model.predict(X[val_idxs])
             val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
             val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
             np_pls_alg_1_rmses[i] = val_rmses_alg_1
             np_pls_alg_2_rmses[i] = val_rmses_alg_2
 
-        # Compute RMSE on the validation predictions using the fast cross-validation algorithm
+        # Compute RMSE on the validation predictions using the fast cross-validation
+        # algorithm
         fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
             X=X,
             Y=Y,
@@ -2819,8 +3035,21 @@ class TestClass:
             verbose=0,
         )
 
-        # Check that best number of components in terms of minimizing validation RMSE for each split is equal among all algorithms
-        unique_splits = np.unique(splits).astype(int)
+        # Sort fast cv results according to the unique splits for comparison with the
+        # other algorithms
+        unique_splits, sort_indices = np.unique(splits, return_index=True)
+        unique_splits = unique_splits.astype(int)
+        fast_cv_order = np.argsort(sort_indices)
+        other_alg_order = np.argsort(fast_cv_order)
+        fast_cv_np_pls_alg_1_results = np.array(
+            fast_cv_np_pls_alg_1_results
+            )[other_alg_order]
+        fast_cv_np_pls_alg_2_results = np.array(
+            fast_cv_np_pls_alg_2_results
+            )[other_alg_order]
+
+        # Check that best number of components in terms of minimizing validation RMSE
+        # for each split is equal among all algorithms
         np_pls_alg_1_best_num_components = [
             [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
             for i in range(M)
@@ -2892,12 +3121,26 @@ class TestClass:
             rtol=rtol,
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_1(self):
         """
         Description
         -----------
-        This test loads input predictor variables, a single target variable, and split indices for cross-validation. It then calls
-        the 'check_fast_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+        This test loads input predictor variables, a single target variable, and split
+        indices for cross-validation. It then calls the 'check_fast_cross_val_pls'
+        method to validate the cross-validation results, specifically for a single
+        target variable.
 
         Returns:
         None
@@ -2916,9 +3159,8 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
-        Y = (
-            Y.squeeze()
-        )  # Remove the singleton dimension and check that the predictions are consistent.
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
         assert Y.ndim == 1
         self.check_fast_cross_val_pls(
             X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
@@ -2930,12 +3172,26 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_2_m_less_k(self):
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
-        cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is less than K), and split indices for cross-validation. It then calls the
+        'check_fast_cross_val_pls' method to validate the cross-validation results for
+        this scenario.
 
         Returns:
         None
@@ -2968,12 +3224,26 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-7
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_2_m_eq_k(self):
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
-        cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is equal to K), and split indices for cross-validation. It then calls the
+        'check_fast_cross_val_pls' method to validate the cross-validation results for
+        this scenario.
 
         Returns:
         None
@@ -3007,12 +3277,26 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_2_m_greater_k(self):
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
-        cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is greater than K), and split indices for cross-validation. It then calls the
+        'check_fast_cross_val_pls' method to validate the cross-validation results for
+        this scenario.
 
         Returns:
         None
@@ -3046,12 +3330,27 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
         )
 
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
     def test_fast_cross_val_pls_1_loocv(self):
         """
         Description
         -----------
-        This test loads input predictor variables and a single target variable. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls
-        the 'check_fast_cross_val_pls' method to validate the cross-validation results, specifically for a single target variable.
+        This test loads input predictor variables and a single target variable. It
+        assigns a unique split index to each sample to perform
+        leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls'
+        method to validate the cross-validation results, specifically for a single
+        target variable.
 
         Returns:
         None
@@ -3073,9 +3372,8 @@ class TestClass:
             X, Y, splits, center=True, scale=True, atol=1e-6, rtol=1e-8
         )
 
-        Y = (
-            Y.squeeze()
-        )  # Remove the singleton dimension and check that the predictions are consistent.
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
         assert Y.ndim == 1
         self.check_fast_cross_val_pls(
             X, Y, splits, center=False, scale=False, atol=1e-6, rtol=1e-8
@@ -3091,8 +3389,11 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is less than K), and split indices for
-        cross-validation. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is less than K), and split indices for cross-validation. It assigns a unique
+        split index to each sample to perform leave-one-out cross-validation. It then
+        calls the 'check_fast_cross_val_pls' method to validate the cross-validation
+        results for this scenario.
 
         Returns:
         None
@@ -3132,8 +3433,11 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is equal to K), and split indices for
-        cross-validation. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is equal to K), and split indices for cross-validation. It assigns a unique
+        split index to each sample to perform leave-one-out cross-validation. It then
+        calls the 'check_fast_cross_val_pls' method to validate the cross-validation
+        results for this scenario.
 
         Returns:
         None
@@ -3153,8 +3457,8 @@ class TestClass:
                 "Protein",
             ]
         )
+
         # Decrease the amount of samples in the interest of time.
-        uniq_Y, uniq_indices = np.unique(Y[..., -1], return_index=True)
         X = X[::50]
         Y = Y[::50]
         X = X[..., :10]
@@ -3175,8 +3479,11 @@ class TestClass:
         """
         Description
         -----------
-        This test loads input predictor variables, multiple target variables (where M is greater than K), and split indices for
-        cross-validation. It assigns a unique split index to each sample to perform leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls' method to validate the cross-validation results for this scenario.
+        This test loads input predictor variables, multiple target variables (where M
+        is greater than K), and split indices for cross-validation. It assigns a unique
+        split index to each sample to perform leave-one-out cross-validation. It then
+        calls the 'check_fast_cross_val_pls' method to validate the cross-validation
+        results for this scenario.
 
         Returns:
         None

@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from ikpls.fast_cross_validation.numpy_ikpls import PLS as NP_PLS_FCV
 from ikpls.jax_ikpls_alg_1 import PLS as JAX_PLS_Alg_1
@@ -19,16 +20,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "-model",
         type=str,
-        help="Model to use. Must be either 'sk', 'np1', 'np2', 'fastnp1, 'fastnp2', 'jax1', 'jax2', 'diffjax1', 'diffjax2'.",
+        help="Model to use. Must be either 'sk', 'np1', 'np2', 'fastnp1, 'fastnp2', 'jax1', 'jax2', 'diffjax1', 'diffjax2'. Note that fastnp1 and fastnp2 only support cross-validation and not single fits.",
     )
     parser.add_argument("-n_components", type=int, help="Number of components to use.")
     parser.add_argument(
-        "-n_splits", type=int, help="Number of splits to use in cross-validation."
+        "-n_splits",
+        type=int,
+        help="Number of splits to use in cross-validation. If 1, will perform a single fit.",
     )
     parser.add_argument(
         "-n_jobs",
         type=int,
-        help="Number of parallel jobs to use. Only used for CPU implementations. A value of -1 will use all available cores.",
+        help="Number of parallel jobs to use. A value of -1 will use all available cores. Not used for JAX implementations as it is assumed these will run on a TPU or GPU.",
     )
     parser.add_argument("-n", type=int, help="Number of samples to generate.")
     parser.add_argument("-k", type=int, help="Number of features to generate.")
@@ -117,10 +120,16 @@ if __name__ == "__main__":
                 )
         print(f"Time: {time}")
 
+    num_cores = os.cpu_count() if n_jobs == -1 else n_jobs
+
     try:
-        with open("timings/timings.csv", "x") as f:
-            f.write("model,n_components,n_splits,n,k,m,time\n")
-            f.write(f"{model},{n_components},{n_splits},{n},{k},{m},{time}\n")
+        with open("timings/user_timings.csv", "x") as f:
+            f.write("model,n_components,n_splits,n,k,m,time,inferred,njobs\n")
+            f.write(
+                f"{model},{n_components},{n_splits},{n},{k},{m},{time},False,{num_cores}\n"
+            )
     except FileExistsError:
-        with open("timings/timings.csv", "a") as f:
-            f.write(f"{model},{n_components},{n_splits},{n},{k},{m},{time}\n")
+        with open("timings/user_timings.csv", "a") as f:
+            f.write(
+                f"{model},{n_components},{n_splits},{n},{k},{m},{time},False,{num_cores}\n"
+            )
