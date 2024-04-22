@@ -37,9 +37,9 @@ You want to make some kind of change to the code base
 #. (**important**) Announce your plan to the rest of the community *before you start working*. This announcement should be in the form of a (new) issue;
 #. (**important**) Wait until some kind of consensus is reached about your idea being a good idea;
 #. If needed, fork the repository to your own Github profile and create your own feature branch off of the latest main commit. While working on your feature branch, make sure to stay up to date with the main branch by pulling in changes, possibly from the 'upstream' repository (follow the instructions `here <https://help.github.com/articles/configuring-a-remote-for-a-fork/>`__ and `here <https://help.github.com/articles/syncing-a-fork/>`__);
-#. Make sure the existing tests still work by following the instructions in :ref:`_testing`.;
+#. Make sure the existing tests still work by following the instructions in `Run the test suite <#testing>`_;
 #. Add your own tests (if necessary);
-#. If you added your own tests, make sure they pass by following the instructions in :ref:`_testing`.;
+#. If you added your own tests, make sure they pass by following the instructions in `Run the test suite <#testing>`_;
 #. Update or expand the documentation;
 #. Check that you can build the package locally and that it passes twine check. See `Build from source <#build_from_source>`_ for more information;
 #. `push <http://rogerdudler.github.io/git-guide/>`_ your feature branch to (your fork of) the IKPLS repository on GitHub;
