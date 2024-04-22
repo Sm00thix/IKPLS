@@ -6,6 +6,7 @@
 
     self
     api
+    CONTRIBUTING
 
 
 
