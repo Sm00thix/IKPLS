@@ -40,6 +40,7 @@ You want to make some kind of change to the code base
 #. Make sure the existing tests still work by following the instructions in `Run the test suite <#testing>`_;
 #. Add your own tests (if necessary);
 #. If you added your own tests, make sure they pass by following the instructions in `Run the test suite <#testing>`_;
+#. If your contribution is a performance enhancement, make sure to include benchmarks. See `Benchmarking <#benchmarking>`_ for more information;
 #. Update or expand the documentation;
 #. Make sure the documentation builds without errors by following the instructions in `Build the documentation <#documentation>`_;
 #. Check that you can build the package locally and that it passes twine check. See `Build from source <#build_from_source>`_ for more information;
@@ -150,3 +151,10 @@ Build the documentation
     :class: nohighlight
 
     make html
+
+.. _benchmarking:
+
+Benchmarking
+************
+
+To run benchmarks, follow the instructions `here <https://github.com/Sm00thix/IKPLS/blob/main/paper/README.md>`_.
