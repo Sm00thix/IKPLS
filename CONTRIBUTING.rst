@@ -34,8 +34,8 @@ You think you may have found a bug
 You want to make some kind of change to the code base
 *****************************************************
 
-#. (**important**) Announce your plan to the rest of the community *before you start working*. This announcement should be in the form of a (new) issue;
-#. (**important**) Wait until some kind of consensus is reached about your idea being a good idea;
+#. (**Important**) Announce your plan to the rest of the community *before you start working*. This announcement should be in the form of a (new) issue;
+#. (**Important**) Wait until some kind of consensus is reached about your idea being a good idea;
 #. If needed, fork the repository to your own Github profile and create your own feature branch off of the latest main commit. While working on your feature branch, make sure to stay up to date with the main branch by pulling in changes, possibly from the 'upstream' repository (follow the instructions `here <https://help.github.com/articles/configuring-a-remote-for-a-fork/>`__ and `here <https://help.github.com/articles/syncing-a-fork/>`__);
 #. Make sure the existing tests still work by following the instructions in `Run the test suite <#testing>`_;
 #. Add your own tests (if necessary);
@@ -103,6 +103,15 @@ IKPLS uses `poetry <https://python-poetry.org/>`_ to manage its dependencies and
 
 Run the test suite
 ******************
+
+To run the test suite, follow these steps:
+
+#. Install poetry:
+
+.. code-block::
+    :class: nohighlight
+
+    pip3 install poetry
 
 #. Install the project dependencies with poetry:
 
