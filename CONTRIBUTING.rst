@@ -103,4 +103,8 @@ Run the test suite
 ******************
 
 The tests can be run with the following command:
-``poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/``
+
+.. code-block::
+    :class: nohighlight
+
+    poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
