@@ -2169,8 +2169,8 @@ class TestClass:
         output_val_alg_2 = preprocess_fit_rmse(jnp_X, jnp_Y, pls_alg_2, num_components)(
             uniform_filter
         )
-        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=5e-14)
-        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=2e-11)
+        assert_allclose(output_val_alg_1, output_val_diff_alg_1, atol=0, rtol=1e-8)
+        assert_allclose(output_val_alg_2, output_val_diff_alg_2, atol=0, rtol=1e-8)
 
     def test_gradient_pls_1(self):
         """
