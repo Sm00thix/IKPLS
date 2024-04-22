@@ -102,7 +102,21 @@ IKPLS uses `poetry <https://python-poetry.org/>`_ to manage its dependencies and
 Run the test suite
 ******************
 
-The tests can be run with the following command:
+#. Install the project dependencies with poetry:
+
+.. code-block::
+    :class: nohighlight
+
+    poetry install
+
+#. Install additional dependencies for testing:
+
+.. code-block::
+    :class: nohighlight
+
+    poetry add --group dev pandas pytest flake8 pytest-cov typeguard
+
+#. Now, the tests can be run with the following command:
 
 .. code-block::
     :class: nohighlight
