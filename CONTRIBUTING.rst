@@ -34,15 +34,16 @@ You think you may have found a bug
 You want to make some kind of change to the code base
 *****************************************************
 
-#. (**important**) announce your plan to the rest of the community *before you start working*. This announcement should be in the form of a (new) issue;
-#. (**important**) wait until some kind of consensus is reached about your idea being a good idea;
-#. if needed, fork the repository to your own Github profile and create your own feature branch off of the latest main commit. While working on your feature branch, make sure to stay up to date with the main branch by pulling in changes, possibly from the 'upstream' repository (follow the instructions `here <https://help.github.com/articles/configuring-a-remote-for-a-fork/>`__ and `here <https://help.github.com/articles/syncing-a-fork/>`__);
-#. make sure the existing tests still work by running ``python3 -m pytest tests --typeguard-packages=ikpls/``;
-#. add your own tests (if necessary);
-#. update or expand the documentation;
-#. check that you can build the package locally and that it passes twine check. See `Build from source <#build_from_source>`_ for more information;
+#. (**important**) Announce your plan to the rest of the community *before you start working*. This announcement should be in the form of a (new) issue;
+#. (**important**) Wait until some kind of consensus is reached about your idea being a good idea;
+#. If needed, fork the repository to your own Github profile and create your own feature branch off of the latest main commit. While working on your feature branch, make sure to stay up to date with the main branch by pulling in changes, possibly from the 'upstream' repository (follow the instructions `here <https://help.github.com/articles/configuring-a-remote-for-a-fork/>`__ and `here <https://help.github.com/articles/syncing-a-fork/>`__);
+#. Make sure the existing tests still work by following the instructions in :ref:`_testing`.;
+#. Add your own tests (if necessary);
+#. If you added your own tests, make sure they pass by following the instructions in :ref:`_testing`.;
+#. Update or expand the documentation;
+#. Check that you can build the package locally and that it passes twine check. See `Build from source <#build_from_source>`_ for more information;
 #. `push <http://rogerdudler.github.io/git-guide/>`_ your feature branch to (your fork of) the IKPLS repository on GitHub;
-#. create the pull request, e.g. following the instructions `here <https://help.github.com/articles/creating-a-pull-request/>`__.
+#. Create the pull request, e.g. following the instructions `here <https://help.github.com/articles/creating-a-pull-request/>`__.
 
 If you feel like you've made a valuable contribution, but you don't know how to write or run tests for it or generate the documentation, don't let this discourage you from making the pull request; we can help you! Just submit the pull request, but remember that you might be asked to append additional commits to your pull request.
 
@@ -95,3 +96,11 @@ IKPLS uses `poetry <https://python-poetry.org/>`_ to manage its dependencies and
         :class: nohighlight
 
         twine check dist/*
+
+.. _testing:
+
+Run the test suite
+******************
+
+The tests can be run with the following command:
+``poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/``
