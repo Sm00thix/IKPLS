@@ -41,6 +41,7 @@ You want to make some kind of change to the code base
 #. Add your own tests (if necessary);
 #. If you added your own tests, make sure they pass by following the instructions in `Run the test suite <#testing>`_;
 #. Update or expand the documentation;
+#. Make sure the documentation builds without errors by following the instructions in `Build the documentation <#documentation>`_;
 #. Check that you can build the package locally and that it passes twine check. See `Build from source <#build_from_source>`_ for more information;
 #. `push <http://rogerdudler.github.io/git-guide/>`_ your feature branch to (your fork of) the IKPLS repository on GitHub;
 #. Create the pull request, e.g. following the instructions `here <https://help.github.com/articles/creating-a-pull-request/>`__.
@@ -122,3 +123,30 @@ Run the test suite
     :class: nohighlight
 
     poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
+
+
+.. _documentation:
+
+Build the documentation
+***********************
+
+#. Install sphinx and the sphinx-rtd-theme:
+
+.. code-block::
+    :class: nohighlight
+
+    pip3 install sphinx sphinx-rtd-theme
+
+#. Change to the docs directory:
+
+.. code-block::
+    :class: nohighlight
+
+    cd docs
+
+#. Build the documentation:
+
+.. code-block::
+    :class: nohighlight
+
+    make html
