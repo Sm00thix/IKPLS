@@ -24,6 +24,13 @@ extensions = [
     "myst_parser",
 ]
 
+myst_enable_extensions = [
+    "dollarmath",  # Enable dollar sign as a delimiter for math
+    # Add other MyST extensions you might need
+]
+
+myst_heading_anchors = 2
+
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
