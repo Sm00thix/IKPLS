@@ -21,12 +21,13 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "myst_parser",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-source_suffix = ".rst"
+source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 autosummary_generate = True
