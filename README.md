@@ -34,7 +34,7 @@ The documentation is available at
 ## Fast Cross-Validation
 
 In addition to the implementations mentioned above, this package
-contains the novel, fast cross-validation algorithms by Engstrøm 
+contains the novel, fast cross-validation algorithms by Engstrøm ([7])
 using both IKPLS algorithms. The fast cross-validation algorithms
 benefit both IKPLS Algorithms and especially Algorithm #2. The fast
 cross-validation algorithms are mathematically equivalent to the
