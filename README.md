@@ -15,14 +15,14 @@
 [![JOSS Status](https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc/status.svg)](https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc)
 
 Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS
-Algorithm #1 and Algorithm #2 ([1]). Improved
-Kernel PLS is both fast ([2]) and numerically stable ([3]). The CPU
-implementations use ([4]) and subclass BaseEstimator from scikit-learn ([5]),
+Algorithm #1 and Algorithm #2 [[1]](#dayal). Improved
+Kernel PLS is both fast [[2]](#alin) and numerically stable [[3]](#andersson). The CPU
+implementations use [[4]](#numpy) and subclass BaseEstimator from scikit-learn [[5]](#sklearn),
 allowing integration into scikit-learn\'s ecosystem of
 machine learning algorithms and pipelines. For example, the CPU
 implementations can be used with scikit-learn\'s
 [cross_validate](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html).
-The GPU and TPU implementations use Google\'s JAX ([6]). JAX supports
+The GPU and TPU implementations use Google\'s JAX [[6]](#jax). JAX supports
 automatic differentiation while allowing CPU, GPU, and TPU execution.
 This implies that the JAX implementations can be combined with deep
 learning approaches, as the PLS fit is differentiable.
@@ -34,7 +34,7 @@ The documentation is available at
 ## Fast Cross-Validation
 
 In addition to the implementations mentioned above, this package
-contains the novel, fast cross-validation algorithms by Engstrøm ([7])
+contains the novel, fast cross-validation algorithms by Engstrøm [[7]](#engstroem)
 using both IKPLS algorithms. The fast cross-validation algorithms
 benefit both IKPLS Algorithms and especially Algorithm #2. The fast
 cross-validation algorithms are mathematically equivalent to the
@@ -157,8 +157,6 @@ Guidelines](https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.md).
 
 ## References
 
-## References
-
 1. [Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. *Journal of Chemometrics*, 11(1), 73-85.](https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23?) {#dayal}
 2. [Alin, A. (2009). Comparison of PLS algorithms when the number of objects is much larger than the number of variables. *Statistical Papers*, 50, 711-720.](https://doi.org/10.1007/s00362-009-0251-7) {#alin}
 3. [Andersson, M. (2009). A comparison of nine PLS1 algorithms. *Journal of Chemometrics*, 23(10), 518-529.](https://doi.org/10.1002/cem.1248) {#andersson}
@@ -170,11 +168,3 @@ Guidelines](https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.md).
     \$\\\\mathbf{X}\^\\\\mathbf{T}\\\\mathbf{X}\$ and
     \$\\\\mathbf{X}\^\\\\mathbf{T}\\\\mathbf{Y}\$ Without Full
     Recomputation of Matrix Products or Statistical Moments](https://arxiv.org/abs/2401.13185) {#engstroem}
-
-[1]: #dayal
-[2]: #alin
-[3]: #andersson
-[4]: #numpy
-[5]: #sklearn
-[6]: #jax
-[7]: #engstroem
