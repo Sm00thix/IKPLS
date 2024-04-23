@@ -108,31 +108,31 @@ To run the test suite, follow these steps:
 
 #. Install poetry:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    pip3 install poetry
+        pip3 install poetry
 
 #. Install the project dependencies with poetry:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    poetry install
+        poetry install
 
 #. Install additional dependencies for testing:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    poetry add --group dev pandas pytest flake8 pytest-cov typeguard
+        poetry add --group dev pandas pytest flake8 pytest-cov typeguard
 
 #. Now, the tests can be run with the following command:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
+        poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
 
 
 .. _documentation:
@@ -142,24 +142,24 @@ Build the documentation
 
 #. Install sphinx and the sphinx-rtd-theme:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    pip3 install sphinx sphinx-rtd-theme
+        pip3 install sphinx sphinx-rtd-theme
 
 #. Change to the docs directory:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    cd docs
+        cd docs
 
 #. Build the documentation:
 
-.. code-block::
-    :class: nohighlight
+    .. code-block::
+        :class: nohighlight
 
-    make html
+        make html
 
 .. _benchmarking:
 
