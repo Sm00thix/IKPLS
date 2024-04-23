@@ -1,4 +1,4 @@
 Contribution Guidelines
 =======================
 
-CONTRIBUTING.md
+.. include:: CONTRIBUTING.md
