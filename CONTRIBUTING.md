@@ -42,6 +42,7 @@ The sections below outline the steps in each case.
 
 If you feel like you've made a valuable contribution, but you don't know how to write or run tests for it or generate the documentation, don't let this discourage you from making the pull request; we can help you! Just submit the pull request, but remember that you might be asked to append additional commits to your pull request.
 
+(build-from-source)=
 ## Build from source
 
 IKPLS uses [poetry](https://python-poetry.org/) to manage its dependencies and packaging. To build the package from source, follow these steps:
@@ -83,6 +84,7 @@ IKPLS uses [poetry](https://python-poetry.org/) to manage its dependencies and p
     twine check dist/*
     ```
 
+(testing)=
 ## Run the test suite
 
 To run the test suite, follow these steps:
@@ -111,6 +113,7 @@ To run the test suite, follow these steps:
     poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=ikpls/ --cov-report=xml --cov-report=html --typeguard-packages=ikpls/
     ```
 
+(documentation)=
 ## Build the documentation
 
 1. Install sphinx and the sphinx-rtd-theme:
@@ -131,6 +134,7 @@ To run the test suite, follow these steps:
     make html
     ```
 
+(benchmarking)=
 ## Benchmarking
 
 To run benchmarks, follow the instructions [here](https://github.com/Sm00thix/IKPLS/blob/main/paper/README.md).
