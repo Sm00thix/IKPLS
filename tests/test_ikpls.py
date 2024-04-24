@@ -2533,6 +2533,12 @@ class TestClass:
             X, Y, n_components, splits.flatten(), rmse_per_component
         )
 
+        # Convert the results from dict to list for easier comparison
+        fast_cv_np_pls_alg_1_results = [np.asarray(fast_cv_np_pls_alg_1_results[key])
+                                        for key in fast_cv_np_pls_alg_1_results.keys()]
+        fast_cv_np_pls_alg_2_results = [np.asarray(fast_cv_np_pls_alg_2_results[key])
+                                        for key in fast_cv_np_pls_alg_2_results.keys()]
+
         # Sort fast cv results according to the unique splits for comparison with the
         # other algorithms
         unique_splits, sort_indices = np.unique(splits, return_index=True)
@@ -3034,6 +3040,12 @@ class TestClass:
             n_jobs=-1,
             verbose=0,
         )
+
+        # Convert the results from dict to list for easier comparison
+        fast_cv_np_pls_alg_1_results = [np.asarray(fast_cv_np_pls_alg_1_results[key])
+                                        for key in fast_cv_np_pls_alg_1_results.keys()]
+        fast_cv_np_pls_alg_2_results = [np.asarray(fast_cv_np_pls_alg_2_results[key])
+                                        for key in fast_cv_np_pls_alg_2_results.keys()]
 
         # Sort fast cv results according to the unique splits for comparison with the
         # other algorithms

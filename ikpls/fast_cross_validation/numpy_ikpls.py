@@ -12,7 +12,6 @@ E-mail: ole.e@di.ku.dk
 """
 
 import warnings
-from collections import defaultdict
 from typing import Any, Callable, Hashable, Iterable, Union
 
 import joblib
@@ -488,9 +487,9 @@ class PLS:
         )
         return metric_function(self.Y[validation_indices], Y_pred)
 
-    def _generate_validation_indices_list(
+    def _generate_validation_indices_dict(
         self, cv_splits: Iterable[Hashable]
-    ) -> list[npt.NDArray[np.int_]]:
+    ) -> dict[Hashable, npt.NDArray[np.int_]]:
         """
         Generates a list of validation indices for each fold in `cv_splits`.
 
@@ -502,14 +501,19 @@ class PLS:
 
         Returns
         -------
-        validation_indices_list : list of array of int
-            A list of validation indices for each fold.
+        index_dict : dict of Hashable to Array
+            A dictionary mapping each unique value in `cv_splits` to an array of
+            validation indices.
         """
-        index_dict = defaultdict(list)
+        index_dict = {}
         for i, num in enumerate(cv_splits):
-            index_dict[num].append(i)
-        validation_indices_list = list(index_dict.values())
-        return [np.asarray(indices) for indices in validation_indices_list]
+            try:
+                index_dict[num].append(i)
+            except:
+                index_dict[num] = [i]
+        for key in index_dict:
+            index_dict[key] = np.asarray(index_dict[key], dtype=int)
+        return index_dict
 
     def cross_validate(
         self,
@@ -520,7 +524,7 @@ class PLS:
         metric_function: Callable[[npt.ArrayLike, npt.ArrayLike], Any],
         n_jobs=-1,
         verbose=10,
-    ) -> list[Any]:
+    ) -> dict[Hashable, Any]:
         """
         Cross-validates the PLS model using `cv_splits` splits on `X` and `Y` with
         `n_components` components evaluating results with `metric_function`.
@@ -560,13 +564,16 @@ class PLS:
 
         Returns
         -------
-        metrics : list of Any
-            A list of the results of evaluating `metric_function` on each fold.
+        metrics : dict of Hashable to Any
+            A dictionary mapping each unique value in `cv_splits` to the result of
+            evaluating `metric_function` on the validation set corresponding to that
+            value.
 
         Notes:
         ------
         The order of cross-validation folds is determined by the order of the unique
-        values in `cv_splits`. `metrics` will be sorted in the same order.
+        values in `cv_splits`. The keys and values of `metrics` will be sorted in the
+        same order.
         """
 
         self.X = np.asarray(X, dtype=self.dtype)
@@ -576,8 +583,8 @@ class PLS:
         self.A = A
         self.N, self.K = X.shape
         self.M = self.Y.shape[1]
-        validation_indices_list = self._generate_validation_indices_list(cv_splits)
-        num_splits = len(validation_indices_list)
+        validation_indices_dict = self._generate_validation_indices_dict(cv_splits)
+        num_splits = len(validation_indices_dict)
 
         if self.algorithm == 1:
             self.all_indices = np.arange(self.N, dtype=int)
@@ -626,9 +633,11 @@ class PLS:
                     metric_function
                    )
 
-        metrics = Parallel(n_jobs=n_jobs, verbose=verbose)(
+        metrics_list = Parallel(n_jobs=n_jobs, verbose=verbose)(
             delayed(worker)(validation_indices, metric_function)
-            for validation_indices in validation_indices_list
+            for validation_indices in validation_indices_dict.values()
         )
 
-        return metrics
+        metrics_dict = dict(zip(validation_indices_dict.keys(), metrics_list))
+ 
+        return metrics_dict

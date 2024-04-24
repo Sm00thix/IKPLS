@@ -25,6 +25,8 @@ import pandas as pd
 from matplotlib import patches
 from matplotlib.transforms import blended_transform_factory
 
+import ikpls
+
 
 def remove_rows_where_all_values_except_time_are_same(df):
     """
@@ -426,7 +428,20 @@ if __name__ == "__main__":
         bbox_to_anchor=(0.5, 0.95),
         bbox_transform=plt.gcf().transFigure,
     )
-    ax = plt.gca().add_artist(first_legend)
+    plt.gca().add_artist(first_legend)
+    
+    ikpls_version_text = f"ikpls version: {ikpls.__version__}"
+
+    fig.text(
+        x=0.02,  # Adjust the x-coordinate to control horizontal placement
+        y=0.98,  # Adjust the y-coordinate to control vertical placement
+        s=ikpls_version_text,  # The text string to display
+        fontsize=9,  # Adjust font size as needed
+        ha='left',  # Horizontal alignment: 'left', 'center', or 'right'
+        va='top',  # Vertical alignment: 'top', 'center', or 'bottom'
+        transform=fig.transFigure  # Use figure-level coordinates
+    )
+
     plt.legend(
         handles=[rect1, rect2, rect11, rect12],
         labels=["PLS1", "PLS2", "Single Fit", "LOOCV"],

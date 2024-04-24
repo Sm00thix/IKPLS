@@ -84,26 +84,32 @@ if __name__ == "__main__":
         verbose=10,
     )
 
+    # np_pls_alg_1_fast_cv_results is a dict with keys corresponding to the names of
+    # unique validation splits. The values are the results of the metric function that
+    # is passed to the cross_validate method - in this case, mse_for_each_target.
+
+    unique_splits = np.unique(splits)
+
     # Shape (M, splits) = (10, number_of_splits).
     # Lowest MSE for each target for each split.
-    lowest_val_mses = np.array(
+    lowest_val_mses = np.asarray(
         [
             [
-                np_pls_alg_1_fast_cv_results[i][f"lowest_mse_target_{j}"]
-                for i in range(number_of_splits)
+                np_pls_alg_1_fast_cv_results[split][f'lowest_mse_target_{i}']
+                for split in unique_splits
             ]
-            for j in range(M)
+            for i in range(M)
         ]
     )
 
     # Shape (M, splits) = (10, number_of_splits).
     # Number of components that achieves the lowest MSE for each target for each split.
-    best_num_components = np.array(
+    best_num_components = np.asarray(
         [
             [
-                np_pls_alg_1_fast_cv_results[i][f"num_components_lowest_mse_target_{j}"]
-                for i in range(number_of_splits)
+                np_pls_alg_1_fast_cv_results[split][f'num_components_lowest_mse_target_{i}']
+                for split in unique_splits
             ]
-            for j in range(M)
+            for i in range(M)
         ]
     )
