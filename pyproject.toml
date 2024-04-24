@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "ikpls"
-version = "1.2.0.post1"
+version = "1.2.0.post2"
 description = ""
 authors = ["Sm00thix <oleemail@icloud.com>"]
 maintainers = ["Sm00thix <oleemail@icloud.com>"]
 license = "Apache-2.0"
-readme = "README.rst"
+readme = "README.md"
 homepage = "https://ikpls.readthedocs.io/en/latest/"
 repository = "https://github.com/Sm00thix/IKPLS"
 
