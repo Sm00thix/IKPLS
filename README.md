@@ -155,6 +155,7 @@ will find:
 To contribute, please read the [Contribution
 Guidelines](https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.md).
 
+(references)=
 ## References
 
 1. [Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. *Journal of Chemometrics*, 11(1), 73-85.](https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23?)
@@ -165,6 +166,6 @@ Guidelines](https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.md).
 6. [JAX](https://jax.readthedocs.io/en/latest/)
 7. [Engstrøm, O.-C. G. (2024). Shortcutting Cross-Validation:
     Efficiently Deriving Column-Wise Centered and Scaled Training Set
-    \$\\\\mathbf{X}\^\\\\mathbf{T}\\\\mathbf{X}\$ and
-    \$\\\\mathbf{X}\^\\\\mathbf{T}\\\\mathbf{Y}\$ Without Full
+    $\mathbf{X}^\mathbf{T}\mathbf{X}$ and
+    $\mathbf{X}^\mathbf{T}\mathbf{Y}$ Without Full
     Recomputation of Matrix Products or Statistical Moments](https://arxiv.org/abs/2401.13185)
