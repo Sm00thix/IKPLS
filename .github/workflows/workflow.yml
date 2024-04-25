@@ -20,12 +20,14 @@ jobs:
       matrix:  
         os: [ubuntu-latest, windows-latest, macos-latest] 
         python-version: ["3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          - os: macos-latest
+            python-version: "3.9"
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/test
         with:
           PYTHON_VERSION: ${{ matrix.python-version }}
-          OS: ${{ matrix.os }}
 
   build_package:
     runs-on: ubuntu-latest
