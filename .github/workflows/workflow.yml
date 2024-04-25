@@ -25,6 +25,7 @@ jobs:
       - uses: ./.github/actions/test
         with:
           PYTHON_VERSION: ${{ matrix.python-version }}
+          OS: ${{ matrix.os }}
 
   build_package:
     runs-on: ubuntu-latest

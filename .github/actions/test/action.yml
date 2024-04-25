@@ -5,6 +5,9 @@ inputs:
   PYTHON_VERSION:
     description: Test Python version
     required: true
+  OS:
+    description: Test OS
+    required: true
 
 runs:
   using: "composite"
@@ -13,6 +16,8 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.PYTHON_VERSION }}
+        # If OS is Mac and Python Version == 3.9, use x64, otherwise use default value
+        architecture: ${{ (inputs.OS == 'macos-latest' && inputs.PYTHON_VERSION == '3.9') && 'x64' || '' }}
 
     - name: Install Poetry
       run: |
