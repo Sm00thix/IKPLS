@@ -16,7 +16,8 @@ runs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ inputs.PYTHON_VERSION }}
-        architecture: ${{ (inputs.OS == 'macos-latest' && inputs.PYTHON_VERSION == '3.9') && 'x64' }}
+        # Conditionally set architecture
+        architecture: ${{ 'arm64' if inputs.OS == 'macos-latest' and int(inputs.PYTHON_VERSION.split('.')[1]) > 9 else 'x64' }}
 
     - name: Install Poetry
       run: |
