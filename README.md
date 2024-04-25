@@ -155,7 +155,6 @@ will find:
 To contribute, please read the [Contribution
 Guidelines](https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.md).
 
-(references)=
 ## References
 
 1. [Dayal, B. S., & MacGregor, J. F. (1997). Improved PLS algorithms. *Journal of Chemometrics*, 11(1), 73-85.](https://doi.org/10.1002/(SICI)1099-128X(199701)11:1%3C73::AID-CEM435%3E3.0.CO;2-%23?)
