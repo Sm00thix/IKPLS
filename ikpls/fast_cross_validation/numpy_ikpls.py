@@ -550,12 +550,6 @@ class PLS:
             values `Y_true` and predicted values `Y_pred`. `Y_pred` contains a
             prediction for all `A` components.
 
-        mean_centering : bool, optional default=True
-            Whether to mean X and Y across the sample axis before fitting. The mean is
-            subtracted from X and Y before fitting and added back to the predictions.
-            This implementation ensures that no data leakage occurs between training
-            and validation sets.
-
         n_jobs : int, optional default=-1
             Number of parallel jobs to use. A value of -1 will use the minimum of all
             available cores and the number of unique values in `cv_splits`.
