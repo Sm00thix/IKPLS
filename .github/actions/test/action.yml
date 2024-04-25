@@ -3,7 +3,10 @@ description: Test the package
 
 inputs:
   PYTHON_VERSION:
-    description: test
+    description: Test Python version
+    required: true
+  OS:
+    description: Test OS
     required: true
 
 runs:
@@ -13,6 +16,7 @@ runs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ inputs.PYTHON_VERSION }}
+        architecture: ${{ (inputs.OS == 'macos-latest' && inputs.PYTHON_VERSION == '3.9') && 'x64' }}
 
     - name: Install Poetry
       run: |
