@@ -544,10 +544,11 @@ class PLS:
             An iterable defining cross-validation splits. Each unique value in
             `cv_splits` corresponds to a different fold.
 
-        metric_function : Callable receiving arrays `Y_test` and `Y_pred` and returning
-        Any
-            Computes a metric based on true values `Y_test` and predicted values
-            `Y_pred`. `Y_pred` contains a prediction for all `A` components.
+        metric_function : Callable `Y_true`, `Y_pred` -> Any
+            A callable receiving arrays `Y_true` of shape (N_val, M) and `Y_pred` of
+            shape (A, N_val, M) and returning Any Computes a metric based on true
+            values `Y_true` and predicted values `Y_pred`. `Y_pred` contains a
+            prediction for all `A` components.
 
         mean_centering : bool, optional default=True
             Whether to mean X and Y across the sample axis before fitting. The mean is
