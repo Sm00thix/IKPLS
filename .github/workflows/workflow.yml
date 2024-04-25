@@ -10,6 +10,7 @@ on:
       - 'ikpls/**'
       - 'tests/**'
       - 'pyproject.toml'
+      - '.github/'
 
 jobs:
   test_package:
