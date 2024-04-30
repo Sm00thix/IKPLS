@@ -43,12 +43,12 @@ cross-validation splits exceed 3. The fast cross-validation algorithms
 correctly handle (column-wise) centering and scaling of the X and Y
 input matrices using training set means and standard deviations to avoid
 data leakage from the validation set. This centering and scaling can be
-enabled by setting the center parameter to True and the scale parameter
-to True, respectively. The fast cross-validation algorithms correctly
-handle row-wise preprocessing such as (row-wise) centering and scaling
-of the X and Y input matrices, convolution, or other preprocessing.
-Row-wise preprocessing can safely be applied before passing the data to
-the fast cross-validation algorithms.
+enabled or disabled independently from eachother and for X and Y by setting 
+the parameters `center_X`, `center_Y`, `scale_X`, and `scale_Y`, respectively.
+The fast cross-validation algorithms correctly handle row-wise preprocessing
+such as (row-wise) centering and scaling of the X and Y input matrices,
+convolution, or other preprocessing. Row-wise preprocessing can safely be
+applied before passing the data to the fast cross-validation algorithms.
 
 ## Pre-requisites
 

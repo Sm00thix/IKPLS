@@ -12,6 +12,7 @@ Author: Ole-Christian Galbo Engstrøm
 E-mail: ole.e@di.ku.dk
 """
 
+from itertools import product
 from typing import Callable, Optional, Tuple, Union
 
 import jax
@@ -2534,10 +2535,12 @@ class TestClass:
         )
 
         # Convert the results from dict to list for easier comparison
-        fast_cv_np_pls_alg_1_results = [np.asarray(fast_cv_np_pls_alg_1_results[key])
-                                        for key in fast_cv_np_pls_alg_1_results.keys()]
-        fast_cv_np_pls_alg_2_results = [np.asarray(fast_cv_np_pls_alg_2_results[key])
-                                        for key in fast_cv_np_pls_alg_2_results.keys()]
+        fast_cv_np_pls_alg_1_results = [
+            np.asarray(value) for value in fast_cv_np_pls_alg_1_results.values()
+        ]
+        fast_cv_np_pls_alg_2_results = [
+            np.asarray(value) for value in fast_cv_np_pls_alg_2_results.values()
+        ]
 
         # Sort fast cv results according to the unique splits for comparison with the
         # other algorithms
@@ -2545,12 +2548,12 @@ class TestClass:
         unique_splits = unique_splits.astype(int)
         fast_cv_order = np.argsort(sort_indices)
         other_alg_order = np.argsort(fast_cv_order)
-        fast_cv_np_pls_alg_1_results = np.array(
-            fast_cv_np_pls_alg_1_results
-            )[other_alg_order]
-        fast_cv_np_pls_alg_2_results = np.array(
-            fast_cv_np_pls_alg_2_results
-            )[other_alg_order]
+        fast_cv_np_pls_alg_1_results = np.array(fast_cv_np_pls_alg_1_results)[
+            other_alg_order
+        ]
+        fast_cv_np_pls_alg_2_results = np.array(fast_cv_np_pls_alg_2_results)[
+            other_alg_order
+        ]
 
         # Calibrate JAX PLS
         jax_pls_alg_1_results = jax_pls_alg_1.cross_validate(
@@ -2768,7 +2771,7 @@ class TestClass:
         """
         X = self.load_X()
         Y = self.load_Y(["Protein"])
-        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] == 1
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=1e-5)
 
@@ -2816,7 +2819,7 @@ class TestClass:
                 "Protein",
             ]
         )
-        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=2e-4)
@@ -2860,7 +2863,7 @@ class TestClass:
                 "Protein",
             ]
         )
-        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         X = X[..., :10]
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
@@ -2905,7 +2908,7 @@ class TestClass:
                 "Protein",
             ]
         )
-        splits = self.load_Y(["split"])  # Contains 3 splits of differfent sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         X = X[..., :9]
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
@@ -2958,10 +2961,18 @@ class TestClass:
         except IndexError:
             M = 1
 
-        np_pls_alg_1 = NpPLS(algorithm=1, center=center, scale=scale)
-        np_pls_alg_2 = NpPLS(algorithm=2, center=center, scale=scale)
-        fast_cv_np_pls_alg_1 = FastCVPLS(algorithm=1, center=center, scale=scale)
-        fast_cv_np_pls_alg_2 = FastCVPLS(algorithm=2, center=center, scale=scale)
+        np_pls_alg_1 = NpPLS(
+            algorithm=1, center_X=center, center_Y=center, scale_X=scale, scale_Y=scale
+        )
+        np_pls_alg_2 = NpPLS(
+            algorithm=2, center_X=center, center_Y=center, scale_X=scale, scale_Y=scale
+        )
+        fast_cv_np_pls_alg_1 = FastCVPLS(
+            algorithm=1, center_X=center, center_Y=center, scale_X=scale, scale_Y=scale
+        )
+        fast_cv_np_pls_alg_2 = FastCVPLS(
+            algorithm=2, center_X=center, center_Y=center, scale_X=scale, scale_Y=scale
+        )
 
         n_components = X.shape[1]
 
@@ -3042,10 +3053,12 @@ class TestClass:
         )
 
         # Convert the results from dict to list for easier comparison
-        fast_cv_np_pls_alg_1_results = [np.asarray(fast_cv_np_pls_alg_1_results[key])
-                                        for key in fast_cv_np_pls_alg_1_results.keys()]
-        fast_cv_np_pls_alg_2_results = [np.asarray(fast_cv_np_pls_alg_2_results[key])
-                                        for key in fast_cv_np_pls_alg_2_results.keys()]
+        fast_cv_np_pls_alg_1_results = [
+            np.asarray(value) for value in fast_cv_np_pls_alg_1_results.values()
+        ]
+        fast_cv_np_pls_alg_2_results = [
+            np.asarray(value) for value in fast_cv_np_pls_alg_2_results.values()
+        ]
 
         # Sort fast cv results according to the unique splits for comparison with the
         # other algorithms
@@ -3053,12 +3066,12 @@ class TestClass:
         unique_splits = unique_splits.astype(int)
         fast_cv_order = np.argsort(sort_indices)
         other_alg_order = np.argsort(fast_cv_order)
-        fast_cv_np_pls_alg_1_results = np.array(
-            fast_cv_np_pls_alg_1_results
-            )[other_alg_order]
-        fast_cv_np_pls_alg_2_results = np.array(
-            fast_cv_np_pls_alg_2_results
-            )[other_alg_order]
+        fast_cv_np_pls_alg_1_results = np.array(fast_cv_np_pls_alg_1_results)[
+            other_alg_order
+        ]
+        fast_cv_np_pls_alg_2_results = np.array(fast_cv_np_pls_alg_2_results)[
+            other_alg_order
+        ]
 
         # Check that best number of components in terms of minimizing validation RMSE
         # for each split is equal among all algorithms
@@ -3531,3 +3544,577 @@ class TestClass:
         self.check_fast_cross_val_pls(
             X, Y, splits, center=True, scale=True, atol=1e-7, rtol=1e-8
         )
+
+    def check_center_scale_combinations(self, X, Y, splits, atol, rtol):
+        """
+        Description
+        -----------
+        This method tests the ability to perform cross-validation to obtain the root
+        mean square error (RMSE) and the best number of components for each target
+        variable and each split. It tests the fast cross-validation algorithm against
+        the ordinary cross-validation algorithm for all possible combinations of
+        centering and scaling.
+
+        Parameters:
+        X : numpy.ndarray
+            The input predictor variables.
+        Y : numpy.ndarray
+            The target variables.
+        splits : numpy.ndarray
+            Split indices for cross-validation.
+
+        atol : float
+            Absolute tolerance for value comparisons.
+
+        rtol : float
+            Relative tolerance for value comparisons.
+
+        Returns:
+        None
+
+        Raises
+        ------
+        AssertionError
+            If the best number of components found by cross validation with is not
+            exactly equal across each different PLS implementation.
+
+            If the output RMSEs for the best number of components are not equal down to
+            the specified tolerance across each different PLS implementation.
+        """
+
+        center_Xs = [False, True]
+        center_Ys = [False, True]
+        scale_Xs = [False, True]
+        scale_Ys = [False, True]
+
+        center_scale_combinations = product(center_Xs, center_Ys, scale_Xs, scale_Ys)
+
+        try:
+            M = Y.shape[1]
+        except IndexError:
+            M = 1
+
+        # Apply the identity function for this test
+        def cross_val_preprocessing(
+            X_train: jnp.ndarray,
+            Y_train: jnp.ndarray,
+            X_val: jnp.ndarray,
+            Y_val: jnp.ndarray,
+        ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+            return X_train, Y_train, X_val, Y_val
+
+        n_components = X.shape[1]
+
+        def rmse_per_component(Y_true: npt.NDArray, Y_pred: npt.NDArray) -> npt.NDArray:
+            if Y_true.ndim == 1:
+                Y_true = np.expand_dims(Y_true, axis=-1)
+            e = Y_true - Y_pred
+            se = e**2
+            mse = np.mean(se, axis=-2)
+            rmse = np.sqrt(mse)
+            return rmse
+        
+        def jax_rmse_per_component(
+                Y_true: npt.NDArray, Y_pred: npt.NDArray
+        ) -> npt.NDArray:
+            if Y_true.ndim == 1:
+                Y_true = np.expand_dims(Y_true, axis=-1)
+            e = Y_true - Y_pred
+            se = e**2
+            mse = np.mean(se, axis=-2)
+            rmse = jnp.sqrt(mse)
+            return rmse
+        
+        jnp_splits = jnp.array(splits)
+
+        def cv_splitter(splits: npt.NDArray):
+            uniq_splits = np.unique(splits)
+            for split in uniq_splits:
+                train_idxs = np.nonzero(splits != split)[0]
+                val_idxs = np.nonzero(splits == split)[0]
+                yield train_idxs, val_idxs
+
+        params = {"A": n_components}
+        for center_X, center_Y, scale_X, scale_Y in center_scale_combinations:
+            np_pls_alg_1 = NpPLS(
+                algorithm=1,
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+            )
+            np_pls_alg_2 = NpPLS(
+                algorithm=2,
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+            )
+            fast_cv_np_pls_alg_1 = FastCVPLS(
+                algorithm=1,
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+            )
+            fast_cv_np_pls_alg_2 = FastCVPLS(
+                algorithm=2,
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+            )
+            jax_pls_alg_1 = JAX_Alg_1(
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+            )
+            jax_pls_alg_2 = JAX_Alg_2(
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+            )
+            diff_jax_pls_alg_1 = JAX_Alg_1(
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+                reverse_differentiable=True,
+            )
+            diff_jax_pls_alg_2 = JAX_Alg_2(
+                center_X=center_X,
+                center_Y=center_Y,
+                scale_X=scale_X,
+                scale_Y=scale_Y,
+                reverse_differentiable=True,
+            )
+
+            np_pls_alg_1_results = cross_validate(
+                np_pls_alg_1,
+                X,
+                Y,
+                cv=cv_splitter(splits),
+                scoring=lambda *args, **kwargs: 0,
+                params=params,
+                return_estimator=True,
+                n_jobs=-1,
+            )
+            np_pls_alg_1_models = np_pls_alg_1_results["estimator"]
+            np_pls_alg_2_results = cross_validate(
+                np_pls_alg_2,
+                X,
+                Y,
+                cv=cv_splitter(splits),
+                scoring=lambda *args, **kwargs: 0,
+                params=params,
+                return_estimator=True,
+                n_jobs=-1,
+            )
+            np_pls_alg_2_models = np_pls_alg_2_results["estimator"]
+
+            # Compute RMSE on the validation predictions
+            np_pls_alg_1_rmses = np.empty((len(np_pls_alg_1_models), n_components, M))
+            np_pls_alg_2_rmses = np.empty((len(np_pls_alg_2_models), n_components, M))
+
+            for i, (np_pls_alg_1_model, np_pls_alg_2_model) in enumerate(
+                zip(np_pls_alg_1_models, np_pls_alg_2_models)
+            ):
+                val_idxs = val_idxs = np.nonzero(splits == i)[0]
+                Y_true = Y[val_idxs]
+                Y_pred_alg_1 = np_pls_alg_1_model.predict(X[val_idxs])
+                Y_pred_alg_2 = np_pls_alg_2_model.predict(X[val_idxs])
+                val_rmses_alg_1 = rmse_per_component(Y_true, Y_pred_alg_1)
+                val_rmses_alg_2 = rmse_per_component(Y_true, Y_pred_alg_2)
+                np_pls_alg_1_rmses[i] = val_rmses_alg_1
+                np_pls_alg_2_rmses[i] = val_rmses_alg_2
+
+            # Compute RMSE on the validation predictions using the fast cross-validation
+            # algorithm
+            fast_cv_np_pls_alg_1_results = fast_cv_np_pls_alg_1.cross_validate(
+                X=X,
+                Y=Y,
+                A=n_components,
+                cv_splits=splits.flatten(),
+                metric_function=rmse_per_component,
+                n_jobs=-1,
+                verbose=0,
+            )
+            fast_cv_np_pls_alg_2_results = fast_cv_np_pls_alg_2.cross_validate(
+                X=X,
+                Y=Y,
+                A=n_components,
+                cv_splits=splits.flatten(),
+                metric_function=rmse_per_component,
+                n_jobs=-1,
+                verbose=0,
+            )
+
+            # Convert the results from dict to list for easier comparison
+            fast_cv_np_pls_alg_1_results = [
+                        np.asarray(value) for value in fast_cv_np_pls_alg_1_results.values()
+                    ]
+            fast_cv_np_pls_alg_2_results = [
+                np.asarray(value) for value in fast_cv_np_pls_alg_2_results.values()
+            ]
+
+            # Sort fast cv results according to the unique splits for comparison with the
+            # other algorithms
+            unique_splits, sort_indices = np.unique(splits, return_index=True)
+            unique_splits = unique_splits.astype(int)
+            fast_cv_order = np.argsort(sort_indices)
+            other_alg_order = np.argsort(fast_cv_order)
+            fast_cv_np_pls_alg_1_results = np.array(fast_cv_np_pls_alg_1_results)[
+                other_alg_order
+            ]
+            fast_cv_np_pls_alg_2_results = np.array(fast_cv_np_pls_alg_2_results)[
+                other_alg_order
+            ]
+
+            # Calibrate JAX PLS
+            jax_pls_alg_1_results = jax_pls_alg_1.cross_validate(
+                X,
+                Y,
+                n_components,
+                jnp_splits,
+                cross_val_preprocessing,
+                jax_rmse_per_component,
+                ["RMSE"],
+            )
+            diff_jax_pls_alg_1_results = diff_jax_pls_alg_1.cross_validate(
+                X,
+                Y,
+                n_components,
+                jnp_splits,
+                cross_val_preprocessing,
+                jax_rmse_per_component,
+                ["RMSE"],
+            )
+            jax_pls_alg_2_results = jax_pls_alg_2.cross_validate(
+                X,
+                Y,
+                n_components,
+                jnp_splits,
+                cross_val_preprocessing,
+                jax_rmse_per_component,
+                ["RMSE"],
+            )
+            diff_jax_pls_alg_2_results = diff_jax_pls_alg_2.cross_validate(
+                X,
+                Y,
+                n_components,
+                jnp_splits,
+                cross_val_preprocessing,
+                jax_rmse_per_component,
+                ["RMSE"],
+            )
+
+            # Get the best number of components in terms of minimizing validation RMSE for
+            # each split is equal among all algorithms
+            unique_splits = np.unique(splits).astype(int)
+            np_pls_alg_1_best_num_components = [
+                [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+                for i in range(M)
+            ]
+            np_pls_alg_2_best_num_components = [
+                [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+                for i in range(M)
+            ]
+            fast_cv_np_pls_alg_1_best_num_components = [
+                [
+                    np.argmin(fast_cv_np_pls_alg_1_results[split][..., i])
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            fast_cv_np_pls_alg_2_best_num_components = [
+                [
+                    np.argmin(fast_cv_np_pls_alg_2_results[split][..., i])
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            jax_pls_alg_1_best_num_components = [
+                [
+                    np.argmin(jax_pls_alg_1_results["RMSE"][split][..., i])
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            jax_pls_alg_2_best_num_components = [
+                [
+                    np.argmin(jax_pls_alg_2_results["RMSE"][split][..., i])
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            diff_jax_pls_alg_1_best_num_components = [
+                [
+                    np.argmin(diff_jax_pls_alg_1_results["RMSE"][split][..., i])
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            diff_jax_pls_alg_2_best_num_components = [
+                [
+                    np.argmin(diff_jax_pls_alg_2_results["RMSE"][split][..., i])
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            np_pls_alg_1_best_rmses = [
+                [
+                    np_pls_alg_1_rmses[split][np_pls_alg_1_best_num_components[i][split], i]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            np_pls_alg_2_best_rmses = [
+                [
+                    np_pls_alg_2_rmses[split][np_pls_alg_2_best_num_components[i][split], i]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            fast_cv_np_pls_alg_1_best_rmses = [
+                [
+                    fast_cv_np_pls_alg_1_results[split][
+                        fast_cv_np_pls_alg_1_best_num_components[i][split], i
+                    ]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            fast_cv_np_pls_alg_2_best_rmses = [
+                [
+                    fast_cv_np_pls_alg_2_results[split][
+                        fast_cv_np_pls_alg_2_best_num_components[i][split], i
+                    ]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            jax_pls_alg_1_best_rmses = [
+                [
+                    jax_pls_alg_1_results["RMSE"][split][
+                        jax_pls_alg_1_best_num_components[i][split], i
+                    ]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            jax_pls_alg_2_best_rmses = [
+                [
+                    jax_pls_alg_2_results["RMSE"][split][
+                        jax_pls_alg_2_best_num_components[i][split], i
+                    ]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            diff_jax_pls_alg_1_best_rmses = [
+                [
+                    diff_jax_pls_alg_1_results["RMSE"][split][
+                        diff_jax_pls_alg_1_best_num_components[i][split], i
+                    ]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+            diff_jax_pls_alg_2_best_rmses = [
+                [
+                    diff_jax_pls_alg_2_results["RMSE"][split][
+                        diff_jax_pls_alg_2_best_num_components[i][split], i
+                    ]
+                    for split in unique_splits
+                ]
+                for i in range(M)
+            ]
+
+            assert_allclose(np_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
+            assert_allclose(
+                fast_cv_np_pls_alg_1_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+            )
+            assert_allclose(
+                fast_cv_np_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+            )
+            assert_allclose(jax_pls_alg_1_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
+            assert_allclose(jax_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
+            assert_allclose(
+                diff_jax_pls_alg_1_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+            )
+            assert_allclose(
+                diff_jax_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+            )
+    
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
+    def test_center_scale_combinations_pls_1(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, a single target variable, and split
+        indices for cross-validation. It then calls the 'check_center_scale_combinations'
+        method to validate the cross-validation results for all possible combinations of
+        centering and scaling.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        X = X[..., :20] # Decrease the amount of features in the interest of time.
+        Y = self.load_Y(["Protein"])
+        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        assert Y.shape[1] == 1
+        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
+
+        # Remove the singleton dimension and check that the predictions are consistent.
+        Y = Y.squeeze()
+        assert Y.ndim == 1
+        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
+
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
+    def test_center_scale_combinations_pls_2_m_less_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M
+        is less than K), and split indices for cross-validation. It then calls the
+        'check_center_scale_combinations' method to validate the cross-validation results
+        for all possible combinations of centering and scaling.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        X = X[..., :20] # Decrease the amount of features in the interest of time.
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        assert Y.shape[1] > 1
+        assert Y.shape[1] < X.shape[1]
+        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-7)
+    
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
+    def test_center_scale_combinations_pls_2_m_eq_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M
+        is equal to K), and split indices for cross-validation. It then calls the
+        'check_center_scale_combinations' method to validate the cross-validation results
+        for all possible combinations of centering and scaling.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        X = X[..., :10]
+        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        assert Y.shape[1] > 1
+        assert Y.shape[1] == X.shape[1]
+        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
+    
+    # JAX will issue a warning if os.fork() is called as JAX is incompatible with
+    # multi-threaded code. os.fork() is called by the  other cross-validation
+    # algorithms. However, there is no interaction between the JAX and the other
+    # algorithms, so we can safely ignore this warning.
+    @pytest.mark.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        message="os.fork() was called. os.fork() is"
+        " incompatible with multithreaded code, and JAX is"
+        " multithreaded, so this will likely lead to a"
+        " deadlock.",
+    )
+    def test_center_scale_combinations_pls_2_m_greater_k(self):
+        """
+        Description
+        -----------
+        This test loads input predictor variables, multiple target variables (where M
+        is greater than K), and split indices for cross-validation. It then calls the
+        'check_center_scale_combinations' method to validate the cross-validation results
+        for all possible combinations of centering and scaling.
+
+        Returns:
+        None
+        """
+        X = self.load_X()
+        Y = self.load_Y(
+            [
+                "Rye_Midsummer",
+                "Wheat_H1",
+                "Wheat_H3",
+                "Wheat_H4",
+                "Wheat_H5",
+                "Wheat_Halland",
+                "Wheat_Oland",
+                "Wheat_Spelt",
+                "Moisture",
+                "Protein",
+            ]
+        )
+        X = X[..., :9]
+        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        assert Y.shape[1] > 1
+        assert Y.shape[1] > X.shape[1]
+        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
