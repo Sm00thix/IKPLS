@@ -3973,7 +3973,7 @@ class TestClass:
         None
         """
         X = self.load_X()
-        X = X[..., :20] # Decrease the amount of features in the interest of time.
+        X = X[..., :10] # Decrease the amount of features in the interest of time.
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
         assert Y.shape[1] == 1
@@ -4009,7 +4009,7 @@ class TestClass:
         None
         """
         X = self.load_X()
-        X = X[..., :20] # Decrease the amount of features in the interest of time.
+        X = X[..., :10] # Decrease the amount of features in the interest of time.
         Y = self.load_Y(
             [
                 "Rye_Midsummer",

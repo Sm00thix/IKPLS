@@ -31,26 +31,22 @@ class PLS(BaseEstimator):
         Whether to use Improved Kernel PLS Algorithm #1 or #2.
     
     center_X : bool, default=True
-        Whether to center the predictor variables (X) before fitting. If True, then the
-        mean of the training data is subtracted from the predictor variables. If False,
-        then the data is assumed to be already centered.
+        Whether to center `X` before fitting by subtracting its row of
+        column-wise means from each row.
     
     center_Y : bool, default=True
-        Whether to center the response variables (Y) before fitting. If True, then the
-        mean of the training data is subtracted from the response variables. If False,
-        then the data is assumed to be already centered.
+        Whether to center `Y` before fitting by subtracting its row of
+        column-wise means from each row.
     
     scale_X : bool, default=True
-        Whether to scale the predictor variables (X) before fitting. If True, then the
-        data is scaled using Bessel's correction for the unbiased estimate of the
-        sample standard deviation. If False, then the data is assumed to be already
-        scaled.
+        Whether to scale `X` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used.
 
     scale_Y : bool, default=True
-        Whether to scale the response variables (Y) before fitting. If True, then the
-        data is scaled using Bessel's correction for the unbiased estimate of the
-        sample standard deviation. If False, then the data is assumed to be already
-        scaled.
+        Whether to scale `Y` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used.
 
     copy : bool, default=True
         Whether to copy `X` and `Y` in fit before potentially applying centering and
@@ -67,6 +63,12 @@ class PLS(BaseEstimator):
     ------
     ValueError
         If `algorithm` is not 1 or 2.
+
+    Notes
+    -----
+    Any centering and scaling is undone before returning predictions to ensure that
+    predictions are on the original scale. If both centering and scaling are True, then
+    the data is first centered and then scaled.
     """
 
     def __init__(

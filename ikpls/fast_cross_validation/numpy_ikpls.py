@@ -31,26 +31,26 @@ class PLS:
     Parameters
     ----------
     center_X : bool, optional default=True
-        Whether to center `X` before fitting by subtracting its mean row. The centering
-        is computed on the training set for each fold to avoid data leakage. The
-        centering is undone before returning predictions.
+        Whether to center `X` before fitting by subtracting its row of
+        column-wise means from each row. The row of column-wise means is computed on
+        the training set for each fold to avoid data leakage.
     
     center_Y : bool, optional default=True
-        Whether to center `Y` before fitting by subtracting its mean row. The centering
-        is computed on the training set for each fold to avoid data leakage. The
-        centering is undone before returning predictions.
+        Whether to center `Y` before fitting by subtracting its row of
+        column-wise means from each row. The row of column-wise means is computed on
+        the training set for each fold to avoid data leakage.
     
     scale_X : bool, optional default=True
-        Whether to scale `X` before fitting by dividing each row by its sample standard
-        deviation using Bessel's correction. The scaling is computed on the training
-        set for each fold to avoid data leakage. The scaling is undone before returning
-        predictions.
+        Whether to scale `X` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used. The row of column-wise standard
+        deviations is computed on the training set for each fold to avoid data leakage.
     
     scale_Y : bool, optional default=True
-        Whether to scale `Y` before fitting by dividing each row by its sample standard
-        deviation using Bessel's correction. The scaling is computed on the training
-        set for each fold to avoid data leakage. The scaling is undone before returning
-        predictions.
+        Whether to scale `Y` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used. The row of column-wise standard
+        deviations is computed on the training set for each fold to avoid data leakage.
 
     algorithm : int, default=1
         Whether to use Improved Kernel PLS Algorithm #1 or #2.
@@ -67,6 +67,10 @@ class PLS:
     
     Notes
     -----
+    Any centering and scaling is undone before returning predictions to ensure that
+    predictions are on the original scale. If both centering and scaling are True, then
+    the data is first centered and then scaled.
+
     Setting either of `center_X`, `center_Y`, `scale_X`, or `scale_Y` to True, while
     using multiple jobs, will increase the memory consumption as each job will then
     have to keep its own copy of :math:`\mathbf{X}^{\mathbf{T}}\mathbf{X}` and

@@ -40,25 +40,21 @@ class PLSBase(abc.ABC):
     ----------
     center_X : bool, default=True
         Whether to center the predictor variables (X) before fitting. If True, then the
-        mean of the training data is subtracted from the predictor variables. If False,
-        then the data is assumed to be already centered.
+        mean of the training data is subtracted from the predictor variables.
 
     center_Y : bool, default=True
         Whether to center the response variables (Y) before fitting. If True, then the
-        mean of the training data is subtracted from the response variables. If False,
-        then the data is assumed to be already centered.
+        mean of the training data is subtracted from the response variables.
 
     scale_X : bool, default=True
         Whether to scale the predictor variables (X) before fitting. If True, then the
         data is scaled using Bessel's correction for the unbiased estimate of the
-        sample standard deviation. If False, then the data is assumed to be already
-        scaled.
+        sample standard deviation.
 
     scale_Y : bool, default=True
         Whether to scale the response variables (Y) before fitting. If True, then the
         data is scaled using Bessel's correction for the unbiased estimate of the
-        sample standard deviation. If False, then the data is assumed to be already
-        scaled.
+        sample standard deviation.
 
     copy : bool, optional, default=True
         Whether to copy `X` and `Y` in fit before potentially applying centering and
@@ -80,6 +76,12 @@ class PLSBase(abc.ABC):
         If True, each sub-function will print when it will be JIT compiled. This can be
         useful to track if recompilation is triggered due to passing inputs with
         different shapes.
+
+    Notes
+    -----
+    Any centering and scaling is undone before returning predictions with `fit` to
+    ensure that predictions are on the original scale. If both centering and scaling
+    are True, then the data is first centered and then scaled.
     """
 
     def __init__(
@@ -491,7 +493,7 @@ class PLSBase(abc.ABC):
         Notes
         -----
         This method computes the next weight vector `w` for the PLS algorithm and its
-        associated norm. It is an essential step in the PLS algorithm.
+        associated norm.
         """
         if self.verbose:
             print(f"_step_2 for {self.name} will be JIT compiled...")
@@ -665,26 +667,22 @@ class PLSBase(abc.ABC):
             Number of components in the PLS model.
 
         center_X : bool, default=True
-            Whether to center the predictor variables (X) before fitting. If True, then
-            the mean of the training data is subtracted from the predictor variables.
-            If False, then the data is assumed to be already centered.
-
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
         center_Y : bool, default=True
-            Whether to center the response variables (Y) before fitting. If True, then
-            the mean of the training data is subtracted from the response variables. If
-            False, then the data is assumed to be already centered.
-
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
         scale_X : bool, default=True
-            Whether to scale the predictor variables (X) before fitting. If True, then
-            the data is scaled using Bessel's correction for the unbiased estimate of
-            the sample standard deviation. If False, then the data is assumed to be
-            already scaled.
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         scale_Y : bool, default=True
-            Whether to scale the response variables (Y) before fitting. If True, then
-            the data is scaled using Bessel's correction for the unbiased estimate of
-            the sample standard deviation. If False, then the data is assumed to be
-            already scaled.
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X` and `Y` in fit before potentially applying centering
@@ -825,19 +823,19 @@ class PLSBase(abc.ABC):
 
         X_mean : Array of shape (1, K) or None, optional, default=None
             Mean of the predictor variables. If None, then no mean is subtracted from
-            the predictor variables.
+            `X`.
 
         X_std : Array of shape (1, K) or None, optional, default=None
             Sample standard deviation of the predictor variables. If None, then no
-            scaling is applied to the predictor variables.
+            scaling is applied to `X`.
 
         Y_mean : Array of shape (1, M) or None, optional, default=None
             Mean of the response variables. If None, then no mean is subtracted from
-            the response variables.
+            `Y`.
 
         Y_std : Array of shape (1, M) or None, optional, default=None
             Sample standard deviation of the response variables. If None, then no
-            scaling is applied to the response variables.
+            scaling is applied to `Y`.
 
         Returns
         -------
@@ -949,26 +947,22 @@ class PLSBase(abc.ABC):
             `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         center_X : bool, default=True
-            Whether to center the predictor variables (X) before fitting. If True, then
-            the mean of the training data is subtracted from the predictor variables.
-            If False, then the data is assumed to be already centered.
-
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
         center_Y : bool, default=True
-            Whether to center the response variables (Y) before fitting. If True, then
-            the mean of the training data is subtracted from the response variables. If
-            False, then the data is assumed to be already centered.
-
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
         scale_X : bool, default=True
-            Whether to scale the predictor variables (X) before fitting. If True, then
-            the data is scaled using Bessel's correction for the unbiased estimate of
-            the sample standard deviation. If False, then the data is assumed to be
-            already scaled.
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         scale_Y : bool, default=True
-            Whether to scale the response variables (Y) before fitting. If True, then
-            the data is scaled using Bessel's correction for the unbiased estimate of
-            the sample standard deviation. If False, then the data is assumed to be
-            already scaled.
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X_train` and `Y_train` in stateless_fit before potentially
@@ -1029,9 +1023,10 @@ class PLSBase(abc.ABC):
         """
         Performs cross-validation for the Partial Least-Squares (PLS) model on given
         data. `preprocessing_function` will be applied before any potential centering
-        and scaling as determined by `self.center` and `self.scale`. Any such potential
-        centering and scaling is applied for each split using training set statistics
-        to avoid data leakage from the validation set.
+        and scaling as determined by `self.center_X`, `self.center_Y`, `self.scale_X`,
+        and `self.scale_Y`. Any such potential centering and scaling is applied for
+        each split using training set statistics to avoid data leakage from the
+        validation set.
 
         Parameters
         ----------
@@ -1170,26 +1165,22 @@ class PLSBase(abc.ABC):
             `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
         center_X : bool, default=True
-            Whether to center the predictor variables (X) before fitting. If True, then
-            the mean of the training data is subtracted from the predictor variables.
-            If False, then the data is assumed to be already centered.
-
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
         center_Y : bool, default=True
-            Whether to center the response variables (Y) before fitting. If True, then
-            the mean of the training data is subtracted from the response variables. If
-            False, then the data is assumed to be already centered.
-
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
         scale_X : bool, default=True
-            Whether to scale the predictor variables (X) before fitting. If True, then
-            the data is scaled using Bessel's correction for the unbiased estimate of
-            the sample standard deviation. If False, then the data is assumed to be
-            already scaled.
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         scale_Y : bool, default=True
-            Whether to scale the response variables (Y) before fitting. If True, then
-            the data is scaled using Bessel's correction for the unbiased estimate of
-            the sample standard deviation. If False, then the data is assumed to be
-            already scaled.
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X_train` and `Y_train` in stateless_fit before potentially
