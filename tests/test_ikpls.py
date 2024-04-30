@@ -4009,7 +4009,7 @@ class TestClass:
         None
         """
         X = self.load_X()
-        X = X[..., :10] # Decrease the amount of features in the interest of time.
+        X = X[..., :11] # Decrease the amount of features in the interest of time.
         Y = self.load_Y(
             [
                 "Rye_Midsummer",
