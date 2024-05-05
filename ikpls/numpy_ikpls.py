@@ -29,16 +29,24 @@ class PLS(BaseEstimator):
     ----------
     algorithm : int, default=1
         Whether to use Improved Kernel PLS Algorithm #1 or #2.
+    
+    center_X : bool, default=True
+        Whether to center `X` before fitting by subtracting its row of
+        column-wise means from each row.
+    
+    center_Y : bool, default=True
+        Whether to center `Y` before fitting by subtracting its row of
+        column-wise means from each row.
+    
+    scale_X : bool, default=True
+        Whether to scale `X` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used.
 
-    center : bool, default=True
-        Whether to center the data before fitting. If True, then the mean of the
-        training data is subtracted from the data. If False, then the data is assumed
-        to be already centered.
-
-    scale : bool, default=True
-        Whether to scale the data before fitting. If True, then the data is scaled
-        using Bessel's correction for the unbiased estimate of the sample standard
-        deviation. If False, then the data is assumed to be already scaled.
+    scale_Y : bool, default=True
+        Whether to scale `Y` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used.
 
     copy : bool, default=True
         Whether to copy `X` and `Y` in fit before potentially applying centering and
@@ -55,19 +63,29 @@ class PLS(BaseEstimator):
     ------
     ValueError
         If `algorithm` is not 1 or 2.
+
+    Notes
+    -----
+    Any centering and scaling is undone before returning predictions to ensure that
+    predictions are on the original scale. If both centering and scaling are True, then
+    the data is first centered and then scaled.
     """
 
     def __init__(
         self,
         algorithm: int = 1,
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
         dtype: np.float_ = np.float64,
     ) -> None:
         self.algorithm = algorithm
-        self.center = center
-        self.scale = scale
+        self.center_X = center_X
+        self.center_Y = center_Y
+        self.scale_X = scale_X
+        self.scale_Y = scale_Y
         self.copy = copy
         self.dtype = dtype
         self.name = f"Improved Kernel PLS Algorithm #{algorithm}"
@@ -173,22 +191,28 @@ class PLS(BaseEstimator):
         if Y.ndim == 1:
             Y = Y.reshape(-1, 1)
 
-        if (self.center or self.scale) and self.copy:
+        if (self.center_X or self.scale_X) and self.copy:
             X = X.copy()
+
+        if (self.center_Y or self.scale_Y) and self.copy:
             Y = Y.copy()
 
-        if self.center:
+        if self.center_X:
             self.X_mean = X.mean(axis=0, dtype=self.dtype, keepdims=True)
-            self.Y_mean = Y.mean(axis=0, dtype=self.dtype, keepdims=True)
             X -= self.X_mean
+
+        if self.center_Y:
+            self.Y_mean = Y.mean(axis=0, dtype=self.dtype, keepdims=True)
             Y -= self.Y_mean
 
-        if self.scale:
+        if self.scale_X:
             self.X_std = X.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
-            self.Y_std = Y.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
             self.X_std[self.X_std == 0] = 1
-            self.Y_std[self.Y_std == 0] = 1
             X /= self.X_std
+
+        if self.scale_Y:
+            self.Y_std = Y.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
+            self.Y_std[self.Y_std == 0] = 1
             Y /= self.Y_std
 
         N, K = X.shape
@@ -299,9 +323,9 @@ class PLS(BaseEstimator):
             up to `A`.
         """
         X = np.asarray(X, dtype=self.dtype)
-        if self.center:
+        if self.center_X:
             X = X - self.X_mean
-        if self.scale:
+        if self.scale_X:
             X = X / self.X_std
 
         if n_components is None:
@@ -309,8 +333,8 @@ class PLS(BaseEstimator):
         else:
             Y_pred = X @ self.B[n_components - 1]
 
-        if self.scale:
+        if self.scale_Y:
             Y_pred = Y_pred * self.Y_std
-        if self.center:
+        if self.center_Y:
             Y_pred = Y_pred + self.Y_mean
         return Y_pred

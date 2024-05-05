@@ -28,15 +28,23 @@ class PLS(PLSBase):
 
     Parameters
     ----------
-    center : bool, optional, default=True
-        Whether to center the data before fitting. If True, then the mean of the
-        training data is subtracted from the data. If False, then the data is assumed
-        to be already centered.
+    center_X : bool, default=True
+        Whether to center `X` before fitting by subtracting its row of
+        column-wise means from each row.
+    
+    center_Y : bool, default=True
+        Whether to center `Y` before fitting by subtracting its row of
+        column-wise means from each row.
+    
+    scale_X : bool, default=True
+        Whether to scale `X` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used.
 
-    scale : bool, optional, default=True
-        Whether to scale the data before fitting. If True, then the data is scaled
-        using Bessel's correction for the unbiased estimate of the sample standard
-        deviation. If False, then the data is assumed to be already scaled.
+    scale_Y : bool, default=True
+        Whether to scale `Y` before fitting by dividing each row with the row of `X`'s
+        column-wise standard deviations. Bessel's correction for the unbiased estimate
+        of the sample standard deviation is used.
 
     copy : bool, optional, default=True
         Whether to copy `X` and `Y` in fit before potentially applying centering and
@@ -58,12 +66,20 @@ class PLS(PLSBase):
         If True, each sub-function will print when it will be JIT compiled. This can be
         useful to track if recompilation is triggered due to passing inputs with
         different shapes.
+
+    Notes
+    -----
+    Any centering and scaling is undone before returning predictions with `fit` to
+    ensure that predictions are on the original scale. If both centering and scaling
+    are True, then the data is first centered and then scaled.
     """
 
     def __init__(
         self,
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
         dtype: DTypeLike = jnp.float64,
         reverse_differentiable: bool = False,
@@ -71,8 +87,10 @@ class PLS(PLSBase):
     ) -> None:
         self.name = "Improved Kernel PLS Algorithm #1"
         super().__init__(
-            center=center,
-            scale=scale,
+            center_X=center_X,
+            center_Y=center_Y,
+            scale_X=scale_X,
+            scale_Y=scale_Y,
             copy=copy,
             dtype=dtype,
             reverse_differentiable=reverse_differentiable,
@@ -346,7 +364,16 @@ class PLS(PLSBase):
         instead of storing them in the class instance.
         """
         self.B, W, P, Q, R, T, self.X_mean, self.Y_mean, self.X_std, self.Y_std = (
-            self.stateless_fit(X, Y, A, self.center, self.scale, self.copy)
+            self.stateless_fit(
+                X,
+                Y,
+                A,
+                self.center_X,
+                self.center_Y,
+                self.scale_X,
+                self.scale_Y,
+                self.copy,
+            )
         )
         self.W = W.T
         self.P = P.T
@@ -354,14 +381,16 @@ class PLS(PLSBase):
         self.R = R.T
         self.T = T.T
 
-    @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6))
+    @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6, 7, 8))
     def stateless_fit(
         self,
         X: ArrayLike,
         Y: ArrayLike,
         A: int,
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
     ) -> Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array, jax.Array]:
         """
@@ -381,15 +410,23 @@ class PLS(PLSBase):
         A : int
             Number of components in the PLS model.
 
-        center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the
-            training data is subtracted from the data. If False, then the data is
-            assumed to be already centered.
+        center_X : bool, default=True
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        center_Y : bool, default=True
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        scale_X : bool, default=True
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
-        scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled
-            using Bessel's correction for the unbiased estimate of the sample standard
-            deviation. If False, then the data is assumed to be already scaled.
+        scale_Y : bool, default=True
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X` and `Y` in fit before potentially applying centering
@@ -451,7 +488,7 @@ class PLS(PLSBase):
 
         X, Y = self._initialize_input_matrices(X, Y)
         X, Y, X_mean, Y_mean, X_std, Y_std = self._center_scale_input_matrices(
-            X, Y, center, scale, copy
+            X, Y, center_X, center_Y, scale_X, scale_Y, copy
         )
 
         # Get shapes

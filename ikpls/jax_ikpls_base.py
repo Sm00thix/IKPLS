@@ -38,15 +38,23 @@ class PLSBase(abc.ABC):
 
     Parameters
     ----------
-    center : bool, optional, default=True
-        Whether to center the data before fitting. If True, then the mean of the
-        training data is subtracted from the data. If False, then the data is assumed
-        to be already centered.
+    center_X : bool, default=True
+        Whether to center the predictor variables (X) before fitting. If True, then the
+        mean of the training data is subtracted from the predictor variables.
 
-    scale : bool, optional, default=True
-        Whether to scale the data before fitting. If True, then the data is scaled
-        using Bessel's correction for the unbiased estimate of the sample standard
-        deviation. If False, then the data is assumed to be already scaled.
+    center_Y : bool, default=True
+        Whether to center the response variables (Y) before fitting. If True, then the
+        mean of the training data is subtracted from the response variables.
+
+    scale_X : bool, default=True
+        Whether to scale the predictor variables (X) before fitting. If True, then the
+        data is scaled using Bessel's correction for the unbiased estimate of the
+        sample standard deviation.
+
+    scale_Y : bool, default=True
+        Whether to scale the response variables (Y) before fitting. If True, then the
+        data is scaled using Bessel's correction for the unbiased estimate of the
+        sample standard deviation.
 
     copy : bool, optional, default=True
         Whether to copy `X` and `Y` in fit before potentially applying centering and
@@ -68,19 +76,29 @@ class PLSBase(abc.ABC):
         If True, each sub-function will print when it will be JIT compiled. This can be
         useful to track if recompilation is triggered due to passing inputs with
         different shapes.
+
+    Notes
+    -----
+    Any centering and scaling is undone before returning predictions with `fit` to
+    ensure that predictions are on the original scale. If both centering and scaling
+    are True, then the data is first centered and then scaled.
     """
 
     def __init__(
         self,
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
         dtype: DTypeLike = jnp.float64,
         reverse_differentiable: bool = False,
         verbose: bool = False,
     ) -> None:
-        self.center = center
-        self.scale = scale
+        self.center_X = center_X
+        self.center_Y = center_Y
+        self.scale_X = scale_X
+        self.scale_Y = scale_Y
         self.copy = copy
         self.dtype = dtype
         self.reverse_differentiable = reverse_differentiable
@@ -179,66 +197,58 @@ class PLSBase(abc.ABC):
         return X, Y
 
     @partial(jax.jit, static_argnums=0)
-    def get_means(self, X: ArrayLike, Y: ArrayLike):
+    def get_mean(self, A: ArrayLike):
         """
-        Get the mean of the input matrices.
+        Get the mean of the a matrix.
 
         Parameters
         ----------
-        X : Array of shape (N, K)
-            Predictor variables matrix.
-
-        Y : Array of shape (N, M)
-            Response variables matrix.
+        A : Array of shape (N, K) or (N, M)
+            Predictor variables matrix or response variables matrix.
 
         Returns
         -------
-        X_mean : Array of shape (1, K)
-            Mean of the predictor variables.
-
-        Y_mean : Array of shape (1, M)
-            Mean of the response variables.
+        A_mean : Array of shape (1, K) or (1, M)
+            Mean of the predictor variables or response variables.
         """
         if self.verbose:
             print(f"get_means for {self.name} will be JIT compiled...")
 
-        X_mean = jnp.mean(X, axis=0, dtype=self.dtype, keepdims=True)
-        Y_mean = jnp.mean(Y, axis=0, dtype=self.dtype, keepdims=True)
-        return X_mean, Y_mean
+        A_mean = jnp.mean(A, axis=0, dtype=self.dtype, keepdims=True)
+        return A_mean
 
     @partial(jax.jit, static_argnums=0)
-    def get_stds(self, X: ArrayLike, Y: ArrayLike):
+    def get_std(self, A: ArrayLike):
         """
-        Get the standard deviation of the input matrices.
+        Get the standard deviation of a matrix.
 
         Parameters
         ----------
-        X : Array of shape (N, K)
-            Predictor variables matrix.
-
-        Y : Array of shape (N, M)
-            Response variables matrix.
+        A : Array of shape (N, K) or (N, M)
+            Predictor variables matrix or response variables matrix.
 
         Returns
         -------
-        X_std : Array of shape (1, K)
-            Sample standard deviation of the predictor variables.
-
-        Y_std : Array of shape (1, M)
-            Sample standard deviation of the response variables.
+        A_std : Array of shape (1, K) or (1, M)
+            Sample standard deviation of the predictor variables or response variables.
         """
         if self.verbose:
             print(f"get_stds for {self.name} will be JIT compiled...")
 
-        X_std = jnp.std(X, axis=0, dtype=self.dtype, keepdims=True, ddof=1)
-        Y_std = jnp.std(Y, axis=0, dtype=self.dtype, keepdims=True, ddof=1)
-        X_std = jnp.where(X_std == 0, 1, X_std)
-        Y_std = jnp.where(Y_std == 0, 1, Y_std)
-        return X_std, Y_std
+        A_std = jnp.std(A, axis=0, dtype=self.dtype, keepdims=True, ddof=1)
+        A_std = jnp.where(A_std == 0, 1, A_std)
+        return A_std
 
-    @partial(jax.jit, static_argnums=(0, 3, 4, 5))
+    @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6, 7))
     def _center_scale_input_matrices(
-        self, X: jax.Array, Y: jax.Array, center: bool, scale: bool, copy: bool
+        self,
+        X: jax.Array,
+        Y: jax.Array,
+        center_X: bool,
+        center_Y: bool,
+        scale_X: bool,
+        scale_Y: bool,
+        copy: bool,
     ):
         """
         Preprocess the input matrices based on the centering and scaling parameters.
@@ -251,11 +261,17 @@ class PLSBase(abc.ABC):
         Y : Array of shape (N, M)
             Response variables matrix.
 
-        center : bool
-            Whether to center the data before fitting.
+        center_X : bool
+            Whether to center the predictor variables (X) before fitting.
 
-        scale : bool
-            Whether to scale the data before fitting.
+        center_Y : bool
+            Whether to center the response variables (Y) before fitting.
+
+        scale_X : bool
+            Whether to scale the predictor variables (X) before fitting.
+
+        scale_Y : bool
+            Whether to scale the response variables (Y) before fitting.
 
         Returns
         -------
@@ -268,24 +284,34 @@ class PLSBase(abc.ABC):
         if self.verbose:
             print(f"_preprocess_input_matrices for {self.name} will be JIT compiled...")
 
-        if (center or scale) and copy:
+        if (center_X or scale_X) and copy:
             X = X.copy()
+
+        if (center_Y or scale_Y) and copy:
             Y = Y.copy()
 
-        if center:
-            X_mean, Y_mean = self.get_means(X, Y)
+        if center_X:
+            X_mean = self.get_mean(X)
             X = X - X_mean
-            Y = Y - Y_mean
         else:
             X_mean = None
+
+        if center_Y:
+            Y_mean = self.get_mean(Y)
+            Y = Y - Y_mean
+        else:
             Y_mean = None
 
-        if scale:
-            X_std, Y_std = self.get_stds(X, Y)
+        if scale_X:
+            X_std = self.get_std(X)
             X = X / X_std
-            Y = Y / Y_std
         else:
             X_std = None
+
+        if scale_Y:
+            Y_std = self.get_std(Y)
+            Y = Y / Y_std
+        else:
             Y_std = None
 
         return X, Y, X_mean, Y_mean, X_std, Y_std
@@ -467,7 +493,7 @@ class PLSBase(abc.ABC):
         Notes
         -----
         This method computes the next weight vector `w` for the PLS algorithm and its
-        associated norm. It is an essential step in the PLS algorithm.
+        associated norm.
         """
         if self.verbose:
             print(f"_step_2 for {self.name} will be JIT compiled...")
@@ -610,14 +636,16 @@ class PLSBase(abc.ABC):
         """
 
     @abc.abstractmethod
-    @partial(jax.jit, static_argnums=(0, 3))
+    @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6, 7, 8))
     def stateless_fit(
         self,
         X: ArrayLike,
         Y: ArrayLike,
         A: int,
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
     ) -> Union[
         Tuple[jax.Array, jax.Array, jax.Array, jax.Array, jax.Array],
@@ -638,15 +666,23 @@ class PLSBase(abc.ABC):
         A : int
             Number of components in the PLS model.
 
-        center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the
-            training data is subtracted from the data. If False, then the data is
-            assumed to be already centered.
+        center_X : bool, default=True
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        center_Y : bool, default=True
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        scale_X : bool, default=True
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
-        scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled
-            using Bessel's correction for the unbiased estimate of the sample standard
-            deviation. If False, then the data is assumed to be already scaled.
+        scale_Y : bool, default=True
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X` and `Y` in fit before potentially applying centering
@@ -675,17 +711,17 @@ class PLSBase(abc.ABC):
             PLS scores matrix of X. Only Returned for Improved Kernel PLS Algorithm #1.
 
         X_mean : Array of shape (1, K) or None
-            Mean of the predictor variables `center` is True, otherwise None.
+            Mean of the predictor variables `center_X` is True, otherwise None.
 
         Y_mean : Array of shape (1, M) or None
-            Mean of the response variables `center` is True, otherwise None.
+            Mean of the response variables `center_Y` is True, otherwise None.
 
         X_std : Array of shape (1, K) or None
-            Sample standard deviation of the predictor variables `scale` is True,
+            Sample standard deviation of the predictor variables `scale_X` is True,
             otherwise None.
 
         Y_std : Array of shape (1, M) or None
-            Sample standard deviation of the response variables `scale` is True,
+            Sample standard deviation of the response variables `scale_Y` is True,
             otherwise None.
 
         Warns
@@ -787,19 +823,19 @@ class PLSBase(abc.ABC):
 
         X_mean : Array of shape (1, K) or None, optional, default=None
             Mean of the predictor variables. If None, then no mean is subtracted from
-            the predictor variables.
+            `X`.
 
         X_std : Array of shape (1, K) or None, optional, default=None
             Sample standard deviation of the predictor variables. If None, then no
-            scaling is applied to the predictor variables.
+            scaling is applied to `X`.
 
         Y_mean : Array of shape (1, M) or None, optional, default=None
             Mean of the response variables. If None, then no mean is subtracted from
-            the response variables.
+            `Y`.
 
         Y_std : Array of shape (1, M) or None, optional, default=None
             Sample standard deviation of the response variables. If None, then no
-            scaling is applied to the response variables.
+            scaling is applied to `Y`.
 
         Returns
         -------
@@ -868,7 +904,7 @@ class PLSBase(abc.ABC):
             X, self.B, n_components, self.X_mean, self.X_std, self.Y_mean, self.Y_std
         )
 
-    @partial(jax.jit, static_argnums=(0, 3, 6, 7, 8, 9))
+    @partial(jax.jit, static_argnums=(0, 3, 6, 7, 8, 9, 10, 11))
     def stateless_fit_predict_eval(
         self,
         X_train: ArrayLike,
@@ -877,8 +913,10 @@ class PLSBase(abc.ABC):
         X_test: ArrayLike,
         Y_test: ArrayLike,
         metric_function: Callable[[jax.Array, jax.Array], Any],
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
     ) -> Any:
         """
@@ -908,15 +946,23 @@ class PLSBase(abc.ABC):
             Computes a metric based on true values `Y_test` and predicted values
             `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
-        center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the
-            training data is subtracted from the data. If False, then the data is
-            assumed to be already centered.
+        center_X : bool, default=True
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        center_Y : bool, default=True
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        scale_X : bool, default=True
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
-        scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled
-            using Bessel's correction for the unbiased estimate of the sample standard
-            deviation. If False, then the data is assumed to be already scaled.
+        scale_Y : bool, default=True
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X_train` and `Y_train` in stateless_fit before potentially
@@ -944,7 +990,14 @@ class PLSBase(abc.ABC):
         X_test, Y_test = self._initialize_input_matrices(X=X_test, Y=Y_test)
 
         matrices = self.stateless_fit(
-            X=X_train, Y=Y_train, A=A, center=center, scale=scale, copy=copy
+            X=X_train,
+            Y=Y_train,
+            A=A,
+            center_X=center_X,
+            center_Y=center_Y,
+            scale_X=scale_X,
+            scale_Y=scale_Y,
+            copy=copy,
         )
         B = matrices[0]
         X_mean, Y_mean, X_std, Y_std = matrices[-4:]
@@ -970,9 +1023,10 @@ class PLSBase(abc.ABC):
         """
         Performs cross-validation for the Partial Least-Squares (PLS) model on given
         data. `preprocessing_function` will be applied before any potential centering
-        and scaling as determined by `self.center` and `self.scale`. Any such potential
-        centering and scaling is applied for each split using training set statistics
-        to avoid data leakage from the validation set.
+        and scaling as determined by `self.center_X`, `self.center_Y`, `self.scale_X`,
+        and `self.scale_Y`. Any such potential centering and scaling is applied for
+        each split using training set statistics to avoid data leakage from the
+        validation set.
 
         Parameters
         ----------
@@ -1048,8 +1102,10 @@ class PLSBase(abc.ABC):
                 A=A,
                 preprocessing_function=preprocessing_function,
                 metric_function=metric_function,
-                center=self.center,
-                scale=self.scale,
+                center_X=self.center_X,
+                center_Y=self.center_Y,
+                scale_X=self.scale_X,
+                scale_Y=self.scale_Y,
                 copy=self.copy,
             )
             metric_value_lists = self._update_metric_value_lists(
@@ -1057,7 +1113,7 @@ class PLSBase(abc.ABC):
             )
         return self._finalize_metric_values(metric_value_lists, metric_names)
 
-    @partial(jax.jit, static_argnums=(0, 5, 6, 7, 8, 9, 10))
+    @partial(jax.jit, static_argnums=(0, 5, 6, 7, 8, 9, 10, 11, 12))
     def _inner_cross_validate(
         self,
         X: ArrayLike,
@@ -1070,8 +1126,10 @@ class PLSBase(abc.ABC):
             Tuple[jax.Array, jax.Array, jax.Array, jax.Array],
         ],
         metric_function: Callable[[jax.Array, jax.Array], Any],
-        center: bool = True,
-        scale: bool = True,
+        center_X: bool = True,
+        center_Y: bool = True,
+        scale_X: bool = True,
+        scale_Y: bool = True,
         copy: bool = True,
     ):
         """
@@ -1106,15 +1164,23 @@ class PLSBase(abc.ABC):
             Computes a metric based on true values `Y_test` and predicted values
             `Y_pred`. `Y_pred` contains a prediction for all `A` components.
 
-        center : bool, optional, default=True
-            Whether to center the data before fitting. If True, then the mean of the
-            training data is subtracted from the data. If False, then the data is
-            assumed to be already centered.
+        center_X : bool, default=True
+            Whether to center `X` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        center_Y : bool, default=True
+            Whether to center `Y` before fitting by subtracting its row of
+            column-wise means from each row.
+        
+        scale_X : bool, default=True
+            Whether to scale `X` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
-        scale : bool, optional, default=True
-            Whether to scale the data before fitting. If True, then the data is scaled
-            using Bessel's correction for the unbiased estimate of the sample standard
-            deviation. If False, then the data is assumed to be already scaled.
+        scale_Y : bool, default=True
+            Whether to scale `Y` before fitting by dividing each row with the row of
+            `X`'s column-wise standard deviations. Bessel's correction for the unbiased
+            estimate of the sample standard deviation is used.
 
         copy : bool, optional, default=True
             Whether to copy `X_train` and `Y_train` in stateless_fit before potentially
@@ -1150,8 +1216,10 @@ class PLSBase(abc.ABC):
             X_test=X_val,
             Y_test=Y_val,
             metric_function=metric_function,
-            center=center,
-            scale=scale,
+            center_X=center_X,
+            center_Y=center_Y,
+            scale_X=scale_X,
+            scale_Y=scale_Y,
             copy=copy,
         )
         return metric_values
