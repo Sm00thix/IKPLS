@@ -113,10 +113,10 @@ To run the test suite, follow these steps:
 
 ## Build the documentation
 
-1. Install sphinx and the sphinx-rtd-theme:
+1. Install sphinx, the sphinx-rtd-theme, and the MyST-Parser:
 
     ```shell
-    pip3 install sphinx sphinx-rtd-theme
+    pip3 install sphinx sphinx-rtd-theme myst-parser
     ```
 
 2. Change to the docs directory:
