@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ikpls"
-version = "1.2.2"
-description = ""
+version = "1.2.2.post1"
+description = "Improved Kernel PLS and Fast Cross-Validation."
 authors = ["Sm00thix <oleemail@icloud.com>"]
 maintainers = ["Sm00thix <oleemail@icloud.com>"]
 license = "Apache-2.0"
