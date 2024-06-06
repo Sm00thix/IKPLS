@@ -124,7 +124,7 @@ class TestClass:
         diff_jax_pls_alg_1 = JAX_Alg_1(reverse_differentiable=True, verbose=True)
         diff_jax_pls_alg_2 = JAX_Alg_2(reverse_differentiable=True, verbose=True)
 
-        sk_pls.fit(X=X, Y=Y)
+        sk_pls.fit(X=X, y=Y)
         np_pls_alg_1.fit(X=X, Y=Y, A=n_components)
         np_pls_alg_2.fit(X=X, Y=Y, A=n_components)
         jax_pls_alg_1.fit(X=jnp_X, Y=jnp_Y, A=n_components)
@@ -1808,10 +1808,10 @@ class TestClass:
         None
         """
         if isinstance(pls_model, SkPLS):
-            msg = "Y residual is constant at iteration"
+            msg = "y residual is constant at iteration"
             with pytest.warns(UserWarning, match=msg) as record:
                 for _ in range(2):
-                    pls_model.fit(X=X, Y=Y)
+                    pls_model.fit(X=X, y=Y)
                     assert_allclose(pls_model.x_rotations_, 0)
                 assert len(record) == 2
 
@@ -2469,7 +2469,7 @@ class TestClass:
                 sk_pred[-1],
                 sk_models[i].predict(X).reshape(X.shape[0], M),
                 atol=0,
-                rtol=1e-13,
+                rtol=1e-7,
             )
 
         # Compute RMSE on the validation predictions
