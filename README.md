@@ -132,7 +132,7 @@ Gotchas](https://github.com/google/jax#current-gotchas).
 
 ### Examples
 
-In [examples](https://github.com/Sm00thix/IKPLS/tree/main/examples) you
+In [examples](https://github.com/Sm00thix/IKPLS/tree/main/examples), you
 will find:
 
 -   [Fit and Predict with
