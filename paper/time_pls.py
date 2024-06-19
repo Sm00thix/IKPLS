@@ -36,6 +36,8 @@ if __name__ == "__main__":
     parser.add_argument("-n", type=int, help="Number of samples to generate.")
     parser.add_argument("-k", type=int, help="Number of features to generate.")
     parser.add_argument("-m", type=int, help="Number of targets to generate.")
+    parser.add_argument("-o", "--output", type=str, default="timings/user_timings.csv",
+                        help="Output file to write timings to.")
     args = parser.parse_args()
     config = vars(args)
     model = config["model"]
@@ -122,14 +124,11 @@ if __name__ == "__main__":
 
     num_cores = os.cpu_count() if n_jobs == -1 else n_jobs
 
-    try:
-        with open("timings/user_timings.csv", "x") as f:
+    # don't repeat yourself
+    if not os.path.exists(args.output):
+        with open(args.output, "w") as f:
             f.write("model,n_components,n_splits,n,k,m,time,inferred,njobs\n")
-            f.write(
-                f"{model},{n_components},{n_splits},{n},{k},{m},{time},False,{num_cores}\n"
-            )
-    except FileExistsError:
-        with open("timings/user_timings.csv", "a") as f:
-            f.write(
-                f"{model},{n_components},{n_splits},{n},{k},{m},{time},False,{num_cores}\n"
-            )
+    with open(args.output, "a") as f:
+        f.write(
+            f"{model},{n_components},{n_splits},{n},{k},{m},{time},False,{num_cores}\n"
+        )
