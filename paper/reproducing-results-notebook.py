@@ -26,8 +26,29 @@
 # these are used as a cache - i.e. not re-run if already present; you can simply delete or move this file if you want to re-start from scratch
 
 # %%
+# this one must not change
 REF_TIMINGS = "timings/timings.csv"
+
+# default - see next cell for how to change it
 OUR_TIMINGS = "timings/user_timings.csv"
+
+# %%
+# provide a way to choose the output from the command line
+# but argparse won't work from Jupyter, so:
+
+try:
+    # this is defined in a Jupyter / IPython environment
+    # in this case just change OUR_TIMINGS above
+    get_ipython()
+except:
+    # not in IPython/notebook - so we run from the command line
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument("-o", "--output", default=OUR_TIMINGS, help="filename for the csv output")
+    args = parser.parse_args()
+    OUR_TIMINGS = args.output
+
+print(f"using {OUR_TIMINGS=}")
 
 # %% [markdown]
 # ## loading the paper timings
@@ -109,7 +130,7 @@ if not len(previous):
 else:
     join = pd.merge(focus, previous, on=KEYS, how='left')
     missing = join[join.previous.isna()]
-    
+
 
 # %%
 missing
