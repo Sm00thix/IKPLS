@@ -18,6 +18,9 @@ The timings.csv file contains the following columns:
     running out of memory.
 """
 
+from argparse import ArgumentParser
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
@@ -36,7 +39,7 @@ def remove_rows_where_all_values_except_time_are_same(df):
     ---------
     df : pd.DataFrame
         The input DataFrame.
-        
+
     Returns:
         pd.DataFrame: The DataFrame with duplicate rows removed.
     """
@@ -202,7 +205,13 @@ def plot_timings(
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("timings/user_timings.csv")
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--input", type=str, default="timings/user_timings.csv",
+                        help="Input file to read timings from.")
+    args = parser.parse_args()
+    output = Path(args.input).with_suffix(".png")
+
+    df = pd.read_csv(args.input)
     df = remove_rows_where_all_values_except_time_are_same(df)
 
     plt.rcParams.update({"font.size": 10})
@@ -429,7 +438,7 @@ if __name__ == "__main__":
         bbox_transform=plt.gcf().transFigure,
     )
     plt.gca().add_artist(first_legend)
-    
+
     ikpls_version_text = f"ikpls version: {ikpls.__version__}"
 
     fig.text(
@@ -457,4 +466,5 @@ if __name__ == "__main__":
     fig.patches.extend([rect1, rect2, rect11, rect12, rect21, rect22])
     # fig.tight_layout()
     plt.subplots_adjust(bottom=0.06, hspace=0.3, wspace=0.2, left=0.1, right=0.95)
-    plt.savefig(f"timings/user_timings.png")
+    plt.savefig(str(output))
+    print(f"output saved to {output}")
