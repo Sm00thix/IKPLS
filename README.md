@@ -52,7 +52,7 @@ such as (row-wise) centering and scaling of the X and Y input matrices,
 convolution, or other preprocessing. Row-wise preprocessing can safely be
 applied before passing the data to the fast cross-validation algorithms.
 
-## Pre-requisites
+## Prerequisites
 
 The JAX implementations support running on both CPU, GPU, and TPU. To
 use the GPU or TPU, follow the instructions from the [JAX Installation
