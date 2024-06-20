@@ -5,7 +5,7 @@ PLS by Dayal and MacGregor.
 Implementations of concrete classes exist for both Improved Kernel PLS Algorithm #1
 and Improved Kernel PLS Algorithm #2.
 
-For more details, refer to the paper: 
+For more details, refer to the paper:
 "Improved Kernel Partial Least Squares Regression" by Dayal and MacGregor.
 
 Author: Ole-Christian Galbo Engstrøm
@@ -669,11 +669,11 @@ class PLSBase(abc.ABC):
         center_X : bool, default=True
             Whether to center `X` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         center_Y : bool, default=True
             Whether to center `Y` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         scale_X : bool, default=True
             Whether to scale `X` before fitting by dividing each row with the row of
             `X`'s column-wise standard deviations. Bessel's correction for the unbiased
@@ -949,11 +949,11 @@ class PLSBase(abc.ABC):
         center_X : bool, default=True
             Whether to center `X` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         center_Y : bool, default=True
             Whether to center `Y` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         scale_X : bool, default=True
             Whether to scale `X` before fitting by dividing each row with the row of
             `X`'s column-wise standard deviations. Bessel's correction for the unbiased
@@ -1167,11 +1167,11 @@ class PLSBase(abc.ABC):
         center_X : bool, default=True
             Whether to center `X` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         center_Y : bool, default=True
             Whether to center `Y` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         scale_X : bool, default=True
             Whether to scale `X` before fitting by dividing each row with the row of
             `X`'s column-wise standard deviations. Bessel's correction for the unbiased

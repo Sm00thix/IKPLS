@@ -107,7 +107,8 @@ if __name__ == "__main__":
     best_num_components = np.asarray(
         [
             [
-                np_pls_alg_1_fast_cv_results[split][f'num_components_lowest_mse_target_{i}']
+                np_pls_alg_1_fast_cv_results[split]
+                [f'num_components_lowest_mse_target_{i}']
                 for split in unique_splits
             ]
             for i in range(M)

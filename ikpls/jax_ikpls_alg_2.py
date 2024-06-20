@@ -31,11 +31,11 @@ class PLS(PLSBase):
     center_X : bool, default=True
         Whether to center `X` before fitting by subtracting its row of
         column-wise means from each row.
-    
+
     center_Y : bool, default=True
         Whether to center `Y` before fitting by subtracting its row of
         column-wise means from each row.
-    
+
     scale_X : bool, default=True
         Whether to scale `X` before fitting by dividing each row with the row of `X`'s
         column-wise standard deviations. Bessel's correction for the unbiased estimate
@@ -389,11 +389,11 @@ class PLS(PLSBase):
         center_X : bool, default=True
             Whether to center `X` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         center_Y : bool, default=True
             Whether to center `Y` before fitting by subtracting its row of
             column-wise means from each row.
-        
+
         scale_X : bool, default=True
             Whether to scale `X` before fitting by dividing each row with the row of
             `X`'s column-wise standard deviations. Bessel's correction for the unbiased

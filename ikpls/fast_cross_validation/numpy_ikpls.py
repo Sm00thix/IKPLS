@@ -34,18 +34,18 @@ class PLS:
         Whether to center `X` before fitting by subtracting its row of
         column-wise means from each row. The row of column-wise means is computed on
         the training set for each fold to avoid data leakage.
-    
+
     center_Y : bool, optional default=True
         Whether to center `Y` before fitting by subtracting its row of
         column-wise means from each row. The row of column-wise means is computed on
         the training set for each fold to avoid data leakage.
-    
+
     scale_X : bool, optional default=True
         Whether to scale `X` before fitting by dividing each row with the row of `X`'s
         column-wise standard deviations. Bessel's correction for the unbiased estimate
         of the sample standard deviation is used. The row of column-wise standard
         deviations is computed on the training set for each fold to avoid data leakage.
-    
+
     scale_Y : bool, optional default=True
         Whether to scale `Y` before fitting by dividing each row with the row of `X`'s
         column-wise standard deviations. Bessel's correction for the unbiased estimate
@@ -64,7 +64,7 @@ class PLS:
     ------
     ValueError
         If `algorithm` is not 1 or 2.
-    
+
     Notes
     -----
     Any centering and scaling is undone before returning predictions to ensure that
@@ -482,7 +482,7 @@ class PLS:
             predictions for that specific number of components is used. If
             `n_components` is None, returns a prediction for each number of components
             up to `A`.
-        
+
         Notes
         -----
         """
