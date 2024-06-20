@@ -3613,7 +3613,7 @@ class TestClass:
             mse = np.mean(se, axis=-2)
             rmse = np.sqrt(mse)
             return rmse
-        
+
         def jax_rmse_per_component(
                 Y_true: npt.NDArray, Y_pred: npt.NDArray
         ) -> npt.NDArray:
@@ -3624,7 +3624,7 @@ class TestClass:
             mse = np.mean(se, axis=-2)
             rmse = jnp.sqrt(mse)
             return rmse
-        
+
         jnp_splits = jnp.array(splits)
 
         def cv_splitter(splits: npt.NDArray):
@@ -3753,14 +3753,15 @@ class TestClass:
 
             # Convert the results from dict to list for easier comparison
             fast_cv_np_pls_alg_1_results = [
-                        np.asarray(value) for value in fast_cv_np_pls_alg_1_results.values()
+                        np.asarray(value) for value
+                        in fast_cv_np_pls_alg_1_results.values()
                     ]
             fast_cv_np_pls_alg_2_results = [
                 np.asarray(value) for value in fast_cv_np_pls_alg_2_results.values()
             ]
 
-            # Sort fast cv results according to the unique splits for comparison with the
-            # other algorithms
+            # Sort fast cv results according to the unique splits for comparison with
+            # the other algorithms
             unique_splits, sort_indices = np.unique(splits, return_index=True)
             unique_splits = unique_splits.astype(int)
             fast_cv_order = np.argsort(sort_indices)
@@ -3810,15 +3811,21 @@ class TestClass:
                 ["RMSE"],
             )
 
-            # Get the best number of components in terms of minimizing validation RMSE for
-            # each split is equal among all algorithms
+            # Get the best number of components in terms of minimizing validation RMSE
+            # for each split is equal among all algorithms
             unique_splits = np.unique(splits).astype(int)
             np_pls_alg_1_best_num_components = [
-                [np.argmin(np_pls_alg_1_rmses[split][..., i]) for split in unique_splits]
+                [
+                    np.argmin(np_pls_alg_1_rmses[split][..., i])
+                    for split in unique_splits
+                ]
                 for i in range(M)
             ]
             np_pls_alg_2_best_num_components = [
-                [np.argmin(np_pls_alg_2_rmses[split][..., i]) for split in unique_splits]
+                [
+                    np.argmin(np_pls_alg_2_rmses[split][..., i])
+                    for split in unique_splits
+                ]
                 for i in range(M)
             ]
             fast_cv_np_pls_alg_1_best_num_components = [
@@ -3865,14 +3872,16 @@ class TestClass:
             ]
             np_pls_alg_1_best_rmses = [
                 [
-                    np_pls_alg_1_rmses[split][np_pls_alg_1_best_num_components[i][split], i]
+                    np_pls_alg_1_rmses[split]
+                    [np_pls_alg_1_best_num_components[i][split], i]
                     for split in unique_splits
                 ]
                 for i in range(M)
             ]
             np_pls_alg_2_best_rmses = [
                 [
-                    np_pls_alg_2_rmses[split][np_pls_alg_2_best_num_components[i][split], i]
+                    np_pls_alg_2_rmses[split]
+                    [np_pls_alg_2_best_num_components[i][split], i]
                     for split in unique_splits
                 ]
                 for i in range(M)
@@ -3932,22 +3941,49 @@ class TestClass:
                 for i in range(M)
             ]
 
-            assert_allclose(np_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
             assert_allclose(
-                fast_cv_np_pls_alg_1_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+                np_pls_alg_2_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
             )
             assert_allclose(
-                fast_cv_np_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
-            )
-            assert_allclose(jax_pls_alg_1_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
-            assert_allclose(jax_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol)
-            assert_allclose(
-                diff_jax_pls_alg_1_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+                fast_cv_np_pls_alg_1_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
             )
             assert_allclose(
-                diff_jax_pls_alg_2_best_rmses, np_pls_alg_1_best_rmses, atol=atol, rtol=rtol
+                fast_cv_np_pls_alg_2_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
             )
-    
+            assert_allclose(
+                jax_pls_alg_1_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
+            )
+            assert_allclose(
+                jax_pls_alg_2_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
+            )
+            assert_allclose(
+                diff_jax_pls_alg_1_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
+            )
+            assert_allclose(
+                diff_jax_pls_alg_2_best_rmses,
+                np_pls_alg_1_best_rmses,
+                atol=atol,
+                rtol=rtol
+            )
+
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
@@ -3965,17 +4001,17 @@ class TestClass:
         Description
         -----------
         This test loads input predictor variables, a single target variable, and split
-        indices for cross-validation. It then calls the 'check_center_scale_combinations'
-        method to validate the cross-validation results for all possible combinations of
-        centering and scaling.
+        indices for cross-validation. It then calls the
+        `check_center_scale_combinations` method to validate the cross-validation
+        results for all possible combinations of centering and scaling.
 
         Returns:
         None
         """
         X = self.load_X()
-        X = X[..., :10] # Decrease the amount of features in the interest of time.
+        X = X[..., :10]  # Decrease the amount of features in the interest of time.
         Y = self.load_Y(["Protein"])
-        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] == 1
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
 
@@ -4002,14 +4038,14 @@ class TestClass:
         -----------
         This test loads input predictor variables, multiple target variables (where M
         is less than K), and split indices for cross-validation. It then calls the
-        'check_center_scale_combinations' method to validate the cross-validation results
-        for all possible combinations of centering and scaling.
+        `check_center_scale_combinations` method to validate the cross-validation
+        results for all possible combinations of centering and scaling.
 
         Returns:
         None
         """
         X = self.load_X()
-        X = X[..., :11] # Decrease the amount of features in the interest of time.
+        X = X[..., :11]  # Decrease the amount of features in the interest of time.
         Y = self.load_Y(
             [
                 "Rye_Midsummer",
@@ -4024,11 +4060,11 @@ class TestClass:
                 "Protein",
             ]
         )
-        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-7)
-    
+
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
@@ -4047,8 +4083,8 @@ class TestClass:
         -----------
         This test loads input predictor variables, multiple target variables (where M
         is equal to K), and split indices for cross-validation. It then calls the
-        'check_center_scale_combinations' method to validate the cross-validation results
-        for all possible combinations of centering and scaling.
+        `check_center_scale_combinations` method to validate the cross-validation
+        results for all possible combinations of centering and scaling.
 
         Returns:
         None
@@ -4069,11 +4105,11 @@ class TestClass:
             ]
         )
         X = X[..., :10]
-        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
-    
+
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
     # multi-threaded code. os.fork() is called by the  other cross-validation
     # algorithms. However, there is no interaction between the JAX and the other
@@ -4092,8 +4128,8 @@ class TestClass:
         -----------
         This test loads input predictor variables, multiple target variables (where M
         is greater than K), and split indices for cross-validation. It then calls the
-        'check_center_scale_combinations' method to validate the cross-validation results
-        for all possible combinations of centering and scaling.
+        `check_center_scale_combinations` method to validate the cross-validation
+        results for all possible combinations of centering and scaling.
 
         Returns:
         None
@@ -4114,7 +4150,7 @@ class TestClass:
             ]
         )
         X = X[..., :9]
-        splits = self.load_Y(["split"]) # Contains 3 splits of different sizes
+        splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
