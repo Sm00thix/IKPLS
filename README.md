@@ -18,7 +18,7 @@
 
 ## Unlock the Power of Fast and Stable Partial Least Squares Modeling with IKPLS
 
-Dive into cutting-edge Python implementations of the IKPLS (Improved Kernel Partial Least Squares) Algorithms #1 and #2 [[1](#references)] for CPUs, GPUs, and TPUs. IKPLS is both fast [[2]](#references) and numerically stable [[3]](#references) making it optimal for PLS modeling.
+Dive into cutting-edge Python implementations of the IKPLS (Improved Kernel Partial Least Squares) Algorithms #1 and #2 [[1]](#references) for CPUs, GPUs, and TPUs. IKPLS is both fast [[2]](#references) and numerically stable [[3]](#references) making it optimal for PLS modeling.
 
 - Use our NumPy [[4]](#references) based CPU implementations for **seamless integration with
 scikit-learn\'s** [[5]](#references) **ecosystem** of machine learning algorithms and pipelines. As the
