@@ -16,18 +16,17 @@
 
 [![JOSS Status](https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc/status.svg)](https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc)
 
-Fast CPU, GPU, and TPU Python implementations of Improved Kernel PLS
-Algorithm #1 and Algorithm #2 [[1]](#references). Improved
-Kernel PLS is both fast [[2]](#references) and numerically stable [[3]](#references). The CPU
-implementations use [[4]](#references) and subclass BaseEstimator from scikit-learn [[5]](#references),
-allowing integration into scikit-learn\'s ecosystem of
-machine learning algorithms and pipelines. For example, the CPU
-implementations can be used with scikit-learn\'s
+## Unlock the Power of Fast and Stable Partial Least Squares Modeling with IKPLS
+
+Dive into cutting-edge Python implementations of the IKPLS (Improved Kernel Partial Least Squares) Algorithms #1 and #2 [[1](#references)] for CPUs, GPUs, and TPUs. IKPLS is both fast [[2]](#references) and numerically stable [[3]](#references) making it optimal for PLS modeling.
+
+- Use our NumPy [[4]](#references) based CPU implementations for **seamless integration with
+scikit-learn\'s** [[5]](#references) **ecosystem** of machine learning algorithms and pipelines. As the
+implementations subclass scikit-learn's BaseEstimator, they can be used with scikit-learn\'s
 [cross_validate](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html).
-The GPU and TPU implementations use Google\'s JAX [[6]](#references). JAX supports
-automatic differentiation while allowing CPU, GPU, and TPU execution.
-This implies that the JAX implementations can be combined with deep
-learning approaches, as the PLS fit is differentiable.
+- Use our JAX [[6]](#references) implementations on CPUs or **leverage powerful GPUs and TPUs for PLS modelling**.
+  Our JAX implementations are **end-to-end differentaible** allowing **gradient propagation** when using **PLS as a layer in a deep learning model**.
+- Use our combination of IKPLS with Engstrøm's **unbelievably fast cross-validation** algorithm [[7]](#references) to quickly determine the optimal combination of preprocessing and number of PLS components.
 
 The documentation is available at
 <https://ikpls.readthedocs.io/en/latest/>; examples can be found at
@@ -35,19 +34,19 @@ The documentation is available at
 
 ## Fast Cross-Validation
 
-In addition to the implementations mentioned above, this package
-contains the novel, fast cross-validation algorithms by Engstrøm [[7]](#references)
-using both IKPLS algorithms. The fast cross-validation algorithms
+In addition to the standalone IKPLS implementations, this package
+contains an implementation of IKPLS combined with the novel, fast cross-validation
+algorithms by Engstrøm [[7]](#references). The fast cross-validation algorithms
 benefit both IKPLS Algorithms and especially Algorithm #2. The fast
 cross-validation algorithms are mathematically equivalent to the
-classical cross-validation algorithm. Still, they are much quicker if
-cross-validation splits exceed 3. The fast cross-validation algorithms
-correctly handle (column-wise) centering and scaling of the X and Y
-input matrices using training set means and standard deviations to avoid
-data leakage from the validation set. This centering and scaling can be
-enabled or disabled independently from eachother and for X and Y by setting 
-the parameters `center_X`, `center_Y`, `scale_X`, and `scale_Y`, respectively.
-The fast cross-validation algorithms correctly handle row-wise preprocessing
+classical cross-validation algorithm. Still, they are much quicker.
+The fast cross-validation algorithms **correctly handle (column-wise)
+centering and scaling** of the X and Y input matrices using training set means and
+standard deviations to avoid data leakage from the validation set. This centering
+and scaling can be enabled or disabled independently from eachother and for X and Y 
+by setting the parameters `center_X`, `center_Y`, `scale_X`, and `scale_Y`, respectively.
+In addition to correctly handling (column-wise) centering and scaling,
+the fast cross-validation algorithms **correctly handle row-wise preprocessing**
 such as (row-wise) centering and scaling of the X and Y input matrices,
 convolution, or other preprocessing. Row-wise preprocessing can safely be
 applied before passing the data to the fast cross-validation algorithms.
