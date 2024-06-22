@@ -37,7 +37,7 @@ bibliography: paper.bib
 ---
 
 # Summary
-The `ikpls` software package provides fast and efficient tools for PLS (partial least squares) modeling. This package is designed to help researchers and practitioners handle PLS modeling faster than previously possible - particularly on large datasets. The PLS implementations in `ikpls` use the fast IKPLS (Improved Kernel PLS) algorithms [@dayal1997improved], providing a substantial speedup compared to scikit-learn's [@scikit-learn] PLS implementation, which is based on NIPALS (Nonlinear Iterative Partial Least Squares) [@wold1966estimation]. The `ikpls` package also offers an implementation of IKPLS combined with the fast cross-validation algorithm by Engstrøm [@engstrøm2024shortcutting], significantly accelerating cross-validation of PLS models - especially when using a large number of cross-validation splits.
+The `ikpls` software package provides fast and efficient tools for PLS (partial least squares) modeling. This package is designed to help researchers and practitioners handle PLS modeling faster than previously possible - particularly on large datasets. The PLS implementations in `ikpls` use the fast IKPLS (Improved Kernel PLS) algorithms [@dayal1997improved], providing a substantial speedup compared to scikit-learn's [@scikit-learn] PLS implementation, which is based on NIPALS (Nonlinear Iterative Partial Least Squares) [@wold1966estimation]. The `ikpls` package also offers an implementation of IKPLS combined with the fast cross-validation algorithms by Engstrøm [@engstrøm2024shortcutting], significantly accelerating cross-validation of PLS models - especially when using a large number of cross-validation splits.
 
 `ikpls` offers NumPy-based CPU and JAX-based CPU/GPU/TPU implementations. The JAX implementations are also differentiable, allowing seamless integration with deep learning techniques. This versatility enables users to handle diverse data dimensions efficiently.
 
@@ -45,7 +45,7 @@ In conclusion, `ikpls` empowers researchers and practitioners in machine learnin
 
 1. both variants of IKPLS for CPUs;
 2. both variants of IKPLS for GPUs, both of which are end-to-end differentiable, allowing integration with deep learning models;
-3. IKPLS combined with a cross-validation algorithm that yields a substantial speedup compared to the regular cross-validation algorithm.
+3. IKPLS combined with a cross-validation algorithm that yields a substantial speedup compared to the classical cross-validation algorithm.
 
 # Statement of need
 
