@@ -53,8 +53,20 @@ applied before passing the data to the fast cross-validation algorithm.
 
 ## Prerequisites
 
-The JAX implementations support running on both CPU, GPU, and TPU. To
-use the GPU or TPU, follow the instructions from the [JAX Installation
+The JAX implementations support running on both CPU, GPU, and TPU.
+
+- To enable NVIDIA GPU execution, install JAX and CUDA with:
+    ```shell
+    pip3 install -U "jax[cuda12]"
+    ```
+
+- To enable Google Cloud TPU execution, install JAX with:
+    ```shell
+    pip3 install -U "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+    ```
+
+These are typical installation instructions that will be what most users are looking for.
+For customized installations, follow the instructions from the [JAX Installation
 Guide](https://jax.readthedocs.io/en/latest/installation.html).
 
 To ensure that JAX implementations use Float64, set the environment
