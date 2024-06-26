@@ -16,6 +16,7 @@ on the machine and with the arguments specified in `paper.md`.
 ### one run
 
 Execute `time_pls.py` with arguments specifying:
+
 - The PLS algorithm to use.
 - The number of components to use.
 - The number of cross-validation splits to use, if any.
@@ -51,16 +52,23 @@ you can use the Jupyter notebook `reproducing-results-notebook.py` to run multip
 
 After executing the desired benchmarks, execute `plot_timings.py` to generate `timings/user_timings.png` with your benchmark results.
 
-### A note on cross-validation splits
+## A note on cross-validation splits
 
 A user can execute `time_pls.py` with any number of cross-validation splits, `n_splits`, and a record of the time taken to execute the experiment will be written to `timings/user_timings.csv`.
-However, for plot_timings.py to work as intended, `n_splits` should be either 1 or the same value as `n` for leave-one-out cross-validation. If this is violated - e.g. if `n` is 100 and `n_splits` is 10 - plot_timings.py will incorrectly interpret this entry as a leave-one-out cross-validation entry and show the result in the leave-one-out cross-validation part of timings/user_timings.png.
+However, for `plot_timings.py` to work as intended, `n_splits` should be either 1 or the same value as `n` for leave-one-out cross-validation. If this is violated - e.g. if `n` is 100 and `n_splits` is 10 - `plot_timings.py` will incorrectly interpret this entry as a leave-one-out cross-validation entry and show the result in the leave-one-out cross-validation part of `timings/user_timings.png`.
 
-### A note on estimation of benchmarks
-Benchmarking of cross-validation can be estimated for the scikit-learn implementation and both NumPy implementations - i.e., `sk`, `np1`, and `np2`. In practice this is achieved by timing the execution of only `2*n_jobs` cross-validation folds to get an estimate of the ratio of time taken per cross-validation fold. This ratio is then used to infer the time it would take to execute all `n_splits` cross-validation folds. This can be reproduced by adding the `--estimate` flag. For example, to estimate the benchmark the fast NumPy implementation of IKPLS algorithm #2 using leave-one-out cross-validation with 1 million samples, 500 features, 10 targets, 30 PLS components, using all available CPU cores for parallel cross-validation, execute the following command in your terminal:
+## A note on estimation of benchmarks
+
+This section gives details on how we obtained the **estimated data** - i.e. all the ones that appear as a square on the figure. We had to resort to this method for runs that would otherwise take too long to complete.
+
+### Automatable estimations
+
+Benchmarking of cross-validation can be estimated for the scikit-learn implementation, as well as for both NumPy implementations - i.e., `sk`, `np1`, and `np2`. In practice this is achieved by timing the execution of only `2*n_jobs` cross-validation folds to get an estimate of the ratio of time taken per cross-validation fold. This ratio is then used to infer the time it would take to execute all `n_splits` cross-validation folds. This can be automated by adding the `--estimate` flag. For example, to estimate the benchmark the fast NumPy implementation of IKPLS algorithm #2 using leave-one-out cross-validation with 1 million samples, 500 features, 10 targets, 30 PLS components, using all available CPU cores for parallel cross-validation, execute the following command in your terminal:
 
 ```shell
 python3 time_pls.py -model fastnp2 -n 1000000 -k 500 -m 10 -n_components 30 -n_splits 1000000 -n_jobs -1 --estimate
 ```
+
+### Manual estimations
 
 Benchmarking estimation is not available for the JAX implementations nor the fast cross-validation implementation. This is due to the implementation details of these algorithms. In practice, for the results in `timings.csv` and corresponding points on the plots in `timings.png` where estimation was used for these implementations, the process mentioned above was conducted manually.
