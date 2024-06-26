@@ -1,3 +1,4 @@
+import os
 from timeit import Timer, default_timer
 
 import jax.numpy as jnp
@@ -257,7 +258,7 @@ def jax_metric_names(M):
     return all_names
 
 
-def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
+def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose, estimate):
     """
     Description
     -----------
@@ -279,6 +280,9 @@ def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
         Number of jobs to run in parallel.
     verbose : int
         Verbosity level.
+    estimate : bool
+        Whether to estimate the time taken to do a full cross-validation based on the
+        time taken to execute only 2*n_jobs cross-validation splits.
 
     Returns
     -------
@@ -286,12 +290,28 @@ def cross_val_cpu_pls(pls, X, Y, n_splits, fit_params, n_jobs, verbose):
         Execution time for cross-validation.
     """
     cv = KFold(n_splits=n_splits, shuffle=False)
+    cv_to_pass = cv
+    if estimate:
+        if n_jobs == -1:
+            n_jobs = os.cpu_count()
+        n_splits_to_execute = 2 * n_jobs
+        if n_splits_to_execute > n_splits:
+            n_splits_to_execute = n_splits
+        def cv_estimate():
+            for _ in range(n_splits_to_execute):
+                (train, test) = next(cv.split(X))
+                yield train, test
+        cv_to_pass = cv_estimate()
     t = Timer(
-        stmt="scores = cross_validate(pls, X, Y, cv=cv, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
+        stmt="scores = cross_validate(pls, X, Y, cv=cv_to_pass, scoring=mse_for_each_target, return_estimator=False, fit_params=fit_params, n_jobs=n_jobs, verbose=verbose, )",
         timer=default_timer,
         globals=locals() | globals(),
     )
-    return t.timeit(number=1)
+    time_taken = t.timeit(number=1)
+    if estimate:
+        time_taken *= n_splits / n_splits_to_execute
+        print(f"Estimated time for full cross-validation: {time_taken:.2f} seconds.")
+    return time_taken
 
 
 def fast_cross_val_cpu_pls(pls, X, Y, A, n_splits, n_jobs, verbose):

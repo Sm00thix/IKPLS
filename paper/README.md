@@ -25,7 +25,7 @@ Execute `time_pls.py` with arguments specifying:
 For example, to benchmark the fast cross-validation algorithm with the NumPy implementation of IKPLS algorithm #2 using leave-one-out cross-validation with
 1 million samples, 500 features, 10 targets, 30 PLS components, using all available CPU cores for parallel cross-validation, execute the following command in your terminal:
 
-```bash
+```shell
 python3 time_pls.py -model fastnp2 -n 1000000 -k 500 -m 10 -n_components 30 -n_splits 1000000 -n_jobs -1
 ```
 
@@ -38,7 +38,7 @@ Execute the following command in your terminal to get an overview and descriptio
 python3 time_pls.py -h
 ```
 
-### multiple runs
+### Multiple runs
 
 you can use the Jupyter notebook `reproducing-results-notebook.py` to run multiple benchmarks in a row; this uses `timings/timings.csv` to find the set of runs that need to take place, and stores the results in `timings/user_timings.csv`. Results are cached so that you can run the notebook multiple times without re-running the same benchmarks.
 
@@ -47,7 +47,7 @@ you can use the Jupyter notebook `reproducing-results-notebook.py` to run multip
 - that you may need to `pip install jupytext` in order to open this file as a notebook in Jupyter;
 - if that does not work for you, the file can be also used as a regular Python script if need be.
 
-### produce a plot
+### Produce a plot
 
 After executing the desired benchmarks, execute `plot_timings.py` to generate `timings/user_timings.png` with your benchmark results.
 
@@ -55,3 +55,12 @@ After executing the desired benchmarks, execute `plot_timings.py` to generate `t
 
 A user can execute `time_pls.py` with any number of cross-validation splits, `n_splits`, and a record of the time taken to execute the experiment will be written to `timings/user_timings.csv`.
 However, for plot_timings.py to work as intended, `n_splits` should be either 1 or the same value as `n` for leave-one-out cross-validation. If this is violated - e.g. if `n` is 100 and `n_splits` is 10 - plot_timings.py will incorrectly interpret this entry as a leave-one-out cross-validation entry and show the result in the leave-one-out cross-validation part of timings/user_timings.png.
+
+### A note on estimation of benchmarks
+Benchmarking of cross-validation can be estimated for the scikit-learn implementation and both NumPy implementations - i.e., `sk`, `np1`, and `np2`. In practice this is achieved by timing the execution of only `2*n_jobs` cross-validation folds to get an estimate of the ratio of time taken per cross-validation fold. This ratio is then used to infer the time it would take to execute all `n_splits` cross-validation folds. This can be reproduced by adding the `--estimate` flag. For example, to estimate the benchmark the fast NumPy implementation of IKPLS algorithm #2 using leave-one-out cross-validation with 1 million samples, 500 features, 10 targets, 30 PLS components, using all available CPU cores for parallel cross-validation, execute the following command in your terminal:
+
+```shell
+python3 time_pls.py -model fastnp2 -n 1000000 -k 500 -m 10 -n_components 30 -n_splits 1000000 -n_jobs -1 --estimate
+```
+
+Benchmarking estimation is not available for the JAX implementations nor the fast cross-validation implementation. This is due to the implementation details of these algorithms. In practice, for the results in `timings.csv` and corresponding points on the plots in `timings.png` where estimation was used for these implementations, the process mentioned above was conducted manually.

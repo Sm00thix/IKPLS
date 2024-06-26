@@ -153,14 +153,16 @@ f"we still have {len(missing)} runs to carry out"
 
 # %%
 import os
+import numpy as np
 
 for index, t in enumerate(missing.itertuples()):
     if t.time > 30:
         print(f"skipping run ({t.model} x {t.n_components} x {t.n_splits}) that has {t.time=} > 30")
         continue
     # print(t)
-    command = (f"python time_pls.py -o {OUR_TIMINGS}"
+    estimate = "" if np.isnan(t.inferred) or not t.inferred else " --estimate"
+    command = (f"python3 time_pls.py -o {OUR_TIMINGS}"
                f" -model {t.model} -n_components {t.n_components}" 
-               f" -n_splits {t.n_splits} -n {t.n} -k{t.k} -m {t.m} -n_jobs -1")
+               f" -n_splits {t.n_splits} -n {t.n} -k{t.k} -m {t.m} -n_jobs -1{estimate}")
     print(command)
     os.system(command)
