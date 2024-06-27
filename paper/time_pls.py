@@ -15,7 +15,7 @@ from timings.timings import (
     single_fit_gpu_pls,
 )
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-model",
@@ -148,3 +148,10 @@ if __name__ == "__main__":
         f.write(
             f"{model},{n_components},{n_splits},{n},{k},{m},{time},{estimate},{num_cores}\n"
         )
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Interrupted.")
+        exit(1)
