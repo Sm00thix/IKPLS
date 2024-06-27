@@ -15,6 +15,9 @@ from timings.timings import (
     single_fit_gpu_pls,
 )
 
+import jax
+jax.config.update("jax_enable_x64", True)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(

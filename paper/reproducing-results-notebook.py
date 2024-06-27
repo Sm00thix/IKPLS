@@ -43,6 +43,11 @@ DRY_RUN = False
 
 
 # %%
+# Allow JAX to use 64-bit floating point precision.
+import jax
+jax.config.update("jax_enable_x64", True)
+
+# %%
 # provide a way to choose the output from the command line
 # but argparse won't work from Jupyter, so:
 
