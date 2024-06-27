@@ -32,8 +32,8 @@ REF_TIMINGS = "timings/timings.csv"
 # default - see next cell for how to change it
 OUR_TIMINGS = "timings/user_timings.csv"
 
-# speed mode: run only short runs
-SKIP_LONG_RUNS = False
+# catch low-hanging fruits first
+SKIP_RUNS_LONGER_THAN = 0
 
 # by default, only on CPU
 RUN_ON_GPUS = False
@@ -56,22 +56,22 @@ except:
     parser = ArgumentParser()
     parser.add_argument("-o", "--output", default=OUR_TIMINGS, 
                         help="filename for the csv output")
-    parser.add_argument("-s", "--speed", default=SKIP_LONG_RUNS, 
-                        action="store_true",
-                        help="speed up: skip runs that had taken > 30s")
+    parser.add_argument("-s", "--skip-runs-longer-than", default=SKIP_RUNS_LONGER_THAN, 
+                        action="store", type=int,
+                        help="speed up: skip runs that had taken longer than, in seconds")
     parser.add_argument("-g", "--gpu", default=RUN_ON_GPUS,
                         action="store_true",
                         help="enable runs that require a GPU")
-    parser.add_argument("-d", "--dry-run", default=DRY_RUN,
+    parser.add_argument("-n", "--dry-run", default=DRY_RUN,
                         action="store_true",
                         help="just show the commands to run, do not actually trigger them")
     args = parser.parse_args()
     OUR_TIMINGS = args.output
-    SKIP_LONG_RUNS = args.speed
+    SKIP_RUNS_LONGER_THAN = args.skip_runs_longer_than
     RUN_RUN_ON_GPUS = args.gpu
     DRY_RUN = args.dry_run
 
-print(f"using {OUR_TIMINGS=} {SKIP_LONG_RUNS=} {RUN_ON_GPUS=} {DRY_RUN=}")
+print(f"using {OUR_TIMINGS=} {SKIP_RUNS_LONGER_THAN=} {RUN_ON_GPUS=} {DRY_RUN=}")
 
 # %% [markdown]
 # ## loading the paper timings
@@ -165,9 +165,11 @@ status("removed GPU-only runs")
 # ### ignore long runs
 
 # %%
-if SKIP_LONG_RUNS:
-    todo = todo[todo.time < 30]
-    status("keeping only short runs")
+# default is zero, in that case we do not filter
+
+if SKIP_RUNS_LONGER_THAN:
+    todo = todo[todo.time < SKIP_RUNS_LONGER_THAN]
+    status(f"keeping only runs shorter than {SKIP_RUNS_LONGER_THAN}s")
 
 # %% [markdown]
 # ### ignore entries whose estimation cannot be automated
