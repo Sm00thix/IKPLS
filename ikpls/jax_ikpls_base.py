@@ -464,7 +464,7 @@ class PLSBase(abc.ABC):
 
     @partial(jax.jit, static_argnums=(0, 2, 3))
     def _step_2(
-        self, XTY: jax.Array, M: jax.Array, K: jax.Array
+        self, XTY: jax.Array, M: int, K: int
     ) -> Tuple[jax.Array, DTypeLike]:
         """
         The second step of the PLS algorithm. Computes the next weight vector and the
@@ -516,7 +516,7 @@ class PLSBase(abc.ABC):
                 norm = eig_vals[-1]
         return w, norm
 
-    @partial(jax.jit, static_argnums=(0, 1))
+    @partial(jax.jit, static_argnums=(0))
     def _step_3(self, i: int, w: jax.Array, P: jax.Array, R: jax.Array) -> jax.Array:
         """
         The third step of the PLS algorithm. Computes the orthogonal weight vectors.
