@@ -15,7 +15,7 @@ from timings.timings import (
     single_fit_gpu_pls,
 )
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-model",
@@ -38,6 +38,13 @@ if __name__ == "__main__":
     parser.add_argument("-m", type=int, help="Number of targets to generate.")
     parser.add_argument("-o", "--output", type=str, default="timings/user_timings.csv",
                         help="Output file to write timings to.")
+    parser.add_argument(
+        "--estimate",
+        dest="estimate",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Estimate the time taken to do a full cross-validation based on the time taken to execute only 2*n_jobs cross-validation splits."
+    )
     args = parser.parse_args()
     config = vars(args)
     model = config["model"]
@@ -46,6 +53,7 @@ if __name__ == "__main__":
     n = config["n"]
     k = config["k"]
     m = config["m"]
+    estimate = config["estimate"]
 
     X, Y = gen_random_data(n, k, m)
     if "jax" in model:
@@ -71,6 +79,8 @@ if __name__ == "__main__":
             )
             time = single_fit_gpu_pls(pls, X, Y, n_components)
         else:
+            if estimate:
+                raise ValueError("Estimation is not supported for JAX implementations.")
             print(
                 f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets."
             )
@@ -109,20 +119,26 @@ if __name__ == "__main__":
             )
             time = single_fit_cpu_pls(pls, X, Y, fit_params)
         else:
+            fitting_or_estimating = "Estimating" if estimate else "Fitting"
             print(
-                f"Fitting {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets. Using {n_jobs} concurrent workers."
+                f"{fitting_or_estimating} {name} with {n_components} components using {n_splits}-fold cross-validation on {n} samples with {k} features and {m} targets. Using {n_jobs} concurrent workers."
             )
             if model.startswith("fast"):
+                if estimate:
+                    raise ValueError("Estimation is not supported for fast cross-validation.")
                 time = fast_cross_val_cpu_pls(
-                    pls, X, Y, n_components, n_splits=n_splits, n_jobs=n_jobs, verbose=1
+                    pls, X, Y, n_components, n_splits=n_splits, n_jobs=n_jobs, verbose=1,
                 )
             else:
                 time = cross_val_cpu_pls(
-                    pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1
+                    pls, X, Y, n_splits, fit_params, n_jobs=n_jobs, verbose=1, estimate=estimate
                 )
         print(f"Time: {time}")
 
-    num_cores = os.cpu_count() if n_jobs == -1 else n_jobs
+    if "jax" in model:
+        num_cores = 'GPU'
+    else:
+        num_cores = os.cpu_count() if n_jobs == -1 else n_jobs
 
     # don't repeat yourself
     if not os.path.exists(args.output):
@@ -130,5 +146,12 @@ if __name__ == "__main__":
             f.write("model,n_components,n_splits,n,k,m,time,inferred,njobs\n")
     with open(args.output, "a") as f:
         f.write(
-            f"{model},{n_components},{n_splits},{n},{k},{m},{time},False,{num_cores}\n"
+            f"{model},{n_components},{n_splits},{n},{k},{m},{time},{estimate},{num_cores}\n"
         )
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Interrupted.")
+        exit(1)
