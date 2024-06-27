@@ -71,4 +71,11 @@ python3 time_pls.py -model fastnp2 -n 1000000 -k 500 -m 10 -n_components 30 -n_s
 
 ### Manual estimations
 
-Benchmarking estimation is not available for the JAX implementations nor the fast cross-validation implementation. This is due to the implementation details of these algorithms. In practice, for the results in `timings.csv` and corresponding points on the plots in `timings.png` where estimation was used for these implementations, the process mentioned above was conducted manually.
+Benchmarking estimation is not available for the JAX implementations nor the fast cross-validation implementation. This is due to the implementation details of these algorithms. In practice, the process mentioned above was conducted manually for the results in `timings.csv` and corresponding points on the plots in `timings.png`, where estimation was used for the JAX implementations. This process can be carried out in the following steps:
+
+1. Execute `time_pls.py` with your desired parameters.
+2. Let the benchmarking run until the time taken per validation fold stabilizes.
+3. Calculate the average time taken per cross-validation fold.
+4. Multiply the average time taken per cross-validation fold with `n_splits` to estimate the time required to complete the entire cross-validation.
+
+Benchmarking estimation of the fast cross-validation algorithm cannot be achieved with the steps specified above. This is because the fast cross-validation algorithm performs a one-time initial heavy computation and then performs relatively cheap operations during iterations over the cross-validation folds. As such, the average time taken per cross-validation fold will continuously decrease until all `n_splits` cross-validation folds have been executed.
