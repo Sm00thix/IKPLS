@@ -174,7 +174,7 @@ status("removed GPU-only runs")
 
 if SKIP_RUNS_LONGER_THAN:
     todo = todo[todo.time < SKIP_RUNS_LONGER_THAN]
-    status(f"keeping only runs shorter than {SKIP_RUNS_LONGER_THAN}s")
+    status(f"skipping runs over {SKIP_RUNS_LONGER_THAN}s")
 
 # %% [markdown]
 # ### ignore entries whose estimation cannot be automated
