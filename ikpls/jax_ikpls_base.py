@@ -516,8 +516,7 @@ class PLSBase(abc.ABC):
                 norm = eig_vals[-1]
         return w, norm
 
-    @partial(jax.jit, static_argnums=(0))
-    def _step_3(self, i: int, w: jax.Array, P: jax.Array, R: jax.Array) -> jax.Array:
+    def _step_3_base(self, i: int, w: jax.Array, P: jax.Array, R: jax.Array) -> jax.Array:
         """
         The third step of the PLS algorithm. Computes the orthogonal weight vectors.
 
@@ -552,6 +551,48 @@ class PLSBase(abc.ABC):
         r = jnp.copy(w)
         r, P, w, R = jax.lax.fori_loop(0, i, self._step_3_body, (r, P, w, R))
         return r
+
+    def _step_3(self, i: int, w: jax.Array, P: jax.Array, R: jax.Array) -> jax.Array:
+        """
+        This is an API to the third step of the PLS algorithm. Computes the orthogonal
+        weight vectors.
+
+        Parameters
+        ----------
+        i : int
+            The current component number in the PLS algorithm.
+
+        w : Array of shape (K, 1)
+            The current weight vector.
+
+        P : Array of shape (A, K)
+            The loadings matrix for the predictor variables.
+
+        R : Array of shape (A, K)
+            The weights matrix to compute scores `T` directly from the original
+            predictor variables.
+
+        Returns
+        -------
+        r : Array of shape (K, 1)
+            The orthogonal weight vector for the current component.
+
+        Notes
+        -----
+        This method compiles _step_3_base which in turn computes the orthogonal weight
+        vector `r` for the current component in the PLS algorithm. It is a key step for
+        calculating the loadings and weights matrices.
+
+        See Also
+        --------
+        _step_3_base : The third step of the PLS algorithm.
+        """
+        if self.reverse_differentiable:
+            jax.jit(self._step_3_base, static_argnums=(0, 1))
+            return self._step_3_base(i, w, P, R)
+        else:
+            jax.jit(self._step_3_base, static_argnums=(0))
+            return self._step_3_base(i, w, P, R)
 
     @partial(jax.jit, static_argnums=0)
     def _step_3_body(
