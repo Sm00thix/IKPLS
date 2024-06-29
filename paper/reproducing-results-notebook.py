@@ -35,12 +35,17 @@ OUR_TIMINGS = "timings/user_timings.csv"
 # catch low-hanging fruits first
 SKIP_RUNS_LONGER_THAN = 0
 
-# by default, only on CPU
-RUN_ON_GPUS = False
+# by default, run all runs
+SKIP_GPU = False
 
 # 
 DRY_RUN = False
 
+
+# %%
+# Allow JAX to use 64-bit floating point precision.
+import jax
+jax.config.update("jax_enable_x64", True)
 
 # %%
 # provide a way to choose the output from the command line
@@ -59,19 +64,19 @@ except:
     parser.add_argument("-s", "--skip-runs-longer-than", default=SKIP_RUNS_LONGER_THAN, 
                         action="store", type=int,
                         help="speed up: skip runs that had taken longer than, in seconds")
-    parser.add_argument("-g", "--gpu", default=RUN_ON_GPUS,
+    parser.add_argument("-g", "--skip-gpu", default=SKIP_GPU,
                         action="store_true",
-                        help="enable runs that require a GPU")
+                        help="skip runs that require a GPU")
     parser.add_argument("-n", "--dry-run", default=DRY_RUN,
                         action="store_true",
                         help="just show the commands to run, do not actually trigger them")
     args = parser.parse_args()
     OUR_TIMINGS = args.output
     SKIP_RUNS_LONGER_THAN = args.skip_runs_longer_than
-    RUN_RUN_ON_GPUS = args.gpu
+    SKIP_GPU = args.skip_gpu
     DRY_RUN = args.dry_run
 
-print(f"using {OUR_TIMINGS=} {SKIP_RUNS_LONGER_THAN=} {RUN_ON_GPUS=} {DRY_RUN=}")
+print(f"using {OUR_TIMINGS=} {SKIP_RUNS_LONGER_THAN=} {SKIP_GPU=} {DRY_RUN=}")
 
 # %% [markdown]
 # ## loading the paper timings
@@ -157,7 +162,7 @@ todo
 # ### isolating lines doable on a CPU (optional)
 
 # %%
-if not RUN_ON_GPUS:
+if SKIP_GPU:
     todo = todo[ ~ todo.model.str.contains('jax')]
 status("removed GPU-only runs")
 
@@ -169,7 +174,7 @@ status("removed GPU-only runs")
 
 if SKIP_RUNS_LONGER_THAN:
     todo = todo[todo.time < SKIP_RUNS_LONGER_THAN]
-    status(f"keeping only runs shorter than {SKIP_RUNS_LONGER_THAN}s")
+    status(f"skipping runs over {SKIP_RUNS_LONGER_THAN}s")
 
 # %% [markdown]
 # ### ignore entries whose estimation cannot be automated
