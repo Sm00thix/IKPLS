@@ -92,6 +92,7 @@ class PLS:
         self.scale_Y = scale_Y
         self.algorithm = algorithm
         self.dtype = dtype
+        self.eps = np.finfo(dtype).eps
         self.name = f"Improved Kernel PLS Algorithm #{algorithm}"
         if self.algorithm not in [1, 2]:
             raise ValueError(
@@ -269,7 +270,7 @@ class PLS:
                     + train_sum_sq_X
                 )
             )
-            training_X_std[training_X_std == 0] = 1
+            training_X_std[np.abs(training_X_std) <= self.eps] = 1
 
         # Compute the training set standard deviations for Y
         if self.scale_Y:
@@ -289,7 +290,7 @@ class PLS:
                     + train_sum_sq_Y
                 )
             )
-            training_Y_std[training_Y_std == 0] = 1
+            training_Y_std[np.abs(training_Y_std) <= self.eps] = 1
 
         # Subtract the validation set's contribution from the total XTY
         training_XTY = self.XTY - validation_X.T @ validation_Y
@@ -341,7 +342,7 @@ class PLS:
             # Step 2
             if self.M == 1:
                 norm = la.norm(training_XTY, ord=2)
-                if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                if np.isclose(norm, 0, atol=self.eps, rtol=0):
                     self._weight_warning(i)
                     break
                 w = training_XTY / norm
@@ -352,7 +353,7 @@ class PLS:
                     q = eig_vecs[:, -1:]
                     w = training_XTY @ q
                     norm = la.norm(w)
-                    if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                    if np.isclose(norm, 0, atol=self.eps, rtol=0):
                         self._weight_warning(i)
                         break
                     w = w / norm
@@ -360,7 +361,7 @@ class PLS:
                     training_XTYYTX = training_XTY @ training_XTY.T
                     eig_vals, eig_vecs = la.eigh(training_XTYYTX)
                     norm = eig_vals[-1]
-                    if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                    if np.isclose(norm, 0, atol=self.eps, rtol=0):
                         self._weight_warning(i)
                         break
                     w = eig_vecs[:, -1:]
