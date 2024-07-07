@@ -677,7 +677,10 @@ class TestClass:
         if n_good_components == -1:
             n_good_components = np_pls_alg_1.A
 
-        atol = 0
+        try:
+            atol = np.finfo(np_pls_alg_1.dtype).eps
+        except AttributeError:
+            atol = 0
         rtol = 1e-4
         # Regression matrices
         assert_allclose(
