@@ -88,6 +88,7 @@ class PLS(BaseEstimator):
         self.scale_Y = scale_Y
         self.copy = copy
         self.dtype = dtype
+        self.eps = np.finfo(dtype).eps
         self.name = f"Improved Kernel PLS Algorithm #{algorithm}"
         if self.algorithm not in [1, 2]:
             raise ValueError(
@@ -207,12 +208,12 @@ class PLS(BaseEstimator):
 
         if self.scale_X:
             self.X_std = X.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
-            self.X_std[self.X_std == 0] = 1
+            self.X_std[np.abs(self.X_std) <= self.eps] = 1
             X /= self.X_std
 
         if self.scale_Y:
             self.Y_std = Y.std(axis=0, ddof=1, dtype=self.dtype, keepdims=True)
-            self.Y_std[self.Y_std == 0] = 1
+            self.Y_std[np.abs(self.Y_std) <= self.eps] = 1
             Y /= self.Y_std
 
         N, K = X.shape
@@ -246,7 +247,7 @@ class PLS(BaseEstimator):
             # Step 2
             if M == 1:
                 norm = la.norm(XTY, ord=2)
-                if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                if np.isclose(norm, 0, atol=self.eps, rtol=0):
                     self._weight_warning(i)
                     break
                 w = XTY / norm
@@ -257,7 +258,7 @@ class PLS(BaseEstimator):
                     q = eig_vecs[:, -1:]
                     w = XTY @ q
                     norm = la.norm(w)
-                    if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                    if np.isclose(norm, 0, atol=self.eps, rtol=0):
                         self._weight_warning(i)
                         break
                     w = w / norm
@@ -265,7 +266,7 @@ class PLS(BaseEstimator):
                     XTYYTX = XTY @ XTY.T
                     eig_vals, eig_vecs = la.eigh(XTYYTX)
                     norm = eig_vals[-1]
-                    if np.isclose(norm, 0, atol=np.finfo(np.float64).eps, rtol=0):
+                    if np.isclose(norm, 0, atol=self.eps, rtol=0):
                         self._weight_warning(i)
                         break
                     w = eig_vecs[:, -1:]

@@ -101,6 +101,7 @@ class PLSBase(abc.ABC):
         self.scale_Y = scale_Y
         self.copy = copy
         self.dtype = dtype
+        self.eps = jnp.finfo(self.dtype).eps
         self.reverse_differentiable = reverse_differentiable
         self.verbose = verbose
         self.name = "Improved Kernel PLS Algorithm"
@@ -236,7 +237,7 @@ class PLSBase(abc.ABC):
             print(f"get_stds for {self.name} will be JIT compiled...")
 
         A_std = jnp.std(A, axis=0, dtype=self.dtype, keepdims=True, ddof=1)
-        A_std = jnp.where(A_std == 0, 1, A_std)
+        A_std = jnp.where(jnp.abs(A_std) <= self.eps, 1, A_std)
         return A_std
 
     @partial(jax.jit, static_argnums=(0, 3, 4, 5, 6, 7))

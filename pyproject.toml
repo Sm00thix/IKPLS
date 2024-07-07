@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ikpls"
-version = "1.2.3"
+version = "1.2.4"
 description = "Improved Kernel PLS and Fast Cross-Validation."
 authors = ["Sm00thix <oleemail@icloud.com>"]
 maintainers = ["Sm00thix <oleemail@icloud.com>"]
