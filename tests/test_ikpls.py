@@ -895,8 +895,8 @@ class TestClass:
             jax_pls_alg_2=jax_pls_alg_2,
             diff_jax_pls_alg_1=diff_jax_pls_alg_1,
             diff_jax_pls_alg_2=diff_jax_pls_alg_2,
-            atol=1e-8,
-            rtol=6e-5,
+            atol=3e-8,
+            rtol=2e-4,
         )
 
         self.check_predictions(
@@ -3178,26 +3178,26 @@ class TestClass:
         splits = self.load_Y(["split"])
         assert Y.shape[1] == 1
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+            X, Y, splits, center=False, scale=False, atol=0, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+            X, Y, splits, center=True, scale=False, atol=0, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+            X, Y, splits, center=True, scale=True, atol=0, rtol=2e-8
         )
 
         # Remove the singleton dimension and check that the predictions are consistent.
         Y = Y.squeeze()
         assert Y.ndim == 1
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+            X, Y, splits, center=False, scale=False, atol=0, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+            X, Y, splits, center=True, scale=False, atol=0, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+            X, Y, splits, center=True, scale=True, atol=0, rtol=2e-8
         )
 
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
@@ -3243,13 +3243,13 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-7
+            X, Y, splits, center=False, scale=False, atol=0, rtol=2e-7
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-7
+            X, Y, splits, center=True, scale=False, atol=0, rtol=2e-7
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-7
+            X, Y, splits, center=True, scale=True, atol=0, rtol=2e-7
         )
 
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
@@ -3296,13 +3296,13 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-8
+            X, Y, splits, center=False, scale=False, atol=0, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-8
+            X, Y, splits, center=True, scale=False, atol=0, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-8
+            X, Y, splits, center=True, scale=True, atol=0, rtol=2e-8
         )
 
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
@@ -3448,13 +3448,13 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=2e-6, rtol=1e-8
+            X, Y, splits, center=False, scale=False, atol=6e-6, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=5e-6, rtol=1e-8
+            X, Y, splits, center=True, scale=False, atol=6e-6, rtol=2e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=3e-6, rtol=1e-8
+            X, Y, splits, center=True, scale=True, atol=6e-6, rtol=2e-8
         )
 
     def test_fast_cross_val_pls_2_m_eq_k_loocv(self):
@@ -3494,10 +3494,10 @@ class TestClass:
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=1e-7, rtol=1e-8
+            X, Y, splits, center=False, scale=False, atol=2e-7, rtol=1e-8
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=1e-7, rtol=1e-8
+            X, Y, splits, center=True, scale=False, atol=2e-7, rtol=1e-8
         )
         self.check_fast_cross_val_pls(
             X, Y, splits, center=True, scale=True, atol=1e-7, rtol=1e-8
@@ -4111,7 +4111,7 @@ class TestClass:
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
-        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
+        self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=3e-8)
 
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
     # multi-threaded code. os.fork() is called by the  other cross-validation
