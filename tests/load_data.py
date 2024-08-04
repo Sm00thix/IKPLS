@@ -64,7 +64,7 @@ def load_spectra():
         resp_byte_array = resp.read()
     byte_contents = io.BytesIO(resp_byte_array)
     npz_arr = np.load(byte_contents)
-    spectra = np.row_stack([npz_arr[k] for k in npz_arr.keys()])
+    spectra = np.vstack([npz_arr[k] for k in npz_arr.keys()])
     spectra = spectra.astype(np.float64)
     spectra = -np.log10(spectra)
     return spectra

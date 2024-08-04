@@ -47,14 +47,14 @@ class TestClass:
     csv : DataFrame
         The CSV data containing target values.
 
-    raw_spectra : NDArray[float]
+    raw_spectra : npt.NDArray[np.float64]
         The raw spectral data.
     """
 
     csv = load_data.load_csv()
     raw_spectra = load_data.load_spectra()
 
-    def load_X(self) -> npt.NDArray[np.float_]:
+    def load_X(self) -> npt.NDArray[np.float64]:
         """
         Description
         -----------
@@ -62,12 +62,12 @@ class TestClass:
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             The raw spectral data.
         """
         return np.copy(self.raw_spectra)
 
-    def load_Y(self, values: list[str]) -> npt.NDArray[np.float_]:
+    def load_Y(self, values: list[str]) -> npt.NDArray[np.float64]:
         """
         Description
         -----------
@@ -80,7 +80,7 @@ class TestClass:
 
         Returns
         -------
-        NDArray[float]
+        npt.NDArray[np.float64]
             Target values as a NumPy array.
         """
         target_values = self.csv[values].to_numpy()
