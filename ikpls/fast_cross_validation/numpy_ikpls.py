@@ -84,7 +84,7 @@ class PLS:
         scale_X: bool = True,
         scale_Y: bool = True,
         algorithm: int = 1,
-        dtype: Union[np.float16, np.float32, np.float64, np.float128] = np.float64,
+        dtype: np.floating = np.float64,
     ) -> None:
         self.center_X = center_X
         self.center_Y = center_Y
@@ -139,27 +139,27 @@ class PLS:
         validation_indices: npt.NDArray[np.int_],
     ) -> Union[
         tuple[
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
         ],
         tuple[
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-            npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
+            npt.NDArray[np.floating],
         ],
     ]:
         """
@@ -433,13 +433,13 @@ class PLS:
     def _stateless_predict(
         self,
         indices: npt.NDArray[np.int_],
-        B: npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-        training_X_mean: npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-        training_Y_mean: npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-        training_X_std: npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
-        training_Y_std: npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]],
+        B: npt.NDArray[np.floating],
+        training_X_mean: npt.NDArray[np.floating],
+        training_Y_mean: npt.NDArray[np.floating],
+        training_X_std: npt.NDArray[np.floating],
+        training_Y_std: npt.NDArray[np.floating],
         n_components: Union[None, int] = None,
-    ) -> npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]]:
+    ) -> npt.NDArray[np.floating]:
         """
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
         `n_components` components. If `n_components` is None, then predictions are
@@ -503,7 +503,7 @@ class PLS:
         self,
         validation_indices: npt.NDArray[np.int_],
         metric_function: Callable[
-            [npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]], npt.NDArray[Union[np.float16, np.float32, np.float64, np.float128]]], Any
+            [npt.NDArray[np.floating], npt.NDArray[np.floating]], Any
         ],
     ) -> Any:
         """
