@@ -79,7 +79,7 @@ class PLS(BaseEstimator):
         scale_X: bool = True,
         scale_Y: bool = True,
         copy: bool = True,
-        dtype: np.float_ = np.float64,
+        dtype: np.floating = np.float64,
     ) -> None:
         self.algorithm = algorithm
         self.center_X = center_X
@@ -300,7 +300,7 @@ class PLS(BaseEstimator):
 
     def predict(
         self, X: npt.ArrayLike, n_components: Union[None, int] = None
-    ) -> npt.NDArray[np.float_]:
+    ) -> npt.NDArray[np.floating]:
         """
         Predicts with Improved Kernel PLS Algorithm #1 on `X` with `B` using
         `n_components` components. If `n_components` is None, then predictions are

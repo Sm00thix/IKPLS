@@ -115,7 +115,7 @@ class PLSBase(abc.ABC):
         self.X_std = None
         self.Y_std = None
 
-    def _weight_warning(self, arg: Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]]):
+    def _weight_warning(self, arg: Tuple[npt.NDArray[np.int_], npt.NDArray[np.floating]]):
         """
         Display a warning message if the weight is close to zero.
 

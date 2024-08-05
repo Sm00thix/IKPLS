@@ -18,6 +18,9 @@
 
 The `ikpls` software package provides fast and efficient tools for PLS (Partial Least Squares) modeling. This package is designed to help researchers and practitioners handle PLS modeling faster than previously possible - particularly on large datasets.
 
+## Citation
+If you use the `ikpls` software package for your work, please cite [this Journal of Open Source Software article](https://joss.theoj.org/papers/10.21105/joss.06533). If you use the fast cross-validation algorithm implemented in `ikpls.fast_cross_validation.numpy_ikpls`, please also cite [this arXiv preprint](https://arxiv.org/abs/2401.13185).
+
 ## Unlock the Power of Fast and Stable Partial Least Squares Modeling with IKPLS
 
 Dive into cutting-edge Python implementations of the IKPLS (Improved Kernel Partial Least Squares) Algorithms #1 and #2 [[1]](#references) for CPUs, GPUs, and TPUs. IKPLS is both fast [[2]](#references) and numerically stable [[3]](#references) making it optimal for PLS modeling.
@@ -49,9 +52,10 @@ and scaling can be enabled or disabled independently from eachother and for X an
 by setting the parameters `center_X`, `center_Y`, `scale_X`, and `scale_Y`, respectively.
 In addition to correctly handling (column-wise) centering and scaling,
 the fast cross-validation algorithm **correctly handles row-wise preprocessing**
-such as (row-wise) centering and scaling of the X and Y input matrices,
-convolution, or other preprocessing. Row-wise preprocessing can safely be
-applied before passing the data to the fast cross-validation algorithm.
+that operates independently on each sample such as (row-wise) centering and scaling
+of the X and Y input matrices, convolution, or other preprocessing. Row-wise
+preprocessing can safely be applied before passing the data to the fast
+cross-validation algorithm.
 
 ## Prerequisites
 
