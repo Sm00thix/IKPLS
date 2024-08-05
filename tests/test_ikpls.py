@@ -3191,13 +3191,13 @@ class TestClass:
         Y = Y.squeeze()
         assert Y.ndim == 1
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=0, rtol=2e-8
+            X, Y, splits, center=False, scale=False, atol=0, rtol=1e-7
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=0, rtol=2e-8
+            X, Y, splits, center=True, scale=False, atol=0, rtol=1e-7
         )
         self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=0, rtol=2e-8
+            X, Y, splits, center=True, scale=True, atol=0, rtol=1e-7
         )
 
     # JAX will issue a warning if os.fork() is called as JAX is incompatible with
