@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ikpls"
-version = "1.2.5"
+version = "1.2.5.post1"
 description = "Improved Kernel PLS and Fast Cross-Validation."
 authors = ["Sm00thix <oleemail@icloud.com>"]
 maintainers = ["Sm00thix <oleemail@icloud.com>"]
@@ -10,7 +10,7 @@ homepage = "https://ikpls.readthedocs.io/en/latest/"
 repository = "https://github.com/Sm00thix/IKPLS"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.13"
+python = ">=3.9, <3.14"
 numpy = ">=1.26.3"
 jax = "^0.4.20"
 jaxlib = "^0.4.20"
