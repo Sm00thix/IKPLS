@@ -12,13 +12,3 @@ runs:
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          repository-url: https://upload.pypi.org/legacy/
-          packages-dir: dist
-          verify-metadata: true
-          skip-existing: false
-          verbose: false
-          print-hash: false
-          attestations: true
-          docker-image: ghcr.io/sm00thix/ikpls:latest
