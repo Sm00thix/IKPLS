@@ -10,9 +10,9 @@
 
 [![Documentation Status](https://readthedocs.org/projects/ikpls/badge/?version=latest)](https://ikpls.readthedocs.io/en/latest/?badge=latest)
 
-[![Tests Status](https://github.com/Sm00thix/ikpls/actions/workflows/test_workflow.yml/badge.svg)](https://github.com/Sm00thix/ikpls/actions/workflows/test_workflow.yml)
+[![Tests Status](https://github.com/Sm00thix/IKPLS/actions/workflows/test_workflow.yml/badge.svg)](https://github.com/Sm00thix/IKPLS/actions/workflows/test_workflow.yml)
 
-[![Package Status](https://github.com/Sm00thix/ikpls/actions/workflows/package_workflow.yml/badge.svg)](https://github.com/Sm00thix/ikpls/actions/workflows/package_workflow.yml)
+[![Package Status](https://github.com/Sm00thix/IKPLS/actions/workflows/package_workflow.yml/badge.svg)](https://github.com/Sm00thix/IKPLS/actions/workflows/package_workflow.yml)
 
 [![JOSS Status](https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc/status.svg)](https://joss.theoj.org/papers/ac559cbcdc6e6551f58bb3e573a73afc)
 
@@ -35,7 +35,7 @@ implementations subclass scikit-learn's BaseEstimator, they can be used with sci
 
 The documentation is available at
 <https://ikpls.readthedocs.io/en/latest/>; examples can be found at
-<https://github.com/Sm00thix/ikpls/tree/main/examples>.
+<https://github.com/Sm00thix/IKPLS/tree/main/examples>.
 
 ## Fast Cross-Validation
 
@@ -151,28 +151,28 @@ Gotchas](https://github.com/google/jax#current-gotchas).
 
 ### Examples
 
-In [examples](https://github.com/Sm00thix/ikpls/tree/main/examples), you
+In [examples](https://github.com/Sm00thix/IKPLS/tree/main/examples), you
 will find:
 
 -   [Fit and Predict with
-    NumPy.](https://github.com/Sm00thix/ikpls/tree/main/examples/fit_predict_numpy.py)
+    NumPy.](https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_numpy.py)
 -   [Fit and Predict with
-    JAX.](https://github.com/Sm00thix/ikpls/tree/main/examples/fit_predict_jax.py)
+    JAX.](https://github.com/Sm00thix/IKPLS/tree/main/examples/fit_predict_jax.py)
 -   [Cross-validate with
-    NumPy.](https://github.com/Sm00thix/ikpls/tree/main/examples/cross_val_numpy.py)
+    NumPy.](https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_numpy.py)
 -   [Cross-validate with NumPy and fast
-    cross-validation.](https://github.com/Sm00thix/ikpls/tree/main/examples/fast_cross_val_numpy.py)
+    cross-validation.](https://github.com/Sm00thix/IKPLS/tree/main/examples/fast_cross_val_numpy.py)
 -   [Cross-validate with
-    JAX.](https://github.com/Sm00thix/ikpls/tree/main/examples/cross_val_jax.py)
+    JAX.](https://github.com/Sm00thix/IKPLS/tree/main/examples/cross_val_jax.py)
 -   [Compute the gradient of a preprocessing convolution filter with
     respect to the RMSE between the target value and the value predicted
     by PLS after fitting with
-    JAX.](https://github.com/Sm00thix/ikpls/tree/main/examples/gradient_jax.py)
+    JAX.](https://github.com/Sm00thix/IKPLS/tree/main/examples/gradient_jax.py)
 
 ## Contribute
 
 To contribute, please read the [Contribution
-Guidelines](https://github.com/Sm00thix/ikpls/blob/main/CONTRIBUTING.md).
+Guidelines](https://github.com/Sm00thix/IKPLS/blob/main/CONTRIBUTING.md).
 
 ## References
 

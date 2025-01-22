@@ -17,9 +17,20 @@ jobs:
         needs: build_package
         runs-on: ubuntu-latest
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
-        steps:  
+        steps:
             - uses: actions/checkout@v4
-            - uses: ./.github/actions/publish
+
+            # Convert the repository name to lowercase
+            - name: Convert repository name to lowercase
+              id: lowercase_repo
+              uses: ASzc/change-string-case-action@v6
+              with:
+                string: ${{ github.repository }}
+            # Pass the lowercase repository name to the publish action
+            - name: Publish Package
+              uses: ./.github/actions/publish
+              env:
+                GITHUB_REPOSITORY: ${{ steps.string.outputs.lowercase }}
         permissions:
             id-token: write
         environment:

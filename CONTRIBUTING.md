@@ -12,13 +12,13 @@ The sections below outline the steps in each case.
 
 ## You have a question
 
-1. Use the search functionality [here](https://github.com/Sm00thix/ikpls/issues) to see if someone already filed the same issue;
+1. Use the search functionality [here](https://github.com/Sm00thix/IKPLS/issues) to see if someone already filed the same issue;
 2. If your issue search did not yield any relevant results, make a new issue;
 3. Apply the "Question" label; apply other labels when relevant.
 
 ## You think you may have found a bug
 
-1. Use the search functionality [here](https://github.com/Sm00thix/ikpls/issues) to see if someone already filed the same issue;
+1. Use the search functionality [here](https://github.com/Sm00thix/IKPLS/issues) to see if someone already filed the same issue;
 2. If your issue search does not yield any relevant results, make a new issue, providing enough information to the rest of the community to understand the cause and context of the problem. Depending on the issue, you may want to include:
     - the [SHA hashcode](https://help.github.com/articles/autolinked-references-and-urls/#commit-shas) of the commit that is causing your problem;
     - some identifying information (name and version number) for dependencies you're using;
@@ -37,25 +37,25 @@ The sections below outline the steps in each case.
 8. Update or expand the documentation;
 9. Make sure the documentation builds without errors by following the instructions in [Build the documentation](#build-the-documentation);
 10. Check that you can build the package locally and that it passes twine check. See [Build from source](#build-from-source) for more information;
-11. [Push](http://rogerdudler.github.io/git-guide/) your feature branch to (your fork of) the ikpls repository on GitHub;
+11. [Push](http://rogerdudler.github.io/git-guide/) your feature branch to (your fork of) the IKPLS repository on GitHub;
 12. Create the pull request, e.g. following the instructions [here](https://help.github.com/articles/creating-a-pull-request/).
 
 If you feel like you've made a valuable contribution, but you don't know how to write or run tests for it or generate the documentation, don't let this discourage you from making the pull request; we can help you! Just submit the pull request, but remember that you might be asked to append additional commits to your pull request.
 
 ## Build from source
 
-ikpls uses [poetry](https://python-poetry.org/) to manage its dependencies and packaging. To build the package from source, follow these steps:
+IKPLS uses [poetry](https://python-poetry.org/) to manage its dependencies and packaging. To build the package from source, follow these steps:
 
 1. Clone the repository:
 
     ```shell
-    git clone https://github.com/Sm00thix/ikpls.git
+    git clone https://github.com/Sm00thix/IKPLS.git
     ```
 
 2. Change to the repository directory:
 
     ```shell
-    cd ikpls
+    cd IKPLS
     ```
 
 3. Install poetry and twine:
@@ -133,4 +133,4 @@ To run the test suite, follow these steps:
 
 ## Benchmarking
 
-To run benchmarks, follow the instructions [here](https://github.com/Sm00thix/ikpls/blob/main/paper/README.md).
+To run benchmarks, follow the instructions [here](https://github.com/Sm00thix/IKPLS/blob/main/paper/README.md).

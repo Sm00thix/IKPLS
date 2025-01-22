@@ -7,7 +7,7 @@ maintainers = ["Sm00thix <oleemail@icloud.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://ikpls.readthedocs.io/en/latest/"
-repository = "https://github.com/Sm00thix/ikpls"
+repository = "https://github.com/Sm00thix/IKPLS"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.14"
