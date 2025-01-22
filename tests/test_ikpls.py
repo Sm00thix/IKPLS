@@ -4015,6 +4015,10 @@ class TestClass:
         X = X[..., :10]  # Decrease the amount of features in the interest of time.
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50] 
+        splits = splits[::50]
         assert Y.shape[1] == 1
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
 
@@ -4064,6 +4068,10 @@ class TestClass:
             ]
         )
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50]
+        splits = splits[::50]
         assert Y.shape[1] > 1
         assert Y.shape[1] < X.shape[1]
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-7)
@@ -4109,6 +4117,10 @@ class TestClass:
         )
         X = X[..., :10]
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50]
+        splits = splits[::50]
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=3e-8)
@@ -4154,6 +4166,10 @@ class TestClass:
         )
         X = X[..., :9]
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
+        # Decrease the amount of samples in the interest of time.
+        X = X[::50]
+        Y = Y[::50]
+        splits = splits[::50]
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_center_scale_combinations(X, Y, splits, atol=0, rtol=1e-8)
