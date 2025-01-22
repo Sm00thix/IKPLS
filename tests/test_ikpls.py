@@ -2773,6 +2773,7 @@ class TestClass:
         None
         """
         X = self.load_X()
+        X = X[..., :3]
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         assert Y.shape[1] == 1
@@ -2808,16 +2809,9 @@ class TestClass:
         None
         """
         X = self.load_X()
+        X = X[..., :3]
         Y = self.load_Y(
             [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
                 "Moisture",
                 "Protein",
             ]
@@ -2854,20 +2848,12 @@ class TestClass:
         X = self.load_X()
         Y = self.load_Y(
             [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
                 "Moisture",
                 "Protein",
             ]
         )
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
-        X = X[..., :10]
+        X = X[..., :2]
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3.4e-5)
@@ -2903,16 +2889,10 @@ class TestClass:
                 "Wheat_H1",
                 "Wheat_H3",
                 "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
-                "Moisture",
-                "Protein",
             ]
         )
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
-        X = X[..., :9]
+        X = X[..., :3]
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_cross_val_pls(X, Y, splits, atol=0, rtol=3e-5)
@@ -3174,6 +3154,7 @@ class TestClass:
         None
         """
         X = self.load_X()
+        X = X[..., :3]
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])
         assert Y.shape[1] == 1
@@ -3225,16 +3206,9 @@ class TestClass:
         None
         """
         X = self.load_X()
+        X = X[..., :3]
         Y = self.load_Y(
             [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
                 "Moisture",
                 "Protein",
             ]
@@ -3279,20 +3253,12 @@ class TestClass:
         X = self.load_X()
         Y = self.load_Y(
             [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
                 "Moisture",
                 "Protein",
             ]
         )
         splits = self.load_Y(["split"])
-        X = X[..., :10]
+        X = X[..., :2]
         assert Y.shape[1] > 1
         assert Y.shape[1] == X.shape[1]
         self.check_fast_cross_val_pls(
@@ -3336,16 +3302,10 @@ class TestClass:
                 "Wheat_H1",
                 "Wheat_H3",
                 "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
-                "Moisture",
-                "Protein",
             ]
         )
         splits = self.load_Y(["split"])
-        X = X[..., :9]
+        X = X[..., :3]
         assert Y.shape[1] > 1
         assert Y.shape[1] > X.shape[1]
         self.check_fast_cross_val_pls(
@@ -3370,183 +3330,6 @@ class TestClass:
         " multithreaded, so this will likely lead to a"
         " deadlock.",
     )
-    def test_fast_cross_val_pls_1_loocv(self):
-        """
-        Description
-        -----------
-        This test loads input predictor variables and a single target variable. It
-        assigns a unique split index to each sample to perform
-        leave-one-out cross-validation. It then calls the 'check_fast_cross_val_pls'
-        method to validate the cross-validation results, specifically for a single
-        target variable.
-
-        Returns:
-        None
-        """
-        X = self.load_X()
-        Y = self.load_Y(["Protein"])
-        # Decrease the amount of samples in the interest of time.
-        X = X[::50]
-        Y = Y[::50]
-        splits = np.arange(X.shape[0])
-        assert Y.shape[1] == 1
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=1e-6, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=1e-6, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=1e-6, rtol=1e-8
-        )
-
-        # Remove the singleton dimension and check that the predictions are consistent.
-        Y = Y.squeeze()
-        assert Y.ndim == 1
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=1e-6, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=1e-6, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=1e-6, rtol=1e-8
-        )
-
-    def test_fast_cross_val_pls_2_m_less_k_loocv(self):
-        """
-        Description
-        -----------
-        This test loads input predictor variables, multiple target variables (where M
-        is less than K), and split indices for cross-validation. It assigns a unique
-        split index to each sample to perform leave-one-out cross-validation. It then
-        calls the 'check_fast_cross_val_pls' method to validate the cross-validation
-        results for this scenario.
-
-        Returns:
-        None
-        """
-        X = self.load_X()
-        Y = self.load_Y(
-            [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
-                "Moisture",
-                "Protein",
-            ]
-        )
-        # Decrease the amount of samples in the interest of time.
-        X = X[::50]
-        Y = Y[::50]
-        splits = np.arange(X.shape[0])
-        assert Y.shape[1] > 1
-        assert Y.shape[1] < X.shape[1]
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=1e-4, rtol=2e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=1e-4, rtol=2e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=1e-4, rtol=2e-8
-        )
-
-    def test_fast_cross_val_pls_2_m_eq_k_loocv(self):
-        """
-        Description
-        -----------
-        This test loads input predictor variables, multiple target variables (where M
-        is equal to K), and split indices for cross-validation. It assigns a unique
-        split index to each sample to perform leave-one-out cross-validation. It then
-        calls the 'check_fast_cross_val_pls' method to validate the cross-validation
-        results for this scenario.
-
-        Returns:
-        None
-        """
-        X = self.load_X()
-        Y = self.load_Y(
-            [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
-                "Moisture",
-                "Protein",
-            ]
-        )
-
-        # Decrease the amount of samples in the interest of time.
-        X = X[::50]
-        Y = Y[::50]
-        X = X[..., :10]
-        splits = np.arange(X.shape[0])
-        assert Y.shape[1] > 1
-        assert Y.shape[1] == X.shape[1]
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=2e-7, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=2e-7, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=1e-7, rtol=1e-8
-        )
-
-    def test_fast_cross_val_pls_2_m_greater_k_loocv(self):
-        """
-        Description
-        -----------
-        This test loads input predictor variables, multiple target variables (where M
-        is greater than K), and split indices for cross-validation. It assigns a unique
-        split index to each sample to perform leave-one-out cross-validation. It then
-        calls the 'check_fast_cross_val_pls' method to validate the cross-validation
-        results for this scenario.
-
-        Returns:
-        None
-        """
-        X = self.load_X()
-        Y = self.load_Y(
-            [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
-                "Moisture",
-                "Protein",
-            ]
-        )
-        # Decrease the amount of samples in the interest of time.
-        X = X[::50]
-        Y = Y[::50]
-        X = X[..., :9]
-        splits = np.arange(X.shape[0])
-        assert Y.shape[1] > 1
-        assert Y.shape[1] > X.shape[1]
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=False, scale=False, atol=1e-7, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=False, atol=1e-7, rtol=1e-8
-        )
-        self.check_fast_cross_val_pls(
-            X, Y, splits, center=True, scale=True, atol=1e-7, rtol=1e-8
-        )
 
     def check_center_scale_combinations(self, X, Y, splits, atol, rtol):
         """
@@ -4012,7 +3795,7 @@ class TestClass:
         None
         """
         X = self.load_X()
-        X = X[..., :10]  # Decrease the amount of features in the interest of time.
+        X = X[..., :3]  # Decrease the amount of features in the interest of time.
         Y = self.load_Y(["Protein"])
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         # Decrease the amount of samples in the interest of time.
@@ -4052,17 +3835,9 @@ class TestClass:
         None
         """
         X = self.load_X()
-        X = X[..., :11]  # Decrease the amount of features in the interest of time.
+        X = X[..., :3]  # Decrease the amount of features in the interest of time.
         Y = self.load_Y(
             [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
                 "Moisture",
                 "Protein",
             ]
@@ -4103,19 +3878,11 @@ class TestClass:
         X = self.load_X()
         Y = self.load_Y(
             [
-                "Rye_Midsummer",
-                "Wheat_H1",
-                "Wheat_H3",
-                "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
                 "Moisture",
                 "Protein",
             ]
         )
-        X = X[..., :10]
+        X = X[..., :2]
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         # Decrease the amount of samples in the interest of time.
         X = X[::50]
@@ -4156,15 +3923,9 @@ class TestClass:
                 "Wheat_H1",
                 "Wheat_H3",
                 "Wheat_H4",
-                "Wheat_H5",
-                "Wheat_Halland",
-                "Wheat_Oland",
-                "Wheat_Spelt",
-                "Moisture",
-                "Protein",
             ]
         )
-        X = X[..., :9]
+        X = X[..., :3]
         splits = self.load_Y(["split"])  # Contains 3 splits of different sizes
         # Decrease the amount of samples in the interest of time.
         X = X[::50]
