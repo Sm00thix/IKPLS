@@ -28,6 +28,4 @@ runs:
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       env:
-        OWNER: ${{ env.OWNER }}
-        REPO_NAME: ${{ env.REPO_NAME }}
-        REPO: "123"
+        GITHUB_REPOSITORY: ${{ env.OWNER }}/${{ env.REPO_NAME }}
