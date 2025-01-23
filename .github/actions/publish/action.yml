@@ -9,6 +9,7 @@ runs:
           echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
         env:
           OWNER: '${{ github.repository_owner }}'
+        shell: bash
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
