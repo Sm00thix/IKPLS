@@ -4,6 +4,11 @@ description: Publish the package to PyPI
 runs:
     using: "composite"
     steps:
+      - name: set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
