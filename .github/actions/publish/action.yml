@@ -21,3 +21,4 @@ runs:
       uses: pypa/gh-action-pypi-publish@release/v1
       env:
         OWNER: ${{ env.OWNER }}
+        GITHUB_REPOSITORY: "123"
