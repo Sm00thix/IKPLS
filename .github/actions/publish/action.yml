@@ -6,7 +6,7 @@ runs:
     steps:
       - name: set lower case owner name
         run: |
-          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+          echo "OWNER_LC=$(echo "${OWNER}" | tr '[:upper:]' '[:lower:]')" >> "${GITHUB_ENV}"
         env:
           OWNER: '${{ github.repository_owner }}'
         shell: bash
