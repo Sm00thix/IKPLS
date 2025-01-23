@@ -1,11 +1,9 @@
 name: Python Package
 on:
-    # workflow_run:
-    #     workflows: ["Tests"]
-    #     types:
-    #         - completed
-    push:
-        branches: [ "main" ]
+    workflow_run:
+        workflows: ["Tests"]
+        types:
+            - completed
 jobs:
     build_package:
         runs-on: ubuntu-latest
