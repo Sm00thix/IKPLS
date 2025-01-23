@@ -36,5 +36,5 @@ jobs:
             id-token: write
         steps:
             - uses: actions/checkout@v4
-            - uses: ./github/actions/release
+            - uses: ./.github/actions/release
 

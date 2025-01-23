@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "ikpls"
-version = "1.2.5.post2"
+version = "1.2.5.post3"
 description = "Improved Kernel PLS and Fast Cross-Validation."
-authors = ["Sm00thix <oleemail@icloud.com>"]
-maintainers = ["Sm00thix <oleemail@icloud.com>"]
+authors = ["sm00thix <oleemail@icloud.com>"]
+maintainers = ["sm00thix <oleemail@icloud.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://ikpls.readthedocs.io/en/latest/"
-repository = "https://github.com/Sm00thix/IKPLS"
+repository = "https://github.com/sm00thix/ikpls"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.14"
