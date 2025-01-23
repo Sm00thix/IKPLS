@@ -4,12 +4,19 @@ description: Publish the package to PyPI
 runs:
   using: "composite"
   steps:
-    - name: Set lower case owner name
+    - name: Set lowercase repository owner
       run: |
         echo "OWNER=$(echo \"${OWNER}\" | tr '[:upper:]' '[:lower:]')" >> "${GITHUB_ENV}"
+        echo "REPO_NAME=$(echo \"${GITHUB_REPOSITORY}\" | tr '[:upper:]' '[:lower:]')" >> "${GITHUB_ENV}"
       env:
         OWNER: '${{ github.repository_owner }}'
+        GITHUB_REPOSITORY: '${{ github.repository }}'
       shell: bash
+
+    - name: Debug variables
+      run: |
+        echo "OWNER=${OWNER}"
+        echo "REPO_NAME=${REPO_NAME}"
 
     - name: Download all the dists
       uses: actions/download-artifact@v4
@@ -21,4 +28,4 @@ runs:
       uses: pypa/gh-action-pypi-publish@release/v1
       env:
         OWNER: ${{ env.OWNER }}
-        GITHUB_REPOSITORY: "123"
+        REPO_NAME: ${{ env.REPO_NAME }}
