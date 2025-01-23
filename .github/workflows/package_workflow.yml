@@ -1,38 +1,33 @@
 name: Python Package
-
 on:
     workflow_run:
         workflows: ["Tests"]
         types:
             - completed
-
 jobs:
     build_package:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
             - uses: ./.github/actions/build
-
     publish_package:
         needs: build_package
         runs-on: ubuntu-latest
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
-        steps:
-            - uses: actions/checkout@v4
-
-            # Convert the repository name to lowercase
-            - name: Convert repository name to lowercase
-              id: lowercase_repo
-              uses: ASzc/change-string-case-action@v6
-              with:
-                string: ${{ github.repository }}
-            # Pass the lowercase repository name to the publish action
-            - name: Publish Package
-              uses: ./.github/actions/publish
-              env:
-                GITHUB_REPOSITORY: ${{ steps.string.outputs.lowercase }}
-        permissions:
-            id-token: write
         environment:
             name: pypi
             url: https://pypi.org/p/ikpls
+        permissions:
+            id-token: write
+        steps:  
+            - uses: actions/checkout@v4
+            - uses: ./.github/actions/publish
+    github_release:
+        needs: publish_package
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            id-token: write
+        steps:
+            - uses: ./github/actions/release
+
