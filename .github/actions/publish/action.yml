@@ -17,6 +17,7 @@ runs:
       run: |
         echo "OWNER=${OWNER}"
         echo "REPO_NAME=${REPO_NAME}"
+      shell: bash
 
     - name: Download all the dists
       uses: actions/download-artifact@v4
@@ -29,3 +30,4 @@ runs:
       env:
         OWNER: ${{ env.OWNER }}
         REPO_NAME: ${{ env.REPO_NAME }}
+        REPO: "123"
