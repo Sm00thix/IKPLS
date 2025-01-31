@@ -6,8 +6,8 @@ on:
         paths:
             - 'ikpls/**'
             - 'tests/**'
-            - '.github/**'
-            - 'pyproject.toml'
+            # - '.github/**'
+            # - 'pyproject.toml'
 
 jobs:
     test_package:
