@@ -9,6 +9,7 @@ runs:
         run: |
           version=$(grep -o 'version = "[^"]*"' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
           echo "VERSION=$version" >> $GITHUB_ENV
+        shell: bash
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
