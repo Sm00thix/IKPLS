@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract version from pyproject.toml
         id: get_version
         run: |
-          version=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          version=$(grep -o 'version = "[^"]*"' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
           echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Download all the dists
@@ -34,12 +34,12 @@ jobs:
 
       - name: Create GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           gh release create "v${{ env.VERSION }}" --repo "$GITHUB_REPOSITORY" --notes "Automated release for version v${{ env.VERSION }}"
 
       - name: Upload artifact signatures to GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           gh release upload "v${{ env.VERSION }}" dist/** --repo "$GITHUB_REPOSITORY"
